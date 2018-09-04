@@ -1,3 +1,6 @@
 v 3
-d AA
-p bla
+d Materials by me
+
+d Here are some useful things I have written
+
+p myprog A program to analyze data
