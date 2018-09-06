@@ -342,6 +342,7 @@ show estimation output if re-estimation required.
 {phang}{help cvlasso##saved_results:Saved results}{p_end}
 {phang}{help cvlasso##references:References}{p_end}
 {phang}{help cvlasso##website:Website}{p_end}
+{phang}{help cvlasso##installation:Installation}{p_end}
 {phang}{help cvlasso##acknowledgements:Acknowledgements}{p_end}
 {phang}{help cvlasso##citation:Citation of lassopack}{p_end}
 
@@ -790,6 +791,13 @@ See {help lasso2##references:lasso2} for further references.
 
 {pstd}
 Please check our website {browse "https://statalasso.github.io/"} for more information. 
+
+{marker installation}{title:Installation}
+
+{pstd}
+To get the latest stable version of {it:lassopack} from our website, 
+check the installation instructions at {browse "https://statalasso.github.io/installation/"}.
+We update the stable website version more frequently than the SSC version.
 
 {marker acknowledgements}{title:Acknowledgements}
 

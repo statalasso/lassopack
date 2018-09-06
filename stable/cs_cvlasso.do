@@ -16,7 +16,7 @@ which lassoutils
 
 * data source
 global prostate prostate.data
-//global prostate https://web.stanford.edu/~hastie/ElemStatLearn/datasets/prostate.data
+*global prostate https://web.stanford.edu/~hastie/ElemStatLearn/datasets/prostate.data
 
 * program to compare two matrices in terms of avg abs deviation
 cap program drop comparemat
@@ -213,7 +213,7 @@ assert myr2==myr
 *** partial                                   							 ***
 ********************************************************************************
 
-/*
+
 * load example data
 insheet using "$prostate", tab clear
 
@@ -222,7 +222,7 @@ cvlasso $model, partial(svi) saveest(m)
 // make sure that partial works
 estimates restore m1
 assert "`e(partial)'"=="svi"
-*/
+
 
 ********************************************************************************
 *** plotting                                    							 ***
@@ -253,7 +253,7 @@ assert 14==`e(nfolds)'
 ********************************************************************************
 *** panel example
 ********************************************************************************
-/*
+
 use "http://fmwww.bc.edu/ec-p/data/macro/abdata.dta", clear
 
 // FE and noftools options
@@ -263,7 +263,7 @@ cap noi assert "`e(noftools)'"==""  // will be error if ftools not installed
 cvlasso ys l(0/3).k l(0/3).n, fe seed(123) noftools
 assert "`e(noftools)'"=="noftools"
 savedresults comp ftools e(), exclude(macros: lasso2opt)
-*/
+
 ********************************************************************************
 *** finish                                                                   ***
 ********************************************************************************
