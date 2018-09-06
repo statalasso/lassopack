@@ -395,6 +395,7 @@ All varlists may contain time-series operators or factor variables; see help var
 {phang}{help lasso2##saved_results:Saved results}{p_end}
 {phang}{help lasso2##references:References}{p_end}
 {phang}{help lasso2##website:Website}{p_end}
+{phang}{help lasso2##installation:Installation}{p_end}
 {phang}{help lasso2##acknowledgements:Acknowledgements}{p_end}
 {phang}{help lasso2##citation:Citation of lassopack}{p_end}
 
@@ -1255,6 +1256,13 @@ Zou, H., Hastie, T., & Tibshirani, R. (2007). On the "degrees of freedom" of the
 
 {pstd}
 Please check our website {browse "https://statalasso.github.io/"} for more information. 
+
+{marker installation}{title:Installation}
+
+{pstd}
+To get the latest stable version of {it:lassopack} from our website, 
+check the installation instructions at {browse "https://statalasso.github.io/installation/"}.
+We update the stable website version more frequently than the SSC version.
 
 {marker acknowledgements}{title:Acknowledgements}
 

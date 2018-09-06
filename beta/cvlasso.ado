@@ -11,7 +11,7 @@
 * 1.0.05  (23feb2018)
 *         Bug fix - lcount/lmin/lmax option weren't being passed to lasso2.
 *         Tweak to prevent warning msg about lcount/lmax/lminratio at end if lse or lopt options used.
-* 1.0.06  (xxx)
+* 1.0.06  (22apr2018)
 * 		  Minor change in output (to make cvlasso consistent with lasso2).
 * 		  Display link in output to allow run lse/lopt model interactively.
 * 		  Fix minor display error that occured when multiple alphas where used.

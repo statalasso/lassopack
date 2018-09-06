@@ -258,6 +258,7 @@ All varlists may contain time-series operators or factor variables; see help {he
 {phang}{help rlasso##saved_results:Saved results}{p_end}
 {phang}{help rlasso##references:References}{p_end}
 {phang}{help rlasso##website:Website}{p_end}
+{phang}{help rlasso##installation:Installation}{p_end}
 {phang}{help rlasso##acknowledgements:Acknowledgements}{p_end}
 {phang}{help rlasso##citation:Citation of lassopack}{p_end}
 
@@ -982,6 +983,13 @@ The Frisch-Waugh-Lovell Theorem for the lasso and the ridge regression.
 
 {pstd}
 Please check our website {browse "https://statalasso.github.io/"} for more information. 
+
+{marker installation}{title:Installation}
+
+{pstd}
+To get the latest stable version of {it:lassopack} from our website, 
+check the installation instructions at {browse "https://statalasso.github.io/installation/"}.
+We update the stable website version more frequently than the SSC version.
 
 {marker acknowledgements}{title:Acknowledgements}
 

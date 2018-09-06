@@ -1,4 +1,4 @@
-*! lassoutils 1.0.14 4sep2018
+*! lassoutils 1.0.14 5sep2018
 *! authors aa/cbh/ms
 * Adapted/expanded from lassoShooting version 12, cbh 25/09/2012
 * mm_quantile from moremata package by Ben Jann:
@@ -4117,7 +4117,7 @@ void s_partial(	string scalar Ynames,
 		st_view(W, ., wvar, touse)
 	}
 	else {									//  no weight variable => W is vector of 1s
-		W = J(rows(Y),1,1)
+		W = J(rows(Yest),1,1)
 	}
 
 	L = cols(P)
@@ -4658,8 +4658,7 @@ void s_fe(		string scalar Xnames,
 	}
 
 	w = F.sort(st_data(., toest, touse))				//  extract toest variable
-	// counts = panelsum(w, F.info)
-	counts = panelsum(Wvar, F.info)
+	counts = panelsum(w:*Wvar, F.info)					//  weighted counts for just the toest subsample
 	means = editmissing(panelsum(F.sort(X:*Wvar), w, F.info) :/ counts, 0)
 	tX[.,.] = X - means[F.levels, .]
 

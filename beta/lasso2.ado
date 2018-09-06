@@ -31,6 +31,7 @@
 * 		  lasso2 can now be directly called with lic() option, e.g. "lasso2 y x*, lic(ebic)" [24/04/18]
 * 		  Added plotpath(lnlambda) and adjusted parameters of plotlabel option. [27/04/18]
 *		  Added "ebicgamma" option, see notes in lassoutils.ado. [04/09/2018]
+*		  Fixed bug when fe used with partial(.).
 
 program lasso2, eclass sortpreserve
 	version 13
@@ -863,11 +864,6 @@ program _lasso2, eclass sortpreserve
 			local k				=colsof(`beta')
 		}
 		*	
-		
-		// restore here if coefs returned in standard units
-		if `feflag' & `partialflag' {					//  FE case and there are partialled-out notpen vars
-			restore										//  Restores dataset with tempvars after FE transform but before notpen partialled out
-		}
 		
 		*** Post results
 		if "`ols'"=="" & "`postall'"=="" {
