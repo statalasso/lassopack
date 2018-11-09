@@ -1,4 +1,0 @@
-v 3
-d LASSOPACK: Stata module for lasso, square-root lasso, elastic net, ridge, adaptive lasso estimation and cross-validation
-p LASSOPACK Model selection & prediction using regularized regression
-p PDSLASSO Causal inference using regularized regression
