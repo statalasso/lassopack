@@ -1,0 +1,13 @@
+{smcl}
+{com}{sf}{ul off}{err}lcount | lmax | lminratio option ignored since lambda() is specified.
+lcount | lmax | lminratio option ignored since lambda() is specified.
+lcount | lmax | lminratio option ignored since lambda() is specified.
+Plotting only supported for list of lambda values.
+Plotting options ignored.
+should display EBIC (the default):
+should display AIC:
+should display AICc:
+should display BIC:
+should display EBIC:
+{smcl}
+{err}{sf}{ul off}
