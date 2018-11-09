@@ -1,0 +1,12 @@
+v 3
+d LASSOPACK: Stata module for lasso, square-root lasso, elastic net, ridge, adaptive lasso estimation and cross-validation
+d Achim Ahrens, Mark E Schaffer, Christian B Hansen
+f cvlasso.sthlp
+f lasso2.sthlp
+f rlasso.sthlp
+f cvlasso.ado
+f lasso2.ado
+f lasso2_p.ado
+f lassoutils.ado
+f rlasso.ado
+f rlasso_p.ado
