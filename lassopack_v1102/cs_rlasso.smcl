@@ -1,0 +1,13 @@
+{smcl}
+{com}{sf}{ul off}{txt}.\lassoShootingCBH.ado
+{res}*! lassoShooting.ado -- version 12, CBH 2012.09.25
+*! mods by MS: save r(lambda); predict double; quadcross
+{txt}.\lassoClusterCBH.ado
+{res}*! lassoCluster.ado -- version 12, CBH 2014.05.19
+*! mods by MS: save r(lambda); predict double; quadcross; sort
+{err}incompatible options - weights + noconstant
+{txt}(sum of wgt is     2.8755e+04)
+{res}{err}error - fe option with weights requires {rnethelp "http://fmwww.bc.edu/RePEc/bocode/f/ftools.sthlp":ftools} package to be installed
+see {rnethelp "http://fmwww.bc.edu/RePEc/bocode/f/ftools.sthlp":help ftools} for details
+{smcl}
+{err}{sf}{ul off}
