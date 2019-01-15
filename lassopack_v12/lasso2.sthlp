@@ -1,6 +1,7 @@
 {smcl}
 {* *! version 1.0.11  15jan2019}{...}
-{cmd:help lasso2}
+{hline}
+{cmd:help lasso2}{right: lassopack v1.2}
 {hline}
 
 {title:Title}
@@ -1270,6 +1271,11 @@ Please check our website {browse "https://statalasso.github.io/"} for more infor
 To get the latest stable version of {it:lassopack} from our website, 
 check the installation instructions at {browse "https://statalasso.github.io/installation/"}.
 We update the stable website version more frequently than the SSC version.
+
+{pstd}
+To verify that {it:lassopack} is correctly installed, 
+click on or type {stata "whichpkg lassopack"} (which requires {helpb whichpkg} 
+to be installed; {stata "ssc install whichpkg"}).
 
 {marker acknowledgements}{title:Acknowledgements}
 

@@ -3,8 +3,8 @@
       name:  {res}<unnamed>
        {txt}log:  {res}C:\Users\Achim.Ahrens\Dropbox\StataLasso\Current\cs_cvlasso.smcl
   {txt}log type:  {res}smcl
- {txt}opened on:  {res}15 Jan 2019, 10:19:31
-{txt}r; t=0.00 10:19:31
+ {txt}opened on:  {res}15 Jan 2019, 12:18:09
+{txt}r; t=0.01 12:18:09
 
 {com}. about
 
@@ -13,52 +13,52 @@ Revision 13 Jul 2017
 Copyright 1985-2015 StataCorp LLC
 
 Total physical memory:    {res}16671324 KB
-{txt}Available physical memory: {res}9171864 KB
+{txt}Available physical memory: {res}8809396 KB
 
 45-user Stata network perpetual license:
        Serial number:  401406293350
          Licensed to:  Achim Ahrens
                        ESRI
-{txt}r; t=0.00 10:19:31
+{txt}r; t=0.00 12:18:09
 
 {com}. which cvlasso
 {txt}.\cvlasso.ado
 {res}*! cvlasso 1.0.08 06jan2019
 *! lassopack package 1.2 15jan2019
 *! authors aa/ms
-{txt}r; t=0.01 10:19:31
+{txt}r; t=0.00 12:18:09
 
 {com}. which lasso2
 {txt}.\lasso2.ado
 {res}*! lasso2 1.0.08 12jan2019
 *! lassopack package 1.2 15jan2019
 *! authors aa/ms
-{txt}r; t=0.00 10:19:31
+{txt}r; t=0.00 12:18:09
 
 {com}. which lasso2_p
 {txt}.\lasso2_p.ado
 {res}*! lasso2_p 1.0.04 22nov2018
 *! lassopack package 1.2 15jan2019
 *! authors aa/ms
-{txt}r; t=0.00 10:19:31
+{txt}r; t=0.00 12:18:09
 
 {com}. which lassoutils
 {txt}.\lassoutils.ado
 {res}*! lassoutils 1.1.03 13jan2019
 *! lassopack package 1.2 15jan2019
 *! authors aa/cbh/ms
-{txt}r; t=0.00 10:19:31
+{txt}r; t=0.00 12:18:09
 
 {com}. 
 . * data source
 . global prostate prostate.data
-{txt}r; t=0.00 10:19:31
+{txt}r; t=0.00 12:18:09
 
 {com}. *global prostate https://web.stanford.edu/~hastie/ElemStatLearn/datasets/prostate.data
 . 
 . * program to compare two matrices in terms of avg abs deviation
 . cap program drop comparemat
-{txt}r; t=0.00 10:19:31
+{txt}r; t=0.00 12:18:09
 
 {com}. program define comparemat , rclass
 {txt}  1{com}.         syntax anything [, tol(real 10e-3)] 
@@ -74,12 +74,12 @@ Total physical memory:    {res}16671324 KB
 {txt} 11{com}.         return scalar mreldif = `diff'
 {txt} 12{com}.         assert `diff'<`tol'
 {txt} 13{com}. end
-{txt}r; t=0.00 10:19:31
+{txt}r; t=0.00 12:18:09
 
 {com}. 
 . 
 . set seed 123456
-{txt}r; t=0.00 10:19:31
+{txt}r; t=0.00 12:18:09
 
 {com}. 
 . ********************************************************************************
@@ -89,29 +89,29 @@ Total physical memory:    {res}16671324 KB
 . * load example data
 . insheet using "$prostate", tab clear
 {txt}(11 vars, 97 obs)
-r; t=0.00 10:19:31
+r; t=0.01 12:18:09
 
 {com}. drop if _n==97 // to ensure same size for each fold
 {txt}(1 observation deleted)
-r; t=0.00 10:19:31
+r; t=0.00 12:18:09
 
 {com}. 
 . global model lpsa lcavol lweight age lbph svi lcp gleason pgg45
-{txt}r; t=0.00 10:19:31
+{txt}r; t=0.00 12:18:09
 
 {com}. 
 . * generate fold variable
 . gen myfid = 1 if _n<=32
 {txt}(64 missing values generated)
-r; t=0.00 10:19:31
+r; t=0.00 12:18:09
 
 {com}. replace myfid = 2 if _n>32 & _n<=64
 {txt}(32 real changes made)
-r; t=0.00 10:19:31
+r; t=0.00 12:18:09
 
 {com}. replace myfid = 3 if _n>64
 {txt}(32 real changes made)
-r; t=0.00 10:19:31
+r; t=0.00 12:18:09
 
 {com}. 
 . cvlasso $model, foldvar(myfid) lambda(150 15 1.5)
@@ -128,10 +128,10 @@ Fold {res}1 2 3
   Run model: {stata cvlasso, lopt}
 ^ lse = largest lambda for which MSPE is within one standard error of the minimal MSPE.
   Run model: {stata cvlasso, lse}
-r; t=0.15 10:19:32
+r; t=0.14 12:18:09
 
 {com}. mat L = e(mmspe)
-{txt}r; t=0.00 10:19:32
+{txt}r; t=0.00 12:18:09
 
 {com}. /*
 > c<-cv.glmnet(X,y,foldid=fid,lambda=c(150, 15, 1.5)/(2*n),keep=TRUE, intercept=TRUE,standardize=TRUE)
@@ -142,7 +142,7 @@ r; t=0.15 10:19:32
 > 1 0.608541
 > */
 . mat G = ( 2.38651835211576 \ 1.46349718052732 \ 1.48495268875459 )
-{txt}r; t=0.00 10:19:32
+{txt}r; t=0.00 12:18:09
 
 {com}. comparemat L G // compare coeffs
 {txt}mreldif=.0001112103984058. tolerance = .01
@@ -158,10 +158,10 @@ c1 {res} 2.3865184
 r1 {res} 2.3865184
 {txt}r2 {res} 1.4634972
 {txt}r3 {res} 1.4849527
-{reset}r; t=0.00 10:19:32
+{reset}r; t=0.01 12:18:09
 
 {com}. cap drop xb
-{txt}r; t=0.00 10:19:32
+{txt}r; t=0.00 12:18:09
 
 {com}. predict double xb, lopt
 {txt}Estimate lasso with lambda=15 (lopt).
@@ -181,17 +181,17 @@ r1 {res} 2.3865184
 {txt}{hline 18}{c BT}{hline 32}
 No xb or residuals options specified. Assume xb (fitted values).
 Use e(b) from previous lasso2 estimation (lambda=15).
-r; t=0.02 10:19:32
+r; t=0.01 12:18:09
 
 {com}. sum xb
 
 {txt}    Variable {c |}        Obs        Mean    Std. Dev.       Min        Max
 {hline 13}{c +}{hline 57}
 {space 10}xb {c |}{res}         96    2.446048    .7801003   .9116189   4.111986
-{txt}r; t=0.00 10:19:32
+{txt}r; t=0.00 12:18:09
 
 {com}. assert reldif(0.608541,r(Var))<0.001 // compare predicted values
-{txt}r; t=0.00 10:19:32
+{txt}r; t=0.00 12:18:09
 
 {com}. 
 . 
@@ -209,10 +209,10 @@ Fold {res}1 2 3
   Run model: {stata cvlasso, lopt}
 ^ lse = largest lambda for which MSPE is within one standard error of the minimal MSPE.
   Run model: {stata cvlasso, lse}
-r; t=0.03 10:19:32
+r; t=0.03 12:18:10
 
 {com}. mat L = e(mmspe)
-{txt}r; t=0.00 10:19:32
+{txt}r; t=0.00 12:18:10
 
 {com}. /*
 > c<-cv.glmnet(X,y,foldid=fid,lambda=c(150, 15, 1.5)/(2*n),keep=TRUE, intercept=TRUE,standardize=TRUE)
@@ -223,7 +223,7 @@ r; t=0.03 10:19:32
 > 1 0.608541
 > */
 . mat G = ( 2.38651835211576 \ 1.46349718052732 \ 1.48495268875459 )
-{txt}r; t=0.00 10:19:32
+{txt}r; t=0.00 12:18:10
 
 {com}. comparemat L G // compare coeffs
 {txt}mreldif=.0001112103968545. tolerance = .01
@@ -239,10 +239,10 @@ c1 {res} 2.3865184
 r1 {res} 2.3865184
 {txt}r2 {res} 1.4634972
 {txt}r3 {res} 1.4849527
-{reset}r; t=0.00 10:19:32
+{reset}r; t=0.01 12:18:10
 
 {com}. cap drop xb
-{txt}r; t=0.00 10:19:32
+{txt}r; t=0.00 12:18:10
 
 {com}. predict double xb, lopt
 {txt}Estimate lasso with lambda=15 (lopt).
@@ -262,17 +262,17 @@ r1 {res} 2.3865184
 {txt}{hline 18}{c BT}{hline 32}
 No xb or residuals options specified. Assume xb (fitted values).
 Use e(b) from previous lasso2 estimation (lambda=15).
-r; t=0.05 10:19:32
+r; t=0.05 12:18:10
 
 {com}. sum xb
 
 {txt}    Variable {c |}        Obs        Mean    Std. Dev.       Min        Max
 {hline 13}{c +}{hline 57}
 {space 10}xb {c |}{res}         96    2.446048    .7801003   .9116189   4.111986
-{txt}r; t=0.00 10:19:32
+{txt}r; t=0.00 12:18:10
 
 {com}. assert reldif(0.608541,r(Var))<0.001 // compare predicted values
-{txt}r; t=0.00 10:19:32
+{txt}r; t=0.00 12:18:10
 
 {com}. 
 . 
@@ -291,10 +291,10 @@ Fold {res}1 2 3
 ^ lse = largest lambda for which MSPE is within one standard error of the minimal MSPE.
   Run model: {stata cvlasso, lse}
 {err}Warning: lopt is at the limit of the lambda range.
-{txt}r; t=0.02 10:19:32
+{txt}r; t=0.02 12:18:10
 
 {com}. mat L = e(mmspe)
-{txt}r; t=0.00 10:19:32
+{txt}r; t=0.00 12:18:10
 
 {com}. /*
 > > # cross-validation with intercept & standardisation
@@ -306,7 +306,7 @@ Fold {res}1 2 3
 > 1 0.7840688
 > */ 
 . mat G = ( 2.10369705382686 \ 1.42993421234064 \ 1.42756055333919 )
-{txt}r; t=0.00 10:19:32
+{txt}r; t=0.00 12:18:10
 
 {com}. comparemat L G // compare coeffs
 {txt}mreldif=.000030615518138. tolerance = .01
@@ -322,10 +322,10 @@ c1 {res} 2.1036977
 r1 {res} 2.1036971
 {txt}r2 {res} 1.4299342
 {txt}r3 {res} 1.4275606
-{reset}r; t=0.00 10:19:32
+{reset}r; t=0.00 12:18:10
 
 {com}. cap drop xb
-{txt}r; t=0.00 10:19:32
+{txt}r; t=0.00 12:18:10
 
 {com}. predict double xb, lopt
 {txt}Estimate lasso with lambda=1.5 (lopt).
@@ -347,17 +347,17 @@ r1 {res} 2.1036971
 {txt}{hline 18}{c BT}{hline 32}
 No xb or residuals options specified. Assume xb (fitted values).
 Use e(b) from previous lasso2 estimation (lambda=1.5).
-r; t=0.01 10:19:32
+r; t=0.02 12:18:10
 
 {com}. sum xb
 
 {txt}    Variable {c |}        Obs        Mean    Std. Dev.       Min        Max
 {hline 13}{c +}{hline 57}
 {space 10}xb {c |}{res}         96    2.446048    .8854875    .513909   4.598263
-{txt}r; t=0.00 10:19:32
+{txt}r; t=0.00 12:18:10
 
 {com}. assert reldif(0.7840688,r(Var))<0.001 // compare predicted values
-{txt}r; t=0.00 10:19:32
+{txt}r; t=0.00 12:18:10
 
 {com}. 
 . 
@@ -376,10 +376,10 @@ Fold {res}1 2 3
 ^ lse = largest lambda for which MSPE is within one standard error of the minimal MSPE.
   Run model: {stata cvlasso, lse}
 {err}Warning: lopt is at the limit of the lambda range.
-{txt}r; t=0.08 10:19:32
+{txt}r; t=0.07 12:18:10
 
 {com}. mat L = e(mmspe)
-{txt}r; t=0.00 10:19:32
+{txt}r; t=0.00 12:18:10
 
 {com}. /*
 > > c<-cv.glmnet(X,y,foldid=fid,lambda=c(150, 15, 1.5)/(2*n),keep=TRUE, intercept=FALSE,standardize=FALSE)
@@ -390,7 +390,7 @@ Fold {res}1 2 3
 > 1 0.7919695
 > */
 . mat G = ( 1.99980614859113 \ 1.26638436668758 \ 1.24680539174676 )
-{txt}r; t=0.00 10:19:32
+{txt}r; t=0.00 12:18:10
 
 {com}. comparemat L G // compare coeffs
 {txt}mreldif=.0003010649455664. tolerance = .01
@@ -406,10 +406,10 @@ c1 {res} 1.9998833
 r1 {res} 1.9998061
 {txt}r2 {res} 1.2663844
 {txt}r3 {res} 1.2468054
-{reset}r; t=0.00 10:19:32
+{reset}r; t=0.00 12:18:10
 
 {com}. cap drop xb
-{txt}r; t=0.00 10:19:32
+{txt}r; t=0.00 12:18:10
 
 {com}. predict double xb, lopt
 {txt}Estimate lasso with lambda=1.5 (lopt).
@@ -428,17 +428,17 @@ r1 {res} 1.9998061
 {txt}{hline 18}{c BT}{hline 32}
 No xb or residuals options specified. Assume xb (fitted values).
 Use e(b) from previous lasso2 estimation (lambda=1.5).
-r; t=0.03 10:19:32
+r; t=0.02 12:18:10
 
 {com}. sum xb
 
 {txt}    Variable {c |}        Obs        Mean    Std. Dev.       Min        Max
 {hline 13}{c +}{hline 57}
 {space 10}xb {c |}{res}         96    2.443933    .8905195   .5327895   4.561406
-{txt}r; t=0.00 10:19:32
+{txt}r; t=0.00 12:18:10
 
 {com}. assert reldif(0.7919695,r(Var))<0.001 // compare predicted values
-{txt}r; t=0.00 10:19:32
+{txt}r; t=0.00 12:18:10
 
 {com}. 
 . cvlasso $model, foldvar(myfid) lambda(150 15 1.5) nocons
@@ -455,10 +455,10 @@ Fold {res}1 2 3
   Run model: {stata cvlasso, lopt}
 ^ lse = largest lambda for which MSPE is within one standard error of the minimal MSPE.
   Run model: {stata cvlasso, lse}
-r; t=0.08 10:19:32
+r; t=0.08 12:18:10
 
 {com}. mat L = e(mmspe)
-{txt}r; t=0.00 10:19:32
+{txt}r; t=0.00 12:18:10
 
 {com}. /*
 > c<-cv.glmnet(X,y,foldid=fid,lambda=c(150, 15, 1.5)/(2*n),keep=TRUE, intercept=FALSE,standardize=TRUE)
@@ -469,7 +469,7 @@ r; t=0.08 10:19:32
 > 1 0.6062457
 > */
 . mat G = ( 1.90652583524832 \ 1.23222044017428 \ 1.31053116174191 )
-{txt}r; t=0.00 10:19:32
+{txt}r; t=0.00 12:18:10
 
 {com}. comparemat L G // compare coeffs
 {txt}mreldif=.0007943382997762. tolerance = .01
@@ -485,10 +485,10 @@ c1 {res} 1.9069161
 r1 {res} 1.9065258
 {txt}r2 {res} 1.2322204
 {txt}r3 {res} 1.3105312
-{reset}r; t=0.00 10:19:32
+{reset}r; t=0.00 12:18:10
 
 {com}. cap drop xb
-{txt}r; t=0.00 10:19:32
+{txt}r; t=0.00 12:18:10
 
 {com}. predict double xb, lopt
 {txt}Estimate lasso with lambda=15 (lopt).
@@ -504,17 +504,17 @@ r1 {res} 1.9065258
 {txt}{hline 18}{c BT}{hline 32}
 No xb or residuals options specified. Assume xb (fitted values).
 Use e(b) from previous lasso2 estimation (lambda=15).
-r; t=0.01 10:19:32
+r; t=0.01 12:18:10
 
 {com}. sum xb
 
 {txt}    Variable {c |}        Obs        Mean    Std. Dev.       Min        Max
 {hline 13}{c +}{hline 57}
 {space 10}xb {c |}{res}         96    2.446541    .7785216   .9124108     4.1091
-{txt}r; t=0.00 10:19:32
+{txt}r; t=0.00 12:18:10
 
 {com}. assert reldif(0.6062457,r(Var))<0.001 // compare predicted values
-{txt}r; t=0.00 10:19:32
+{txt}r; t=0.00 12:18:10
 
 {com}. 
 . cvlasso $model, foldvar(myfid) lambda(150 15 1.5) nocons prestd
@@ -531,10 +531,10 @@ Fold {res}1 2 3
   Run model: {stata cvlasso, lopt}
 ^ lse = largest lambda for which MSPE is within one standard error of the minimal MSPE.
   Run model: {stata cvlasso, lse}
-r; t=0.09 10:19:32
+r; t=0.09 12:18:10
 
 {com}. mat L = e(mmspe)
-{txt}r; t=0.00 10:19:32
+{txt}r; t=0.00 12:18:10
 
 {com}. /*
 > c<-cv.glmnet(X,y,foldid=fid,lambda=c(150, 15, 1.5)/(2*n),keep=TRUE, intercept=FALSE,standardize=TRUE)
@@ -545,7 +545,7 @@ r; t=0.09 10:19:32
 > 1 0.6062457
 > */
 . mat G = ( 1.90652583524832 \ 1.23222044017428 \ 1.31053116174191 )
-{txt}r; t=0.00 10:19:32
+{txt}r; t=0.00 12:18:10
 
 {com}. comparemat L G // compare coeffs
 {txt}mreldif=.0007943382600105. tolerance = .01
@@ -561,10 +561,10 @@ c1 {res} 1.9069161
 r1 {res} 1.9065258
 {txt}r2 {res} 1.2322204
 {txt}r3 {res} 1.3105312
-{reset}r; t=0.00 10:19:32
+{reset}r; t=0.01 12:18:10
 
 {com}. cap drop xb
-{txt}r; t=0.00 10:19:32
+{txt}r; t=0.00 12:18:10
 
 {com}. predict double xb, lopt
 {txt}Estimate lasso with lambda=15 (lopt).
@@ -580,17 +580,17 @@ r1 {res} 1.9065258
 {txt}{hline 18}{c BT}{hline 32}
 No xb or residuals options specified. Assume xb (fitted values).
 Use e(b) from previous lasso2 estimation (lambda=15).
-r; t=0.01 10:19:32
+r; t=0.01 12:18:10
 
 {com}. sum xb
 
 {txt}    Variable {c |}        Obs        Mean    Std. Dev.       Min        Max
 {hline 13}{c +}{hline 57}
 {space 10}xb {c |}{res}         96    2.446541    .7785216   .9124108     4.1091
-{txt}r; t=0.00 10:19:32
+{txt}r; t=0.00 12:18:10
 
 {com}. assert reldif(0.6062457,r(Var))<0.001 // compare predicted values
-{txt}r; t=0.00 10:19:32
+{txt}r; t=0.00 12:18:10
 
 {com}. 
 . 
@@ -601,14 +601,14 @@ r; t=0.01 10:19:32
 . * load example data
 . insheet using "$prostate", tab clear
 {txt}(11 vars, 97 obs)
-r; t=0.00 10:19:32
+r; t=0.00 12:18:10
 
 {com}.  
 . global model lpsa lcavol lweight age lbph svi lcp gleason pgg45
-{txt}r; t=0.00 10:19:32
+{txt}r; t=0.00 12:18:10
 
 {com}. gen sample = _n<70 
-{txt}r; t=0.00 10:19:32
+{txt}r; t=0.00 12:18:10
 
 {com}.  
 . foreach type of newlist lopt lse {c -(} 
@@ -1940,7 +1940,7 @@ y1 {res}  .23219855    .5274469  -.00521937   .08047941  -.11597644    .0018973
 
 {txt}       gleason       pgg45       _cons
 y1 {res}  .14391884    .0020957  -.80737524
-{reset}r; t=6.26 10:19:38
+{reset}r; t=6.16 12:18:16
 
 {com}. *
 . 
@@ -1952,7 +1952,7 @@ y1 {res}  .14391884    .0020957  -.80737524
 . * load example data
 . insheet using "$prostate", tab clear
 {txt}(11 vars, 97 obs)
-r; t=0.00 10:19:38
+r; t=0.01 12:18:16
 
 {com}. 
 . cvlasso $model, partial(svi) saveest(m)
@@ -2066,16 +2066,16 @@ Fold {res}1 2 3 4 5 6 7 8 9 10
 ^ lse = largest lambda for which MSPE is within one standard error of the minimal MSPE.
   Run model: {stata cvlasso, lse}
 {err}Warning: lopt is at the limit of the lambda range.
-{txt}r; t=1.48 10:19:40
+{txt}r; t=1.50 12:18:18
 
 {com}. 
 . // make sure that partial works
 . estimates restore m1
 {txt}(results {stata estimates replay m1:m1} are active now)
-r; t=0.00 10:19:40
+r; t=0.01 12:18:18
 
 {com}. assert "`e(partial)'"=="svi"
-{txt}r; t=0.00 10:19:40
+{txt}r; t=0.00 12:18:18
 
 {com}. 
 . 
@@ -2086,7 +2086,7 @@ r; t=0.00 10:19:40
 . * load example data
 . insheet using "$prostate", tab clear
 {txt}(11 vars, 97 obs)
-r; t=0.00 10:19:40
+r; t=0.00 12:18:18
 
 {com}. 
 . cvlasso $model, plotcv
@@ -2199,7 +2199,7 @@ Fold {res}1 2 3 4 5 6 7 8 9 10
   Run model: {stata cvlasso, lopt}
 ^ lse = largest lambda for which MSPE is within one standard error of the minimal MSPE.
   Run model: {stata cvlasso, lse}
-{res}{txt}r; t=1.44 10:19:41
+{res}{txt}r; t=1.43 12:18:19
 
 {com}. 
 . ********************************************************************************
@@ -2208,7 +2208,7 @@ Fold {res}1 2 3 4 5 6 7 8 9 10
 . 
 . webuse air2, clear
 {txt}(TIMESLAB: Airline passengers)
-r; t=0.37 10:19:42
+r; t=0.40 12:18:19
 
 {com}.  
 . cvlasso air L(1/12).air, rolling origin(130)
@@ -2320,11 +2320,11 @@ Training from-to (validation point): {res}13-130 (131), 13-131 (132), 13-132 (13
   Run model: {stata cvlasso, lopt}
 ^ lse = largest lambda for which MSPE is within one standard error of the minimal MSPE.
   Run model: {stata cvlasso, lse}
-r; t=11.63 10:19:53
+r; t=11.15 12:18:31
 
 {com}. // we should have 144-130=14 folds
 . assert 14==`e(nfolds)'
-{txt}r; t=0.00 10:19:53
+{txt}r; t=0.00 12:18:31
 
 {com}. 
 . cvlasso air L(1/12).air, rolling origin(130) h(2)
@@ -2436,11 +2436,11 @@ Training from-to (validation point): {res}13-130 (132), 13-131 (133), 13-132 (13
   Run model: {stata cvlasso, lopt}
 ^ lse = largest lambda for which MSPE is within one standard error of the minimal MSPE.
   Run model: {stata cvlasso, lse}
-r; t=10.40 10:20:04
+r; t=10.40 12:18:41
 
 {com}. // we should have 144-130-1=14 folds
 . assert 13==`e(nfolds)'
-{txt}r; t=0.00 10:20:04
+{txt}r; t=0.00 12:18:41
 
 {com}. 
 . cvlasso air L(1/12).air, rolling origin(130) fixedwin
@@ -2552,10 +2552,10 @@ Training from-to (validation point): {res}13-130 (131), 14-131 (132), 15-132 (13
   Run model: {stata cvlasso, lopt}
 ^ lse = largest lambda for which MSPE is within one standard error of the minimal MSPE.
   Run model: {stata cvlasso, lse}
-r; t=11.13 10:20:15
+r; t=11.37 12:18:52
 
 {com}. assert 14==`e(nfolds)'
-{txt}r; t=0.00 10:20:15
+{txt}r; t=0.00 12:18:52
 
 {com}. 
 . ********************************************************************************
@@ -2564,7 +2564,7 @@ r; t=11.13 10:20:15
 . 
 . use "http://fmwww.bc.edu/ec-p/data/macro/abdata.dta", clear
 {txt}(Layard & Nickell, Unemployment in Britain, Economica 53, 1986 from Ox dist)
-r; t=0.64 10:20:15
+r; t=0.64 12:18:53
 
 {com}. 
 . // FE and noftools options
@@ -2678,13 +2678,13 @@ Fold {res}1 2 3 4 5 6 7 8 9 10
   Run model: {stata cvlasso, lopt}
 ^ lse = largest lambda for which MSPE is within one standard error of the minimal MSPE.
   Run model: {stata cvlasso, lse}
-r; t=0.82 10:20:16
+r; t=0.88 12:18:54
 
 {com}. savedresults save ftools e()
-{txt}r; t=0.01 10:20:16
+{txt}r; t=0.00 12:18:54
 
 {com}. cap noi assert "`e(noftools)'"==""  // will be error if ftools not installed
-{txt}r; t=0.00 10:20:16
+{txt}r; t=0.00 12:18:54
 
 {com}. cvlasso ys l(0/3).k l(0/3).n, fe seed(123) noftools
 
@@ -2796,13 +2796,13 @@ Fold {res}1 2 3 4 5 6 7 8 9 10
   Run model: {stata cvlasso, lopt}
 ^ lse = largest lambda for which MSPE is within one standard error of the minimal MSPE.
   Run model: {stata cvlasso, lse}
-r; t=1.01 10:20:17
+r; t=1.00 12:18:55
 
 {com}. assert "`e(noftools)'"=="noftools"
-{txt}r; t=0.00 10:20:17
+{txt}r; t=0.00 12:18:55
 
 {com}. savedresults comp ftools e(), exclude(macros: lasso2opt)
-{txt}r; t=0.01 10:20:17
+{txt}r; t=0.00 12:18:55
 
 {com}. 
 . ********************************************************************************
