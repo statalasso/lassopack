@@ -1,98 +1,43 @@
-*! lasso2 1.0.11 29july2020
-*! lassopack package 1.4.0
+*! iclasso 1.0.02 31july2020
+*! based on lasso2 1.0.10 14oct2019
+*! lassopack package 1.3.1
 *! authors aa/ms
 
-* additional notes
-* return dof for 1 lambda
-* for ridge (or elastic net), maybe report last lambda instead of just knots?
+* Notes:
+* Add display of selected lambda to rlasso.
+* Make display consistent with rlasso (cons).
+* Sort out lambda vs newlambda vs lambdamat etc.
+* fix unused options in iclasso wrapper.
+* bug in lasso2 - stdcoef w/o prestd is ignored rather than triggering stdcoef
+* allow stdcoef w/o prestd (use std on-the-fly for speed)
+* now stdcoef => prestd automatically
+* add stdcoef to rlasso
+* ebicgamma
+* active set convergence issue (p. 7 FHT JSS 2010)
+* just warn about lambda edges, or more active response?
+* in lasso2, emphasise that adaloadings should be for standardized coeffs
+* state coefs are standarized in output?
+* to fix - prestd + stdcoef + cons and any partialled out wrong - cons and partialled-out vars need rescaling
+* in fact ... should just perhaps not report them. stdcoef = norecover.
+* norecover + stdcoef applies to lasso2, cvlasso etc. as well.
+* but has implications for partialling-out...
 
-* eclass wrapper for elastic net & sqrt-lasso estimation
-* all partialling, transformations, standardisation, FE, tempvars handled here
-* keeps lists of original and temp varlists
-* plotting supported using "plotpath" program
-* display of output handled by "DisplayPath" and "DisplayCoefs" programs
-* marksample and markout used here so that e(sample) can be saved
-* options relevant to eclass and saved results spelled out here
-* all varlists and options passed to lassoshooting
-* supports replay syntax
-* lasso2 accommodates two cases: scalar lambda or list of lambdas (default)
-
-* Updates (release date):
-* 1.0.03  (30jan2018)
-*         First public release.
-*         Promoted to require version 13 or higher.
-*         Added holdout option and related changes.
-*         Replaced noprestd with prestd and related changes; added unitloadings option.
-*         Recoding of cons and demeaning flags. Std loadings based on demeaned vars even with nocons.
-*         partial and nocons no longer compatible.
-* 1.0.04  (10feb2018)
-*         Support for Sergio Correia's FTOOLS FE transform (if installed).
-* 1.0.05  (4apr2018)
-*         Support for information criteria added. DisplayPath program has been modified accordingly.
-* 		  lic(string) and ic(string) options were added. Added various results that are stored in e().
-*		  See lassoutils 1.0.08 for underlying technical changes.
-*		  Added ic(none) and noic options; both suppress calculation of information criteria.
-* 1.0.06  (4sep2018)
-*         Fixed small typo in error message ("type 'lasso2, lic(ebic)' after estimation").
-* 		  lasso2 can now be directly called with lic() option, e.g. "lasso2 y x*, lic(ebic)" [24/04/18]
-* 		  Added plotpath(lnlambda) and adjusted parameters of plotlabel option. [27/04/18]
-*		  Added "ebicgamma" option, see notes in lassoutils.ado. [04/09/2018]
-*		  Fixed bug when fe used with partial(.).
-* 1.0.07  (8nov2018)
-*         Added saved value of objective function for estimation with a single lambda/alpha.
-*         Added version option
-*         Replaced "postest" option with name "postresults"; legacy support for postest.
-* 1.0.08  (12jan2019)
-*         Replace Ups terminology with Psi (penalty loadings)
-*         Bug fix - FE + weights would fail if data were not sorted on xtset panel var.
-* 1.0.09  (28jun2019)
-*         Minor tweaks to display table (to get line to default 80 chars) and message.
-*         Bug fix - plotvar(.) option would fail with FV interactions.
-*         Fix to accommodate if inrange(.) syntax.
-* 1.0.10  (4oct2019)
-*		  Fixed bug that occured when partial was used.
-*		  Fixed bug: post-lasso coefficients were sometimes not returned in e(b)
-* 1.1.11  (29july2020)
-*         Misc bug fixes: norecover option (should be ignored in DisplayCoefs - ignore if nothing
-*           partialled-out); stdcoef+prestd (stdcoef implies prestd); fe option requires earlier
-*           pre-check for markout; plot no longer assumes varabbrev=on.
-*         Model s (#selected) now excludes constant; consistently excludes constant, #partialled, #FE.
-*         Model df includes constant (if not FE), #partialled.
-*         Added dofminus/sdofminus to capture lost degrees of freedom from partial/FE.
-*         Added e(.) macros r2, df & untrunc lists lambdamat0, lmin0, lmax0.
-*         Added support for psolver option.
-
-program lasso2, eclass sortpreserve
+program iclasso, eclass sortpreserve
 	version 13
 	syntax [anything] [if] [in] [,					///
-			PLOTpath(string)						/// "norm" or "lambda" allowed
-			PLOTVar(varlist min=1 fv ts)			/// optional subset of variables to plot
-			partial(varlist fv ts)					///
-			psolver(string)							/// optional solver for partialling out
-			PLOTOpt(string)							/// options to pass to graph command
-			PLOTLabel 								///
-			POSTRESults								///
-			POSTEst 								/// legacy option, now replaced by postresults
-			NEWLambda(numlist >0 min=1 max=1)		///
-			NEWAlpha(numlist >=0 min=1 max=1)		///
-			wnorm									///
-			NOPATH									/// suppress display
 			displayall 								/// display zeros of beta, only applicable for one lambda
-			NORecover								/// don't recover partialled-out coeffs
+			NOGrid									/// no display of grid
 			long 									///
-			lic(string)								/// for replay
-			ic(string)								/// for lasso2 output
-			NOIC 									///
 			VERsion									///
-			OLS 									///
+			IC(string)								///
 			* 										///
 			]
 	
-	local lversion 1.0.11
-	local pversion 1.4.0
+	local lversion 1.0.00
+	local pversion 1.3.1
 
 	if "`version'" != "" {							//  Report program version number, then exit.
-		di in gr "lasso2 version `lversion'"
+		di in gr "iclasso version `lversion'"
 		di in gr "lassopack package version `pversion'"
 		ereturn clear
 		ereturn local version		`lversion'
@@ -100,248 +45,34 @@ program lasso2, eclass sortpreserve
 		exit
 	}
 	
-	*** legacy option postest replaced by postresults
-	if "`postest'" != "" {
-		local postresults postresults
-		di as err "'postest' option has been renamed to 'postresults'. Please use 'postresults' instead."
+	if ~replay() {
+		// if not replay, estimate / grid search
+		_iclasso `anything' `if' `in', ic(`ic') `options'
 	}
-	*
+	else if "`ic'"~="" & "`ic'"~="`e(ic)'" {
+		// replay with ic(.) option
+		// if ic is different, need to reestimate with lasso3
+		// new estimation results will be in e(.) macros
+		_reestimate, ic(`ic')
+	}
 
-	*** noic and ic(none)
-	// omit calculation of IC if either noic or ic(none) is used
-	if "`noic'"!="" {
-		local ic none
+	// display results
+	if "`nogrid'"=="" {
+		DispGrid
 	}
-	if "`ic'"=="none" {
-		local noic noic
-	}
-	*
-	
-	*** initialise local that saves whether est results are in hold
-	local inhold=0
-	
-	*** first run of _lasso2; there is a 2nd _lasso2 call if lic() is specified
-	// 3 cases:
-	// (a) no replay syntax (with or w/o lic): standard case; also used by cvlasso
-	// (b) replay syntax and lic(): re-run with lambda selected by IC
-	// (c) replay syntax and newlambda(): re-run with newlambda, used by lasso2_p
-	
-	if (~replay()) {
-		// no replay. estimate model.
-		// this is the standard case of a fully specified model.
-		// newlambda() and newalpha() are required for cvlasso.
-		
-		// noic and lic are incompatible
-		if ("`noic'"!="") & ("`lic'"!="") {
-			di as err "lic and noic are incompatible. noic ignored."
-			local noic 
-		}
-		if ("`lic'"!="") {
-			local notypemessage notypemessage
-		}
-		*
-		
-		// estimate
-		// bug fix:
-		// tokenize "`0'", parse(",")
-		// _lasso2 `1', `options'  ///
-		_lasso2 `anything' `if' `in', `options'		///
-						newlambda(`newlambda')		///	
-						newalpha(`newalpha')		///
-						partial(`partial')			///
-						psolver(`psolver')			///
-						`norecover'					///
-						`noic'						///
-						`ols' 
-		ereturn local lasso2opt `options'
-		
-	}
-	else if (replay()) & ("`newlambda'`newalpha'"!="") & ("`lic'"=="") {
-		// replay syntax. 
-		// re-estimate model with (new) single lambda (and alpha) value.
-		// newlambda() and newalpha() options are undocumented.
-		// this case is (primarily) intended for lasso2_p.
-		
-		// check for lasso2 results
-		if ("`e(cmd)'"!="lasso2") {
-			di as error "lasso2 estimation results not found"
-			exit 301
-		}
-		
-		// estimate
-		local depvar `e(depvar)'
-		local varXmodel `e(varXmodel)'
-		local lasso2opt `e(lasso2opt)'
-		local partial_vars `e(partial_var)'
-		tempvar esample
-		gen `esample' = e(sample) // ensure same sample is used
-		_lasso2 `depvar' `varXmodel' `partial_vars' if `esample', 	///
-								partial(`partial_vars')				///
-								psolver(`psolver')					///
-								`lasso2opt' 						///
-								newlambda(`newlambda') 				///
-								newalpha(`newalpha')				///
-								`ols'
-		ereturn local lasso2opt `lasso2opt' 
-	}
-	else if (replay()) & ("`newlambda'`newalpha'"=="") & ("`lic'"!="") {
-		// replay syntax. 
-		// re-estimate model with lic value.
-		
-		// check for lasso2 results
-		if ("`e(cmd)'"!="lasso2") {
-			di as error "lasso2 estimation results not found"
-			exit 301
-		}
-		*
+	DispHeader
+	DisplayCoefs, `displayall'
 
-		// set newlambda to lambda selected by IC
-		if ("`lic'"=="bic") {
-			local newlambda = e(lbic)
-		}
-		else if ("`lic'"=="aic") {
-			local newlambda = e(laic)
-		}
-		else if ("`lic'"=="aicc") {
-			local newlambda = e(laicc)
-		}
-		else if ("`lic'"=="ebic") {
-			//local ic ebic // is this required?
-			local newlambda = e(lebic)	
-		}
-		else {
-			di as err "lic(`lic') not allowed. Select aic, bic, aicc or ebic."
-			exit 198		
-		}
-		*
-		
-		// estimate
-		local depvar `e(depvar)'
-		local varXmodel `e(varXmodel)'
-		local lasso2opt `e(lasso2opt)'
-		local partial_vars `e(partial_var)'
-		local licstrupper=strupper("`lic'")
-		di as text ""
-		di as text "Use lambda=`newlambda' (selected by `licstrupper')."
-		tempvar esample
-		gen `esample' = e(sample) // ensure same sample is used
-		if ("`postresults'"=="") {
-			tempname model0
-			_estimates hold `model0'
-			local inhold = 1
-		}
-		_lasso2 `depvar' `varXmodel' `partial_vars' if `esample', 	///
-								partial(`partial_vars')				///
-								psolver(`psolver')					///
-								`lasso2opt' 						///
-								newlambda(`newlambda')				///
-								`ols'
-		ereturn local lasso2opt `lasso2opt' 
-	}
-	else {
-		if ("`newlambda'`newalpha'"!="") & ("`lic'"!="") {
-			di as error "internal lasso2 error. newlambda and lic specified."
-			exit 301
-		}
-	}
-	*
-	
-	*** show output if lambda is a list
-	if (`e(lcount)'>1) & !missing(`e(lcount)') {
-		// display should be the same as lic()
-		if "`lic'"!="" {
-			local ic `lic'
-		}
-		*
-		if "`nopath'"=="" {
-			DisplayPath, `wnorm' `long' ic(`ic') `notypemessage'
-		}
-		if ("`plotpath'`plotvar'`plotopt'"!="")  {
-			plotpath, plotpath(`plotpath') 		///
-					  plotvar(`plotvar')   		///
-					  plotopt(`plotopt') 		///
-					  `plotlabel'				///
-					  `wnorm' 
-		}
-	}
-	*
-		
-	*** second run of _lasso2
-	// only applicable if lasso2 is called with lic option
-	// re-estimate for single lambda	
-	if (~replay()) & ("`lic'"!="") {
-	
-		* check that lambda was a list in previous estimation
-		if (`e(lcount)'==1) {
-			di as err "lic() only allowed if lambda() is a list."
-			exit 198
-		}
-		* set newlambda to lambda selected by IC
-		if ("`lic'"=="aic") {
-			local newlambda = e(laic)
-		}
-		else if ("`lic'"=="bic") {
-			local newlambda = e(lbic)
-		} 
-		else if ("`lic'"=="aicc") {
-			local newlambda = e(laicc)
-		}
-		else if ("`lic'"=="ebic") {
-			local newlambda = e(lebic)
-		}
-		else {
-			di as err "lic(`lic') not allowed. Select aic, bic, aicc or ebic."
-			exit 198		
-		}
-
-		local depvar `e(depvar)'
-		local varXmodel `e(varXmodel)'
-		local lasso2opt `e(lasso2opt)'
-		local partial_vars `e(partial_var)'
-		local licstrupper=strupper("`lic'")
-		di as text ""
-		di as text "Use lambda=`newlambda' (selected by `licstrupper')."
-		tempvar esample
-		gen `esample' = e(sample) // ensure same sample is used
-		if ("`postresults'"=="") {
-			tempname model0
-			_estimates hold `model0'
-			local inhold = 1
-		}
-		_lasso2 `depvar' `varXmodel' `partial_vars' if `esample', 	///
-								partial(`partial_vars')				///
-								psolver(`psolver')					///
-								`lasso2opt' 						///
-								newlambda(`newlambda') 				///
-								`ols'
-		ereturn local lasso2opt `lasso2opt' 
-	}
 	*
  
-	*** Show ouput if lambda is a scalar
-	if `e(lcount)'==1 {
-		// norecover should be ignored in DisplayCoefs, depends only on what was estimated
-		DisplayCoefs, `displayall'
-		if ("`plotpath'`plotvar'`plotopt'`plotlabel'"!="") {
-			di as error "Plotting only supported for list of lambda values."
-			di as error "Plotting options ignored."
-		}
-	}
-	*
-
-	*** unhold estimation results
-	if ("`postresults'"=="") & (`inhold'==1) {
-		_estimates unhold `model0'
-	}
 end
 
-program _lasso2, eclass sortpreserve
+program _iclasso, eclass sortpreserve
 	version 13
 
 	syntax varlist(numeric min=2 fv ts) [if] [in] [,	///
 			NOTPen(string) 							/// list of variables not penalised
 			PARtial(string)							/// string so that list can contain "_cons"
-			psolver(string)							/// optional solver for partialling out
 			fe										/// do within-transformation
 			NOCONStant								///
 			NORecover 								/// recover partialled out coefficients
@@ -354,78 +85,192 @@ program _lasso2, eclass sortpreserve
 			displaynames_d(string)					/// corresponding display names of vars
 			pminus(int 0)							/// not used; just means rlasso code also works here
 			///
+			/// info criterion
+			IC(string)								///
+			///
 			/// lambda
-			Lambda(numlist >0 min=1 descending)		/// either list or scalar
+			Lambda(numlist >0 min=1 descending)		/// expect list (syntax check captured below)
+			LCount0(integer 100)					/// 0 to preserve original
+			LMAX(real 0) 							///
+			LMINRatio(real 1e-4)					/// ratio of maximum to minimum lambda
 			LFactor(real 1) 						/// 
-			LAMBDAMat(string)						/// alternative: specify lambda as matrix
-			NEWLambda(numlist >0 min=1  max=1 )		/// scalar
-			NEWPloadings(string) 					///
+			LAMBDAMat0(string)						/// alternative: specify lambda as matrix; 0 to preserve original
 			Ploadings(string) 						///
 			UNITLoadings							///
 			///
-			/// standardisation
+			/// standardization
 			PREStd 									///
 			STDCoef 								/// 
-			///
 			/// choice of estimator
-			ADAptive  								/// adaptive lasso
-			ADATheta(real 1) 						/// gamma paramater for adapLASSO
-			ADALoadings(string)						///
-			ALPha(numlist >=0 ascending) 			/// elastic net parameter
-			NEWAlpha(numlist >=0 min=1  max=1) 		///
 			SQRT 									/// square-root lasso
+			RIDGE									///
+			LASSO									///
+			ENET									///
 			OLS										///
+			///
+			/// adaptive lasso
+			ADAptive  								/// adaptive lasso
+			ADATheta(numlist >=0 ascending) 		/// theta parameter for adaLASSO
+			ADALoadings(string)						///
+			///
+			///
+			ALPha(numlist >=0 ascending) 			/// elastic net parameter
+			AMIN(real 0)							///
+			AMAX(real 1)							///
+			ACount0(integer 5)						/// 0 to preserve original
 													///
 			POSTAll									///
 			holdout(varlist numeric min=1 max=1) 	///
 													///
 			NOFTOOLS								///
+			psolver(string)							/// optional choice of solver
 													///
-			NOIC									///
 			*										///
 			]
 
-	*** flags	
+
+	** flags
+	local ridgeflag		="`ridge'"~=""
+	local sqrtflag		="`sqrt'"~=""
+	local enetflag		="`enet'"~=""
+	local lassoflag		="`lasso'"~="" | (`ridgeflag' + `sqrtflag' + `enetflag')==0
 	local feflag=("`fe'"~="")
-	local debugflag	=("`debug'"~="")
+	*
+
+	** set IC default
+	if "`ic'"=="" {
+		local ic bic
+	}
+	else {
+		local ic = strlower("`ic'")
+	}
 	*
 	
-	** reset lambda, used for predict & replay
-	if ("`newlambda'"!="") {
-		local lambda = `newlambda'
+	** alpha list / elastic net
+	// elastic net
+	// alpha list implies elastic net
+	// alphalist0 is original list in original order
+	// alphalist is reordered for estimation purposes
+	local acount			: word count `alpha'
+	if `acount' > 0 {
+		// user provided a list of alphas
+		local enetflag		= 1
+		local lassoflag		= 0
+		// overwrite default acount0
+		local acount0		= `acount'
+		local alphalist0	`alpha'
 	}
-	if ("`newalpha'"!="") {
-		local alpha = `newalpha'
+	else if `enetflag' & `acount'==0 {
+		// user indicated elastic net but with no list of alphas
+		// calculate default alpha grid using default acount0
+		local adelta		= (`amax'-`amin')/(`acount0'-1)
+		numlist "`amin'(`adelta')`amax'"
+		local alphalist0	`r(numlist)'
+		// update acount
+		local acount		: word count `alphalist0'
 	}
-	if ("`newploadings'"!="") {
-		tempname ploadings
-		mat `ploadings' = `newploadings'
-		// clear these macros
-		local adaptive
-		local prestd
+	else {
+		// overwrite default acount0
+		local acount0		= `acount'
 	}
-	// set alpha default. 
-	local alphacount	: word count `alpha'
-	if (`alphacount'==0) {
-		local alpha = 1	
+	// process alphas, update alpha count, etc.
+	// alpha defined for all estimators so acount must be updated
+	if (`acount'==0) {
+		if (`lassoflag' | `sqrtflag') {
+			local alpha		= 1
+			local alphalist	1
+		}
+		else if `ridgeflag' {
+			local alpha		= 0
+			local alphalist	0
+		}
+		// and update acount
+		local acount	= 1
 	}
-	else if (`alphacount'>1) {
-		di as err "alpha() must be a scalar."
-		exit 198
+	else {
+		// the lambda grid created by lassoutils depends on alpha
+		// we want the grid created in the first iteration to have the smallest lambda endpoint
+		// ensured by making the first alpha the biggest
+		forvalues i=1/`acount' {
+			local a	: word `i' of `alphalist0'
+			local alphalist `a' `alphalist'
+		}
+		// overwrite alpha
+		// first alpha to iterate over
+		local alpha 	: word 1 of `alphalist'
 	}
-	// adapative - any adaptive options/variants implies adaptive
-	if ("`adaloadings'"~="") | (`adatheta'~=1) {
+	*
+
+	** theta list / adalasso
+	local tcount0			: word count `adatheta'		// count of adaptive lasso parameter; 0 for consistency with lambda
+	local adaflag			="`adaptive'"~="" | `tcount0'>0 | "`adaloadings'"~=""
+	if `adaflag' {
 		local adaptive adaptive
 	}
+	// maintain thetalist0/tcount0 and thetalist0/thetalist; 0 fixed, no zero may change
+	if (`tcount0'==0) {
+		// default list is [ 1 ]
+		local thetalist0	1
+		local thetalist		`thetalist0'
+		local tcount		= 1
+		// update
+		local tcount0		= 1
+		local tcount		= `tcount0'
+		// first theta to iterate over
+		local theta			= 1
+	}
+	else {
+		local tcount		= `tcount0'
+		local thetalist0	`adatheta'
+		local thetalist		`thetalist0'
+		local theta	: word 1 of `thetalist0'
+	}
+	// any theta not equal to 1 implied prestd
+	local one				1
+	local thetanotone		: list thetalist - one
+	local thetanotone		: word count `thetanotone'
+	if `thetanotone' {
+		di as text "note: theta <1 or >1 implies prestd; data will be pre-standardized" 
+		local prestd		prestd
+	}
 	*
-	
+
 	****** syntax checks *******************************************************
-	if (`alpha'>1) | (`alpha'<0) {
-		di as err "alpha is out of range."
+	if (`ridgeflag'+`lassoflag'+`enetflag'+`sqrtflag')>1 {
+		di as err "incompatible options: `ridge' `lasso' `enet' `sqrt'"
 		exit 198
 	}
-	if ("`sqrt'"!="") & (`alpha'!=1) {
-		di as error "sqrt-lasso only allowed with alpha=1."
+	local iclist aic aicc ebic bic
+	local checklist	: list ic - iclist
+	local checknum	: word count `checklist'
+	if `checknum' {
+		di as err "syntax error - `ic' invalid IC option"
+		exit 198
+	}
+	if `acount'==1 {
+		if (`alpha'>1) | (`alpha'<0) {
+			di as err "error - alpha is out of range."
+			exit 198
+		}
+		if (`lassoflag' | `sqrtflag') & (`alpha'~=1)  {
+			di as err "error - `lasso'`sqrt' requires alpha=1"
+			exit 198
+		}
+		if (`ridgeflag') & (`alpha'~=0)  {
+			di as err "error - ridge requires alpha=0"
+			exit 198
+		}
+		if ("`sqrt'"!="") & (`alpha'!=1) {
+			di as error "error - sqrt-lasso allowed only with alpha=1."
+			exit 198
+		}
+	}
+	else if `enetflag'==0 {
+		di as err "error - alpha list allowed only with elastic net estimator"
+		exit 198
+	}
+	else if (`amin'<0) | (`amax'>1) {
+		di as err "error - alpha is out of range."
 		exit 198
 	}
 	local notpenpar : list notpen & partial
@@ -433,6 +278,8 @@ program _lasso2, eclass sortpreserve
 		di as error "`notpenpar' listed in both notpen(.) and partial(.)"
 		exit 198
 	}
+// ms bug fix: 
+*	if ("`stdcoef'"!="") & ("`prestd'"!="") {
 	if ("`stdcoef'"!="") & ("`prestd'"=="") {
 		di as text "note: option stdcoef implies prestd; data will be pre-standardized" 
 		local prestd prestd
@@ -445,9 +292,13 @@ program _lasso2, eclass sortpreserve
 	*
 	****************************************************************************
 	
+	*** debug mode; create flag
+	local debugflag	=("`debug'"~="")
+	*
+	
 	*** Record which observations have non-missing values
 	marksample touse
-	// need to check panel var up here
+	// need to check panel var as well
 	if `feflag' {
 		cap xtset
 		local ivar	`r(panelvar)'
@@ -463,7 +314,7 @@ program _lasso2, eclass sortpreserve
 	}
 	*
 
-	*** FEs.
+	*** FEs. Create 1/0 flag.
 	if `feflag' {
 		if "`ivar'"=="" {
 			di as err "Error: fe option requires data to be xtset"
@@ -495,9 +346,7 @@ program _lasso2, eclass sortpreserve
 	// default is to use standardization loadings; overridden by ploadings, unitloadings, pre-standardization, adaptive
 	local stdloadflag	= ("`ploadings'`unitloadings'`prestd'`adaptive'"=="")
 	local sqrtflag 		= ("`sqrt'"!="")
-	// ignore norecover if no partialled-out variables
-	local parrflag		= ("`norecover'"=="") & (`partialflag' | `prestdflag')
-
+	local parrflag		= ("`norecover'"=="")	
 	// if partial list has factor vars, will need to be replaced with tempvars
 	cap _fv_check_depvar `partial'
 	local partialfvflag	=(_rc==198)
@@ -648,7 +497,7 @@ program _lasso2, eclass sortpreserve
 	//  p is calculated in lassoutils/_rlasso as number of model vars excluding constant
 	//  here we calculate which of the model vars are unpenalized or omitted/base vars
 	//  to provide as `pminus' to lassoutils/_rlasso (unless provided by user)
-	//  do here so that code above is compatible with lasso2
+	//  do here so that code above is compatible with iclasso
 	//  use _o names / display names since they have info on whether var is omitted/base/etc.
 	if ~`pminus' {
 		foreach vn of local varXmodel_d {								//  display names
@@ -684,7 +533,6 @@ program _lasso2, eclass sortpreserve
 	//  If no FE: leave original variables unchanged.
 	//            partial-out low-dim ctrls from temp variables.
 	//            if no FE/low-dim ctrls, no transform needed
-	// dofminus/sdofminus captures lost degrees of freedom from FE/partialling
 
 	local dofminus	=0										//  overwritten by FE count
 	local sdofminus	=`consmodel'							//  initial "small" df count is cons/nocons
@@ -692,7 +540,7 @@ program _lasso2, eclass sortpreserve
 	if `feflag' {											//  FE-transform all variables
 		fvrevar `varY_o' `varX_o' if `touse'				//  in case any FV or TS vars in _o list
 		local vlist `r(varlist)'
-		lassoutils `vlist',									/// call on _o list
+		lassoutils `vlist',								/// call on _o list
 						touse(`touse') 						///
 						toest(`toest') 						///
 						tvarlist(`varY_t' `varX_t')			/// overwrite/initialize these
@@ -738,9 +586,9 @@ program _lasso2, eclass sortpreserve
 						touse(`touse') 						///
 						toest(`toest') 						///
 						partial(`pvlist')					///
+						psolver(`psolver')					/// optional choice of solver
 						tvarlist(`varY_t' `varXmodel_t')	/// overwrite/initialize these
 						partialflag(`partialflag')			/// triggers branching to partial utility
-						psolver(`psolver')					/// optional choice of solver
 						dmflag(0)							//  data are not yet demeaned
 		local sdofminus	=r(rank)							//  overwrite sdofminus with #partialled
 		local dmflag	=1									//  data are now demeaned
@@ -786,36 +634,88 @@ program _lasso2, eclass sortpreserve
 	}
 
  	*************** lambda to matrix **************************************************
+// ms note - now the original lcount is lcount0 and original matrix is lambdamat0
+// macro lcount gets overwritten
 	if ("`lambda'"!="") {
-		local lcount	: word count `lambda'
-		tempname lambdamat0
-		mat `lambdamat0'	= J(1,`lcount',.)
+		// lambda list provided in macro form
+		// overwrite default lcount
+		local lcount0		: word count `lambda'
+		local lcount		= `lcount0'
+		if `lcount0'==1 {
+			di as err "error - lambda list must have at least 2 entries"
+			exit 198
+		}
+		// overwrite default lambda0
+		tempname lambdamat0 lambdamat
+		mat `lambdamat0'	= J(1,`lcount0',.)
 		local j = 1
 		foreach lami of local lambda {
 			mat `lambdamat0'[1,`j'] = `lami'  
 			local j=`j'+1
 		}
 		// optional adjustment using undocumented lfactor option
-		// used for CV
-		mat `lambdamat0'=`lambdamat0'*`lfactor'
+		mat `lambdamat0'	=`lambdamat0'*`lfactor'
+		mat `lambdamat'		= `lambdamat0'
 	}
-	else if ("`lambdamat'"!="") {
-		tempname lambdamat0
-		mat `lambdamat0'=`lambdamat'
+	else if ("`lambdamat0'"!="") {
+		// lambdamat0 provided
+		// overwrite default lcount
+		local lcount0	= colsof(`lambdamat0')
+		local lcount	= `lcount0'
+		if `lcount0'==1 {
+			di as err "error - lambda list must have at least 2 entries"
+			exit 198
+		}
 		// optional adjustment using undocumented lfactor option
-		// used for CV
 		mat `lambdamat0'=`lambdamat0'*`lfactor'
+		tempname lambdamat
+		mat `lambdamat'=`lambdamat0'
+	}
+	else {
+		// macro `lambdamat0' is empty so will be constructed by lassoutils
+		local lcount	= `lcount0'
+	}
+	*
+
+ 	*************** alpha to matrix **************************************************
+	if (`acount0'>1) {
+		tempname alphamat0
+		mat `alphamat0'	= J(1,`acount0',.)
+		local j = 1
+		foreach ai of local alphalist0 {
+			mat `alphamat0'[1,`j'] = `ai'  
+			local j=`j'+1
+		}
+	}
+	*
+
+ 	*************** theta to matrix **************************************************
+	if (`tcount0'>1) {
+		tempname thetamat0
+		mat `thetamat0'	= J(1,`tcount0',.)
+		local j = 1
+		foreach ti of local thetalist0 {
+			mat `thetamat0'[1,`j'] = `ti'  
+			local j=`j'+1
+		}
 	}
 	*
 	
 	************* Partialling/standardization END ***********************************************
-	
-	*** Lasso estimation with transformed/partialled-out vars
+
+	************** Lasso estimation with transformed/partialled-out vars
 	if "`verbose'`vverbose'"=="" {
 		local quietly "quietly"							//  don't show lassoutils output
 	}	
 
-	*** Lasso estimation
+	************* Lasso/Ridge/Enet estimation - first iteration *********************************
+	// will be the only iteration if looping through lambda only
+	// will be initial iteration if then looping through alpha/theta/lambda
+	
+	if `adaflag' {
+		`quietly' di as text "Initial iteration: theta=" %5.3f `theta' " ..."
+	}
+	`quietly' di as text "Initial iteration: alpha=" %5.3f `alpha' " ..."
 	`quietly' lassoutils `varY_t',							///
 					path									/// branches to _lassopath
 					toest(`toest')							///
@@ -827,13 +727,13 @@ program _lasso2, eclass sortpreserve
 					sdofminus(`sdofminus')					/// dofs lost from partialling
 					notpen_o(`notpen_d') 					/// not penalised (display name)
 					notpen_t(`notpen_t')					///
-					lambda(`lambdamat0')					/// pass to lassoshooting
+					lambda(`lambdamat0')					/// original (untruncated) lambdamat
 					`adaptive'								///
-					adatheta(`adatheta')					///
+					adatheta(`theta')						///
 					adaloadings(`adaloadings')				///
 					`sqrt'									///
 					`ols'									///
-					alpha(`alpha')							///
+					alpha(`alpha')							/// initial alpha
 					stdy(`prestdY')							///
 					stdx(`prestdX')							///
 					stdl(`stdloadflag')						/// use standardisation loadings
@@ -841,19 +741,199 @@ program _lasso2, eclass sortpreserve
 					ploadings(`ploadings') 					///
 					`verbose' `vverbose'					///
 					holdout(`holdout')						///
-					`noic' 									///
+					lcount(`lcount0')						/// first iteration only
+					lmax(`lmax')							/// first iteration only
+					lminratio(`lminratio')					/// first iteration only
 					`options'
 
+	tempname lambdas lambdas0
+	// truncated and untruncated lambda list
+	mat `lambdas'	=r(lambdalist)
+	mat `lambdas0'	=r(lambdalist0)
+	// lambda grid may be shortened if endpoint encountered
+	local lcount	=r(lcount)
+	// min and max of untruncated grid
+	local lmin0		=r(lmin0)
+	local lmax0		=r(lmax0)
+
+	tempname fullmat
+	local cnames	lambda alpha theta aic aicc bic ebic s df rss ess r2
+	mat `fullmat' = r(lambdalist), J(`lcount',1,`alpha'), J(`lcount',1,`theta')
+	mat `fullmat'	= `fullmat', r(aic), r(aicc), r(bic), r(ebic), r(shat), r(dof), r(rss), r(ess), r(rsq)
+	mat colnames `fullmat' = `cnames'
+	// initialize rcount
+	local rcount 1
+	forvalues i=1/`lcount' {
+		local rnames	`rnames' r`rcount'
+		local ++rcount
+	}
+	// need this only once
+	local ebicgamma = r(ebicgamma)
+	// initialize mat lists and minimizing values
+	tempname aicmat aiccmat bicmat ebicmat
+	foreach m in aic aicc bic ebic {
+		mat ``m'mat'			= J(1,7,.)
+		mat colnames ``m'mat'	= icmin lambda alpha theta min max endpoint
+		mat ``m'mat'[1,1]		= r(`m'min)
+		mat ``m'mat'[1,2]		= `lambdas'[r(l`m'id),1]
+		mat ``m'mat'[1,3]		= `alpha'
+		mat ``m'mat'[1,4]		= `theta'
+		mat ``m'mat'[1,5]		= `lmin0'
+		mat ``m'mat'[1,6]		= `lmax0'
+		// endpoint refers to truncated list
+		// -1 <=> lower endpoint, +1 <=> upper endpoint, 0 <=> interior of lambda grid
+		if ``m'mat'[1,2] == `lambdas'[1,1] {
+			mat ``m'mat'[1,7]	= +1				//  upper endpoint (max)
+		}
+		else if ``m'mat'[1,2] == `lambdas'[`lcount',1] {
+			mat ``m'mat'[1,7]	= -1				//  lower endpoint (min)
+		}
+		else {
+			mat ``m'mat'[1,7]	= 0					//  interior of grid
+		}
+		
+	}
+
+	************* Elastic net / Adaptive LASSO estimation - 2nd+ iterations *****************
+
+	// outer loop ii over theta
+	// inner loop jj over alpha
+	// ii=jj=1 initialization has already taken place so do not execute block if ii=jj=1
+	// note we can now use the existing (untruncated) list of lambdas
+
+	forvalues ii=1/`tcount' {
+		local theta	: word `ii' of `thetalist'
+		
+		forvalues jj=1/`acount' {
+			local alpha	: word `jj' of `alphalist'
+		
+			if ~((`ii'==1) & (`jj'==1)) {		// do not enter if ii=jj=1
+						
+				if `adaflag' {
+					`quietly' di as text "Iterating: theta=" %5.3f `theta' " ..."
+				}
+				if `enetflag' {
+					`quietly' di as text "Iterating: alpha=" %5.3f `alpha' " ..."
+				}
+			
+				`quietly' lassoutils `varY_t',							///
+								path									/// branches to _lassopath
+								toest(`toest')							///
+								xnames_o(`varXmodel_d')					/// display name
+								xnames_t(`varXmodel_t')					///
+								consflag(`consflag')					/// =0 if cons already partialled out or if no cons
+								dmflag(`dmflag')						/// =1 if data have been demeaned
+								dofminus(`dofminus')					/// dofs lost from FEs
+								sdofminus(`sdofminus')					/// dofs lost from partialling
+								notpen_o(`notpen_d') 					/// not penalised (display name)
+								notpen_t(`notpen_t')					///
+								lambda(`lambdamat0')					/// original (untruncated) lambdamat
+								`adaptive'								///
+								adatheta(`theta')						///
+								adaloadings(`adaloadings')				///
+								`sqrt'									///
+								`ols'									///
+								alpha(`alpha')							///
+								stdy(`prestdY')							///
+								stdx(`prestdX')							///
+								stdl(`stdloadflag')						/// use standardisation loadings
+								stdcoef(`stdcoefflag')					/// return in standard units
+								ploadings(`ploadings') 					///
+								`verbose' `vverbose'					///
+								holdout(`holdout')						///
+								lcount(`lcount0')						/// 
+								lmax(`lmax')							/// 
+								lminratio(`lminratio')					/// 
+								`options'
+		
+				mat `lambdas'	=r(lambdalist)
+				mat `lambdas0'	=r(lambdalist0)
+				// lambda grid may be shortened if endpoint encountered
+				local lcount	=r(lcount)
+				// min and max of untruncated grid
+				local lmin0		=r(lmin0)
+				local lmax0		=r(lmax0)
+				// append results
+				tempname thismat
+				mat `thismat' = r(lambdalist)
+				mat `thismat'	= `thismat', J(`lcount',1,`alpha'), J(`lcount',1,`theta')
+				mat `thismat'	= `thismat', r(aic), r(aicc), r(bic), r(ebic), r(shat), r(dof), r(rss), r(ess), r(rsq)
+				mat `fullmat'	= `fullmat' \ `thismat'
+				forvalues i=1/`lcount' {
+					local rnames	`rnames' r`rcount'
+					local ++rcount
+				}
+				
+				foreach m in aic aicc bic ebic {
+					if r(`m'min) < ``m'mat'[1,1] {
+						mat ``m'mat'[1,1]	= r(`m'min)
+						mat ``m'mat'[1,2]	= `lambdas'[r(l`m'id),1]
+						mat ``m'mat'[1,3]	= `alpha'
+						mat ``m'mat'[1,4]	= `theta'
+						mat ``m'mat'[1,5]	= `lmin0'
+						mat ``m'mat'[1,6]	= `lmax0'
+						if ``m'mat'[1,2] == `lambdas'[1,1] {
+							mat ``m'mat'[1,7]	= +1				//  upper endpoint (max)
+						}
+						else if ``m'mat'[1,2] == `lambdas'[`lcount',1] {
+							mat ``m'mat'[1,7]	= -1				//  lower endpoint (min)
+						}
+						else {
+							mat ``m'mat'[1,7]	= 0					//  interior of grid
+						}
+					}
+				}
+			}	// end block of code to execute in loop
+	
+		}	// end alpha loop
+
+	}	// end theta loop
+
+	mat rownames `fullmat' = `rnames'
+	
 	************* Finish up ********************************************************
 
-	*** Create macros etc.
-	local lcount	=r(lcount)
-	if (`lcount'==1) { //------- scalar lambda -----------------------------------------------//	
-		
+	// set depending on which IC used
+	local icmin		= ``ic'mat'[1,1]
+	local llambda	= ``ic'mat'[1,2]
+	local aalpha	= ``ic'mat'[1,3]
+	local tmin		= ``ic'mat'[1,4]
+
+	tempname lambdamat1
+	mat `lambdamat1' = `llambda'
+
+	*** Lasso re-estimation with selected hyperparameters
+	`quietly' lassoutils `varY_t',							///
+					path									/// branches to _lassopath
+					toest(`toest')							///
+					xnames_o(`varXmodel_d')					/// display name
+					xnames_t(`varXmodel_t')					///
+					consflag(`consflag')					/// =0 if cons already partialled out or if no cons
+					dmflag(`dmflag')						/// =1 if data have been demeaned
+					dofminus(`dofminus')					/// dofs lost from FEs
+					sdofminus(`sdofminus')					/// dofs lost from partialling
+					notpen_o(`notpen_d') 					/// not penalised (display name)
+					notpen_t(`notpen_t')					///
+					lambda(`lambdamat1')					/// chosen lambda
+					`adaptive'								///
+					adatheta(`tmin')						/// chosen theta
+					adaloadings(`adaloadings')				///
+					`sqrt'									///
+					`ols'									///
+					alpha(`aalpha')							/// chosen alpha
+					stdy(`prestdY')							///
+					stdx(`prestdX')							///
+					stdl(`stdloadflag')						/// use standardisation loadings
+					stdcoef(`stdcoefflag')					/// return in standard units
+					ploadings(`ploadings') 					///
+					`verbose' `vverbose'					///
+					holdout(`holdout')						///
+					`options'
+
 		*** e-return lasso estimation results
 		tempname b beta betaOLS Psi stdvec
 		tempname betaAll betaAllOLS
-		tempname lambda lambda0 rmse rmseOLS objfn r2 df
+		tempname rmse rmseOLS objfn r2 df
 		if "`cluster'" ~= "" {
 			local N_clust		=r(N_clust)
 		}
@@ -864,9 +944,9 @@ program _lasso2, eclass sortpreserve
 		mat `Psi'			=r(Psi)
 		//*//mat `sPsi'			=r(sPsi)
 		mat `stdvec'		=r(stdvec)
-		scalar `lambda'		=r(lambda)
+		//*//scalar `lambda'		=r(lambda)
 		//*//scalar `slambda'	=r(slambda)
-		scalar `lambda0'	=r(lambda0)
+		//*//scalar `lambda0'	=r(lambda0)
 		scalar `rmse'		=r(rmse)		//  Lasso RMSE
 		scalar `rmseOLS'	=r(rmseOLS)		//  post-Lasso RMSE
 		scalar `r2'			=r(r2)
@@ -882,7 +962,6 @@ program _lasso2, eclass sortpreserve
 		//*//local robust		`r(robust)'
 		//*//local center		=r(center)
 		local sqrtflag 		=r(sqrt)
-		local alpha			=r(alpha)
 		local olsflag 		= r(olsflag)
 		local method		`r(method)'		//  lasso or sqrt-lasso
 		local niter			=r(niter)
@@ -915,7 +994,7 @@ program _lasso2, eclass sortpreserve
 			mat list `betaOLS'
 		}
 		*
-
+		
 		*********** Get coeff estimates for partialled-out vars. ********************
 		if `feflag' & `partialflag' {					//  FE case and there are partialled-out notpen vars
 			restore										//  Restores dataset with tempvars after FE transform but before notpen partialled out
@@ -990,14 +1069,13 @@ program _lasso2, eclass sortpreserve
 		ereturn local varXmodel		`varXmodel_d'		//  display name
 		ereturn local varX			`varX_d'			//  display name
 		ereturn local method		`method'
-		ereturn local predict		lasso2_p
-		ereturn local cmd			lasso2
-		//*//ereturn scalar pminus		=`pminus'
+		ereturn local predict		iclasso_p
+		ereturn local cmd			iclasso
+ 		//*//ereturn scalar pminus		=`pminus'
 		//*//ereturn scalar center		=`center'
 		ereturn scalar cons			=`consmodel'
 		//*//ereturn scalar slambda		=`slambda'
 		//*//ereturn scalar lambda0		=`lambda0'
-		ereturn scalar lambda		=`lambda'
 
 		if "`N_clust'" ~= "" {
 			ereturn local clustvar	`clustvar'
@@ -1029,7 +1107,7 @@ program _lasso2, eclass sortpreserve
 		ereturn matrix betaOLS		=`betaOLS'
 		ereturn matrix beta			=`beta'
 
-		// lasso2-specific:
+		// iclasso-specific:
 		// constant is always considered partialled out
 		if (`consmodel') {
 			local selected0		`selected0' _cons
@@ -1047,474 +1125,355 @@ program _lasso2, eclass sortpreserve
 		ereturn scalar partial_ct	=`partial_ct'		//  number of partialled-out INCLUDING CONS
 		*		
 		
-		*** more lasso2 ereturns
-		ereturn scalar alpha		=`alpha'
+		*** more iclasso ereturns
+		ereturn scalar lambda		=`lambdamat1'[1,1]	//  IC-maximizing lambda
+		ereturn scalar alpha		=`aalpha'
+		ereturn scalar theta		=`tmin'
 		ereturn scalar fe 			=`feflag'
-		ereturn scalar sqrt  		= `sqrtflag'
-		ereturn scalar prestd		= `prestdflag'
-		ereturn scalar ols 			= `olsflag'
-		ereturn scalar adaptive		= "`adaptive'"!=""
-		ereturn scalar lcount		=`lcount'
-
-		ereturn scalar dofminus		=`dofminus'
-		ereturn scalar sdofminus	=`sdofminus'
-	
-	}
-	else if (`lcount'>1) { //------- list of lambdas -------------------------------------------------//
-	
-		*** Create macros etc.
-		local nobs		=r(N)
-		local lcount	=r(lcount)
-		local method	`r(method)'	//  "lasso", "sqrt-lasso", "elastic net"
-		local alpha 	= r(alpha)
-		local sqrt		= r(sqrt)
-		tempname Psi sups stdvec  
-		mat `Psi' = r(Psi)
-		mat `stdvec'	= r(stdvec)
-		local olsflag 	= r(olsflag)
-		local xvars		`varXmodel_o'
-		local depvar	`r(depvar)'
-		local lmin		=r(lmin)
-		local lmin0		=r(lmin0)
-		local lmax		=r(lmax)
-		local lmax0		=r(lmax0)
-		tempname betas lambdas lambdas0 l1norm wl1norm Rsquared dof shat shat0
-		mat `betas'		=r(betas)
-		mat `lambdas'	=r(lambdalist)
-		mat `lambdas0'	=r(lambdalist0)
-		mat `l1norm'	=r(l1norm)
-		mat `wl1norm'	=r(wl1norm)
-		mat `Rsquared'	=r(Rsquared)
-		mat `dof'		=r(dof)
-		mat `shat'		=r(shat)
-		mat `shat0'		=r(shat0)
-		local s			=r(s)
-		if ("`holdout'"!="") {
-			tempname mspe0
-			mat `mspe0' = r(mspe)
-			//mat list `mspe0'
-		}	
-		else if "`noic'"=="" {
-			tempname rss ess tss rsq aicmat bicmat aiccmat ebicmat
-			mat `rss' = r(rss)
-			mat `ess' = r(ess)
-			mat `tss' = r(tss)
-			mat `rsq' = r(rsq)	
-			// aic
-			mat `aicmat' = r(aic)
-			local aicmin = r(aicmin)
-			local laicid = r(laicid)
-			local laic = `lambdas'[`laicid',1]
-			// aicc
-			mat `aiccmat' = r(aicc)
-			local aiccmin = r(aiccmin)
-			local laiccid = r(laiccid)
-			local laicc = `lambdas'[`laiccid',1]
-			// ebic
-			mat `ebicmat' = r(ebic)
-			local ebicmin = r(ebicmin)
-			local lebicid = r(lebicid)
-			local ebicgamma = r(ebicgamma)
-			local lebic = `lambdas'[`lebicid',1]
-			// bic
-			mat `bicmat' = r(bic)
-			local bicmin = r(bicmin)
-			local lbicid = r(lbicid)
-			local lbic = `lambdas'[`lbicid',1]
-		}
-
-		*********** Unstandardize = convert coef estimates etc. back into original units
-		// standardization removed constant if present so k is number of elements in vectors
-		local cnames_o	: colnames `betas'
-		local pmodel	: word count `cnames_o' 
-
-		*********** Get coeff estimates for constant and/or unpenalized vars. ********************
-		if (!`feflag') & ((`partialflag') | (`consmodel' & `prestdflag')) & (`parrflag') {	
-		// recovery of constant 
-		// only supported if there are no other partialled out regressors and no FE
-
-			fvstrip `cnames_o'					//  colnames may insert b/n/o operators - remove
-			local cnames_o	`r(varlist)'
-			matchnames "`cnames_o'" "`varlist_o'" "`varlist_t'"
-			local cnames_t	`r(names)'
-			
-			tempname bi binew betasnew
-			forvalues i= 1/`lcount' {
-				mat `bi' = `betas'[`i',1..`pmodel']
-				lassoutils `varY_o',						///
-					unpartial								///
-					touse(`toest')							///
-					beta(`bi')								///
-					scorevars(`cnames_o')					///
-					partial(`partial_t')					///
-					names_o(`varlist_o')					/// dictionary
-					names_t(`varlist_t')					///	dictionary
-					consmodel(`consmodel')
-				mat `binew' = r(b)
-				if `i'==1 {
-					mat `betasnew' = `binew'
-				}
-				else {
-					mat `betasnew' = (`betasnew' \ `binew')
-				}
-			}
-			mat `betas' = `betasnew'
-		}		
-		*
-	
-		*** ereturns
-		ereturn post    , obs(`N') depname(`varY_d') esample(`toest')	//  display name
-		ereturn scalar cons 		=`consmodel'
-		ereturn scalar fe 			=`feflag'
-		ereturn scalar alpha		=`alpha'
 		ereturn scalar sqrt  		=`sqrtflag'
-		ereturn scalar ols	 		=`olsflag' 
-		ereturn scalar adaptive		="`adaptive'"!=""
-		ereturn scalar p 			=`p'
-		local notpen_ct		: word count `notpen_d'		//  number of notpen INCLUDING CONSTANT (if not partialled-out)
-		local partial_ct	: word count `partial_d'	//  number of partialled-out INCLUDING CONSTANT
-		ereturn scalar notpen_ct	=`notpen_ct'		//  number of notpen INCLUDING CONS (unless partialled-out)
-		ereturn scalar partial_ct	=`partial_ct'		//  number of partialled-out INCLUDING CONS
 		ereturn scalar prestd		=`prestdflag'
-		ereturn scalar lcount 		=`lcount'
-		ereturn scalar lmax			=`lmax'
-		ereturn scalar lmax0		=`lmax0'
-		ereturn scalar lmin			=`lmin'
-		ereturn scalar lmin0		=`lmin0'
-		ereturn local noftools		`noftools'
-		ereturn local method		`method'
-		ereturn local predict		lasso2_p
-		ereturn local cmd			lasso2
-		ereturn local varXmodel		`varXmodel_d'		//  display name
-		ereturn local varX			`varX_d'			//  display name
-		ereturn local partial		`partial_d'			//  display name
-		ereturn local partial_var 	`partial'
-		ereturn local notpen		`notpen_d'			//  display name
-		ereturn matrix l1norm		=`l1norm'
-		ereturn matrix wl1norm		=`wl1norm'
-		ereturn matrix Psi			=`Psi'
-		ereturn matrix betas		=`betas' 	 
-		ereturn matrix dof			=`dof'
-		ereturn matrix s			=`shat'
-		ereturn matrix s0			=`shat0'
-		ereturn matrix lambdamat	=`lambdas'
-		ereturn matrix lambdamat0	=`lambdas0'
+		ereturn scalar ols 			=`olsflag'
+		ereturn scalar adaptive		= "`adaptive'"!=""
+		if `adaflag' {
+			ereturn scalar tmin		=`tmin'
+		}
+		if "`adaloadings'"~="" {
+			ereturn matrix adaloadings	=`adaloadings', copy	//  copy so that original stays in memory
+		}
+		ereturn local ic			`ic'
+		ereturn scalar lasso		=`lassoflag'
+		ereturn scalar ridge		=`ridgeflag'
+		ereturn scalar enet			=`enetflag'
 		ereturn scalar dofminus		=`dofminus'
 		ereturn scalar sdofminus	=`sdofminus'
-		ereturn matrix stdvec		=`stdvec'
-		if ("`holdout'"!="") {
-			ereturn matrix mspe = `mspe0'
+
+		*** iclasso grid ereturns
+// refers to untruncated grid
+		ereturn scalar lcount 		=`lcount0'
+// ms note - lambdas0 is a col vector, lambdamat0 is a row vector, alphamat0 is a row vector ... we save col vectors
+//		ereturn matrix lambdamat	=`lambdas0'
+		if `acount0'>1 {
+			mat `alphamat0'			= `alphamat0''
+			ereturn matrix alphamat	= `alphamat0'
 		}
-		else if "`noic'"=="" {
-			ereturn scalar aicmin = `aicmin'
-			//ereturn scalar laicid = `laicid'
-			ereturn scalar bicmin = `bicmin'
-			//ereturn scalar lbicid = `lbicid'
-			ereturn scalar aiccmin = `aiccmin'
-			//ereturn scalar laiccid = `laiccid'
-			ereturn scalar ebicmin = `ebicmin'
-			ereturn scalar ebicgamma = `ebicgamma'
-			//ereturn scalar lebicid = `lebicid'
-			ereturn matrix rss 		= `rss' 
-			ereturn matrix ess 		= `ess' 
-			ereturn matrix tss		= `tss' 
-			ereturn matrix rsq 		= `rsq' 
-			ereturn matrix aic 		= `aicmat' 
-			ereturn scalar laic		= `laic'
-			ereturn matrix bic 		= `bicmat' 
-			ereturn scalar lbic		= `lbic'
-			ereturn matrix aicc		= `aiccmat' 
-			ereturn scalar laicc	= `laicc'
-			ereturn matrix ebic		= `ebicmat' 
-			ereturn scalar lebic 	= `lebic'
+		if `tcount0'>1 {
+			mat `thetamat0'			= `thetamat0''
+			ereturn matrix thetamat	= `thetamat0'
 		}
-	}
+//		ereturn scalar lmax			=`lmax'
+//		ereturn scalar lmin			=`lmin'
+		ereturn matrix aicmat		= `aicmat'
+		ereturn matrix aiccmat		= `aiccmat'
+		ereturn matrix bicmat		= `bicmat'
+		ereturn matrix ebicmat		= `ebicmat'
+		ereturn scalar ebicgamma	= `ebicgamma'
+		ereturn matrix gridmat		= `fullmat'
+
+
 end
 
+program define _reestimate, eclass
+	version 13
+	syntax [anything] , IC(string)
 
-program define plotpath
-
-	syntax [anything] [, 	plotvar(string)		///
-							plotpath(string)	///
-							plotopt(string)		///
-							plotlabel			///
-							wnorm				///
-							]
-	
-	version 12
-	
-	if ("`plotpath'"!="") {
-	
-		if (("`plotpath'"!="lambda") & ("`plotpath'"!="norm") & ("`plotpath'"!="lnlambda")) {
-			di as err "Plotpath() allows 'lambda', `lnlambda' or 'norm'."
-			error 198
+		tempname icresults icmat
+		tempname b beta betaOLS betaAll betaAllOLS
+		tempname rmse prmse rmseOLS pmse r2 df
+		tempvar esample
+		local y						`e(depvar)'
+		local X						`e(varX)'
+		// icmat has maximizing hyperparameter values for specified IC criterion
+		mat `icmat'					= e(`ic'mat)
+		local lambda				= `icmat'[1,2]
+		local alpha					= `icmat'[1,3]
+		local theta					= `icmat'[1,4]
+		if e(sqrt) {
+			local l3options `l3options' sqrt
 		}
-	
-// Contents of b matrix and lambda vector made into Stata variables for plotting.
-// Varnames taken from colnames of b matrix.
-// Strip out constant (if it's there) since creating a variable called _cons not alllowed.
-// If `plotvar' macro is empty, graph all regressors.
-		tempname lambdas l1norm 
-		tempvar touse
-		gen `touse'=e(sample)
-		mat b=e(betas)
-		//mat lambdalist = e(lambdalist)
-		mat `lambdas' = e(lambdamat)
-		if "`wnorm'"=="" {
-			mat `l1norm' = e(l1norm)
+		if e(adaptive) {
+			local l3options `l3options' adaptive adatheta(`theta')
+			tempname aload
+			mat `aload'				= e(adaloadings)
+			if ~matmissing(`aload') {
+				local l3options `l3options' adaloadings(`aload')
+			}
+		}
+		local l3options				`l3options' notpen(`e(notpen)')
+		local consname				_cons
+		local partial				`e(partial)'
+		local partial				: list partial - consname
+		local l3options				`l3options' partial(`partial')
+		qui gen `esample'			= e(sample)
+		_estimates hold `icresults'
+		
+		qui lasso3 `y' `X' if `esample', lambda(`lambda') alpha(`alpha') `l3options'
+		
+		mat `b'						= e(b)
+		mat `beta'					= e(beta)
+		mat `betaOLS'				= e(betaOLS)
+		mat `betaAll'				= e(betaAll)
+		mat `betaAllOLS'			= e(betaAllOLS)
+		local k						= e(k)
+		local selected				`e(selected)'
+		local selected0				`e(selected0)'
+		local s						= e(s)
+		local s0					= e(s0)
+		local niter					= e(niter)
+		local method				`e(method)'
+		scalar `rmse'				= e(rmse)
+		scalar `rmseOLS'			= e(rmseOLS)
+		scalar `pmse'				= e(pmse)
+		scalar `prmse'				= e(prmse)
+		scalar `r2'					= e(r2)
+		scalar `df'					= e(df)
+		_estimates unhold `icresults'
+		ereturn repost b = `b', resize
+		ereturn matrix betaAllOLS	=`betaAllOLS'
+		ereturn matrix betaAll		=`betaAll'
+		ereturn matrix betaOLS		=`betaOLS'
+		ereturn matrix beta			=`beta'
+		ereturn scalar k			=`k'
+		ereturn scalar s			=`s'
+		ereturn scalar s0			=`s0'
+		ereturn scalar rmse			=`rmse'
+		ereturn scalar rmseOLS		=`rmseOLS'
+		ereturn scalar r2			=`r2'
+		ereturn scalar df			=`df'
+		if e(sqrt) {
+			ereturn scalar prmse		=`prmse'
 		}
 		else {
-			mat `l1norm' = e(wl1norm)
+			ereturn scalar pmse			=`pmse'
 		}
-		local lcount = e(lcount)
-		local cons = e(cons)
-		if `cons' {
-			local rb1 = colsof(b) - 1	//  constant is in the last column
-			mat b = b[1...,1..`rb1']
+		ereturn scalar niter		=`niter'
+		ereturn scalar lambda		=`lambda'
+		ereturn scalar alpha		=`alpha'
+		if e(adaptive) {
+			ereturn scalar theta	=`theta'
 		}
-		local bnames : colnames b
-		fvstrip `bnames'				//  annoying - Stata inserts b/n etc. in first factor variable etc.
-		local bnames `r(varlist)'
-// process pv names
-		if "`plotvar'"=="" {
-			local pvnames `bnames'		//  plot all
-		}
-		else {							//  plot user-provided
-			fvstrip `plotvar' if `touse', expand dropomit
-			local pvnames	`r(varlist)'
-		}
-		foreach pvn in `pvnames' {		//  unab one-by-one to standardise, get i prefix etc.
-			fvunab pvn_unab	: `pvn'
-			local pvnames_unab `pvnames_unab' `pvn_unab'
-		}
-// process b names
-		foreach bn in `bnames' {		//  unab one-by-one to standardise, get i prefix etc.
-			fvunab bn_unab	: `bn'
-			local bnames_unab `bnames_unab' `bn_unab'
-		}
-// now that unabbreviated varlists are prepared, check that plotvars are in regressors
-		if "`plotvar'"~="" {
-			local nplotvarcheck	 : list pvnames_unab - bnames_unab
-			if ("`nplotvarcheck'"!="") {								
-				di as error "Variable(s) `nplotvarcheck' of plotvar() not listed as regressor(s)." 
-				exit 198
-			}
-		}
-// in case there are any . or # operators included, change to "_" or "__"
-		local bnames	: subinstr local bnames_unab "." "_", all count(local numsubs)
-		local pvnames	: subinstr local pvnames_unab "." "_", all count(local numsubs)
-		local bnames	: subinstr local bnames "#" "__", all count(local numsubs)
-		local pvnames	: subinstr local pvnames "#" "__", all count(local numsubs)
-// check for max number of variables to plot
-		local npv : word count `pvnames'
-		if `npv' >= 100 {
-			di as err "Error: lassopath can graph at most 99 regressors"
-			di as err "       use plotvar(.) option to specify subset of regressors"
-			exit 103
-		}
+		ereturn local selected		`selected'
+		ereturn local selected0		`selected0'
+		ereturn local ic			`ic'
+		ereturn local method		`method'
 
-// create graphing data and then plot
- 		preserve						//  do this here so that above vars exist
-		clear
-		qui svmat b
-		foreach var of varlist b* {
-			tokenize `bnames'
-			rename `var' `1'
-			mac shift
-			local bnames `*'
-		}
-		if "`plotpath'"=="lnlambda" {
-			qui svmat `lambdas', names("lambda")
-			replace lambda1 = ln(lambda1)
-			if ("`plotlabel'"!="") {
-				local txt
-				local xcoord = lambda1[1]-abs(lambda1[_N]-lambda1[1])*1.03
-				local xcoordminus = lambda1[1]-abs(lambda1[_N]-lambda1[1])*1.1
-				foreach var of varlist `pvnames' {	
-					local ycoord = `var'[_N] 
-					local vn = abbrev("`var'",8)
-					local txt `txt' text(`ycoord' `xcoord' `"`vn'"', place(w) just(left) size(small))	
-				}
-				local yscalealt yscale(alt)
-				local xscale xscale(range(`xcoordminus'))		//  extend plot area on left to allow room for varnames
-			}  
-			twoway line `pvnames' lambda1, `plotopt' `txt' `yscalealt' xtit("ln(Lambda)") `graphr' `xscale'
-		}
-		else if "`plotpath'"=="lambda" {
-			qui svmat `lambdas', names("lambda")
-			if ("`plotlabel'"!="") {
-				local txt
-				local xcoord = -abs(lambda1[1])*0.03
-				local xcoordminus = -abs(lambda1[1])*0.15
-				foreach var of varlist `pvnames' {	
-					local ycoord = `var'[_N] 
-					local vn = abbrev("`var'",8)
-					local txt `txt' text(`ycoord' `xcoord' `"`vn'"', place(w) just(left) size(small))	
-				}
-				local yscalealt yscale(alt)
-				local xscale xscale(range(`xcoordminus'))		//  extend plot area on left to allow room for varnames
-			}  
-			twoway line `pvnames' lambda1, `plotopt' `txt' `yscalealt' xtit("Lambda") `graphr' `xscale'
-		}
-		else {
-			qui svmat `l1norm', names("l1norm")
- 			sort l1norm1
-			if ("`plotlabel'"!="") {
-				local txt
-				local xcoord = l1norm1[_N]*1.02		//  extend plot area on right to allow room for varnames
-				local xcoordplus = l1norm1[_N]*1.1
-				foreach var of varlist `pvnames' {
-					local ycoord = `var'[_N]
-					local vn = abbrev("`var'",8)
-					local txt `txt' text(`ycoord' `xcoord' `"`vn'"', place(e) just(left) size(small))
-				}
-				local xscale xscale(range(`xcoordplus'))
-			}
-			if "`wnorm'"=="" {
-				local xtitle L1 Norm
-			}
-			else {
-				local xtitle Weighted L1 Norm
-			}
-
-			line `pvnames' l1norm, `plotopt' `txt' xtit("`xtitle'") `graphr' `xscale'
-		}
-
- 		restore
-	}
-	*
-	
 end
 
+program define DispGrid
+	version 11.2
 
-// Display table of path with knots, lambda, vars added/removed etc.
-program define DisplayPath
-	//syntax [anything] [, stdcoef(int 0)]
-	syntax [anything] [, wnorm long ic(string) NOTYpemessage ]
+	tempname gridmat
+	mat `gridmat'		= e(gridmat)
+	local gridrows		= rowsof(`gridmat')
+	
+	tempname aicmat aiccmat bicmat ebicmat
+	mat `aicmat'		= e(aicmat)
+	mat `aiccmat'		= e(aiccmat)
+	mat `bicmat'		= e(bicmat)
+	mat `ebicmat'		= e(ebicmat)
+	
+	local alphachar = uchar(945)
+	local thetachar = uchar(952)
+	local bline {hline 9}
+	local header {space 3}Lambda{space 1}
+	if e(enet) {
+		local bline `bline'{hline 5}
+		local header `header'{space 2}`alphachar'{space 2}
+	}
+	if e(adaptive) {
+		local bline `bline'{hline 5}
+		local header `header'{space 2}`thetachar'{space 2}
+	}
+	local bline `bline'{hline 1}{c +}{hline 40}{c +}{hline 18}
+	local header `header'{c |}{space 4}AIC{space 7}AICC{space 6}BIC{space 7}EBIC{space 2}{c |}{space 3}s{space 4}df{space 4}R-sq
 
-	version 12
-	tempname betas r1 r2 vnames d addedM removedM lambdas dof l1norm vnames0 allselected allsec
-	tempname icmat rsq
-	
-	***** information criteria *************************************************
-	if ("`ic'"=="") {
-		local ic ebic
-	}
-	if ("`ic'"!="aic") & ("`ic'"!="bic") & ("`ic'"!="aicc") & ("`ic'"!="ebic") & ("`ic'"!="none") {
-		di as err "Option ic(`ic') not allowed. Using the default ic(ebic)."
-		local ic ebic
-	}
-	if ("`ic'"=="ebic") {
-		mat `icmat' 	=e(ebic)
-		local icmin 	=e(ebicmin)
-		local ic EBIC
-	}
-	else if ("`ic'"=="aic") {
-		mat `icmat' 	=e(aic)
-		local icmin 	=e(aicmin)
-		local ic AIC
-	}
-	else if ("`ic'"=="bic") {
-		mat `icmat' 	=e(bic)
-		local icmin 	=e(bicmin)
-		local ic BIC
-	}
-	else if ("`ic'"=="aicc") {
-		mat `icmat' 	=e(aicc)
-		local icmin 	=e(aiccmin)	
-		local ic AICc
-	}
-	else {
-		mat `icmat' 	=.
-		local icmin 	=.
-		local ic IC
-	}
-	****************************************************************************
-	
-	mat `lambdas'	=e(lambdamat)
-	mat `dof'		=e(s)
-	mat `rsq' 		=e(rsq)
-	mata: `vnames'	=st_matrixcolstripe("e(betas)")		// starts as k x 2
-	mata: `vnames'	=(`vnames'[.,2])'					// take 2nd col and transpose into row vector
-	mata: `betas'	=st_matrix("e(betas)")
-	mata: `r1'		=(`betas'[1,.] :!= 0)
-	mata: `addedM'	=select(`vnames', (`r1' :== 1))
-	mata: st_local("added",invtokens(`addedM'))
-	local knot		=0
-	mata: `r1'		=J(1,cols(`betas'),0)
 	di
-	if "`wnorm'"=="" {
-		mat `l1norm' = e(l1norm)
-		di as text "  Knot{c |}  ID     Lambda    s      L1-Norm        `ic'" _c
-		di as text _col(58) "R-sq   {c |} Action"
+//	di as text "{hline 80}"
+	di as text "`header'"
+	di as text "`bline'"
+	forvalues i=1/`gridrows' {
+	
+		if `i'==1 {
+			// initialize
+			if e(enet) {
+				local this_alpha	=`gridmat'[`i',"alpha"]
+			}
+			if e(adaptive) {
+				local this_theta	=`gridmat'[`i',"theta"]
+			}
+		}
+		else {
+			// print line if alpha or theta change (but not twice)
+			local blineflag	= 0
+			if e(enet) {
+				if `this_alpha'~=`gridmat'[`i',"alpha"] {
+					// display line and update alpha
+					local this_alpha	=`gridmat'[`i',"alpha"]
+					di as text "`bline'"
+					local blineflag		= 1
+				}
+			}
+			if e(adaptive) {
+				if `this_theta'~=`gridmat'[`i',"theta"] {
+					// display line and update theta
+					local this_theta	=`gridmat'[`i',"theta"]
+					if `blineflag'==0 {
+						di as text "`bline'"
+					}
+					local blineflag		= 1
+				}
+			}
+		}
+	
+		local c	=0
+		di as res %9.4f `gridmat'[`i',"lambda"] _c
+		local c	=`c'+11
+		di _col(`c') _c
+		if e(enet) {
+			local c	=`c'+1
+			di _col(`c') _c
+			di as res %3.1f `gridmat'[`i',"alpha"] _c
+			local c	=`c'+4
+			di _col(`c') _c
+		}
+		if e(adaptive) {
+			local c	=`c'+1
+			di _col(`c') _c
+			di as res %3.1f `gridmat'[`i',"theta"] _c
+			local c	=`c'+4
+			di _col(`c') _c
+		}
+		di as text _col(`c') "{c |}" _c
+		local c	=`c'+2
+		di _col(`c') _c
+		
+		di as res %8.2f `gridmat'[`i',"aic"] _c
+		if `gridmat'[`i',"aic"]==`aicmat'[1,"icmin"] {
+			di as text "*" _c
+		}
+		local c	=`c'+10
+		di _col(`c') _c
+		
+		di as res %8.2f `gridmat'[`i',"aicc"] _c
+		if `gridmat'[`i',"aicc"]==`aiccmat'[1,"icmin"] {
+			di as text "*" _c
+		}
+		local c	=`c'+10
+		di _col(`c') _c
+
+		di as res %8.2f `gridmat'[`i',"bic"] _c
+		if `gridmat'[`i',"bic"]==`bicmat'[1,"icmin"] {
+			di as text "*" _c
+		}
+		local c	=`c'+10
+		di _col(`c') _c
+
+		di as res %8.2f `gridmat'[`i',"ebic"] _c
+		if `gridmat'[`i',"ebic"]==`ebicmat'[1,"icmin"] {
+			di as text "*" _c
+		}
+		local c	=`c'+9
+		di _col(`c') _c
+
+		di as text _col(`c') "{c |}" _c
+		local c	=`c'+2
+		di _col(`c') _c
+
+		di as res %3.0f `gridmat'[`i',"s"] _c
+		local c	=`c'+3
+		di _col(`c') _c
+
+		di as res %7.1f `gridmat'[`i',"df"] _c
+		local c	=`c'+7
+		di _col(`c') _c
+		
+		di as res %7.3f `gridmat'[`i',"r2"] _c
+		di
+	}
+	di as text "{helpb iclasso##minic:*}indicates minimum IC."
+end
+
+program define DispHeader
+	version 11.2
+
+	tempname icmat
+	local ic 			`e(ic)'
+	mat `icmat'			= e(`ic'mat)
+	local ebicgamma		= e(ebicgamma)
+	local icmin			= `icmat'[1,1]
+	local endpoint		= `icmat'[1,7]
+	
+	tempname lambdamat alphamat thetamat
+	local lmin			= `icmat'[1,5]
+	local lmax			= `icmat'[1,6]
+	mat `alphamat'		= e(alphamat)
+	mat `thetamat'		= e(thetamat)
+	local acount		= rowsof(`alphamat')
+	if `acount'>1 {
+		mata: st_local("alphalist",invtokens(strofreal(st_matrix("e(alphamat)"))'))
+		// insert commas
+		local alphalist	: subinstr local alphalist " " ", ", all
+	}
+	local tcount		= rowsof(`thetamat')
+	if `tcount'>1 {
+		mata: st_local("thetalist",invtokens(strofreal(st_matrix("e(thetamat)"))'))
+		// insert commas
+		local thetalist	: subinstr local thetalist " " ", ", all
+	}
+
+	local icstrupper=strupper("`ic'")
+	di as text ""
+	di as text "Minimized `icstrupper':" _col(26) as res %9.2f `icmin'
+	if "`ic'"=="ebic" {
+		if `ebicgamma'==0 {
+			local extratext " (equivalent to BIC)"
+		}
+		di as text "EBIC gamma:" _col(27) as res %5.3f `ebicgamma' as text "`extratext'"
+	}
+	if `e(adaptive)' {
+		di as text "Adaptive theta:" _col(26) as res %5.1f `e(tmin)'
+	}
+	if `e(enet)' {
+		if `e(alpha)'==0 {
+			local extratext " (Ridge)"
+		}
+		else if `e(alpha)'==1 {
+			local extratext " (Lasso)"
+		}
+		di as text "Elastic net with lambda = " as res %8.4f `e(lambda)' as text " and alpha = " as res %5.3f `e(alpha)' as text "`extratext'"
 	}
 	else {
-		mat `l1norm' = e(wl1norm)
-		di as text "  Knot{c |}  ID     Lambda    s     wL1-Norm        `ic'" _c
-		di as text _col(58) "R-sq   {c |} Action"  
+		di as text "Lambda:" _col(29) as res %8.4f `e(lambda)'
 	}
-	// line is always 80 chars
-	di as text "{hline 6}{c +}{hline 57}{c +}{hline 15}"
-	forvalues i=1/`e(lcount)' {
-		mata: `r2'			=(`betas'[`i',.] :!= 0)
-		mata: `d'			=`r2'-`r1'
-		mata: `addedM'		=select(`vnames',(`d' :== 1))
-		mata: `allselected' = (sum(`r2':==0))==0 // = 1 if all selected
-		mata: st_numscalar("`allsec'",`allselected')
-		mata: st_local("added",invtokens(`addedM'))
-		mata: `removedM'	=select(`vnames',(`d' :== -1))
-		mata: st_local("removed",invtokens(`removedM'))
-		if ("`added'`removed'" ~= "") | ("`long'"!="") { 
-			if ("`added'`removed'" ~= "") {
-				local ++knot
-				di as res %6.0f `knot' _c
-			}
-			di as text _col(7) "{c |}" _c
-			di as res %4.0f `i' _c
-			di as res _col(13) %10.5f el(`lambdas',`i',1) _c
-			di as res _col(25) %4.0f el(`dof',`i',1) _c
-			di as res _col(31) %10.5f el(`l1norm',`i',1) _c
-			di as res _col(43) %11.5f el(`icmat',`i',1) _c			//  can be negative so add a space
-			if ("`long'"!="") & (reldif(`icmin',el(`icmat',`i',1))<10^-5) & ("`icmin'"!=".") {
-				di as text "*" _c
-			}
-			else {
-				di as text " " _c
-			}
-			di as res _col(56) %7.4f el(`rsq',`i',1) _c
-			di as text _col(65) "{c |}" _c
-			// clear macro
-			macro drop _dtext
-			if (`i'==1) & (`allsec') {
-				local dtext All selected.
-			}
-			else {
-				if "`added'" ~= "" {
-					local dtext Added `added'.
-				}
-				if "`removed'" ~= "" {
-					local dtext `dtext' Removed `removed'.
-				}
-			}
-			DispVars `dtext', _lc1(7) _lc2(65) _col(67)
+
+	di as text "Lambda grid:"  as res %4.0f `e(lcount)' as text " points in" _col(30) "[" as res %5.3f `lmin' as text ", " as res %7.3f `lmax' as text "]"
+	
+	if `endpoint' ~= 0 {
+		if `endpoint' == -1 {
+			local whichend "lower"
 		}
-		mata: `r1'		=`r2'
+		else {
+			local whichend "upper"
+		}
+		di as text "Warning: lambda is at the `whichend' boundary of the evaluated gridpoints."
 	}
-	local iclower = strlower("`ic'")
-	if ("`long'"=="") {
-		di as text "Use {bf:long} option for full output."
+
+	if `acount' > 1 {
+		di "{txt}Alpha grid:"					 _col(30) "[{res}`alphalist'{txt}]"
 	}
-	else if ("`ic'"!="IC") {
-		di as text "{helpb lasso2##aicbic:*}indicates minimum `ic'."
+	if `tcount' > 1 {
+		di "{txt}Theta grid:"					 _col(30) "[{res}`thetalist'{txt}]"
 	}
-	if ("`ic'"!="IC") & ("`notypemessage'"=="") {
-		di as text											///
-			"{p 0 6 2}"										///
-			"Type e.g. {stata lasso2, lic(`iclower')}"		///
-			" to run the model selected by `ic'."			///
-			"{p_end}"
+	di "{txt}N:"								_col(25) as res %7.0f e(N)
+	di "{txt}p (ex. partialled, cons):"			_col(28) as res %4.0f e(p)
+	di "{txt}s (ex. partialled, cons):"			_col(28) as res %4.0f e(s)
+	di "{txt}#partialled+cons:"					_col(28) as res %4.0f e(sdofminus)
+	if e(alpha)<1 {
+		di "{txt}Effective df (incl. p, c):"	_col(28) as res %9.4f e(df)
 	}
-	mata: mata drop `betas' `r1' `r2' `vnames' `d' `addedM' `removedM'
+	else {
+		di "{txt}Effective df (incl. p, c):"	_col(28) as res %4.0f e(df)
+	}
+	di "{txt}In-sample R-sq: "					_col(28) as res %9.4f e(r2)
 	
 end
 
@@ -1554,7 +1513,7 @@ program define DispVars
 end
 
 // Used in rlasso and lasso2.
-// version  2020-07-26
+// version  2020-02-21
 prog DisplayCoefs
 
 	syntax	,								///
@@ -1574,7 +1533,7 @@ prog DisplayCoefs
 		local partial
 		local partial_ct	=0
 	}
-	
+
 	// varlists
 	local selected		`e(selected)'
 	fvstrip `selected'
@@ -1691,7 +1650,7 @@ prog DisplayCoefs
 	}
 	if `partial_ct' {
 		di as text "{hline `varwidth1'}{c +}{hline 32}"
-		di as text _col(`varwidthm13') "Partialled-out{help lasso2##examples_partialling:*}{c |}"
+		di as text _col(`varwidthm13') "Partialled-out{help iclasso##examples_partialling:*}{c |}"
 		di as text "{hline `varwidth1'}{c +}{hline 32}"
 		local i = `lastcol'+1
 		while `i' <= `col_ct' {
@@ -1724,7 +1683,7 @@ prog DisplayCoefs
 	di as text "{hline `varwidth1'}{c BT}{hline 32}"
 	
 	if `anynotpen' {
-		di "{help lasso2##examples_partialling:*Not penalized}"
+		di "{help iclasso##examples_partialling:*Not penalized}"
 	}
 	
 end
