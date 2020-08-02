@@ -1,5 +1,5 @@
 *! lasso2_p 1.0.06 14oct2019
-*! lassopack package 1.3.1
+*! lassopack package 1.4
 *! authors aa/ms
 *
 * post-estimation predict for both lasso2 and cvlasso.

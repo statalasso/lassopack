@@ -1,7 +1,7 @@
 {smcl}
 {* *! version 4oct2019}{...}
 {hline}
-{cmd:help lassologit}{right: lassopack v1.3.1}
+{cmd:help lassologit}{right: lassopack v1.4}
 {cmd:help rlassologit}
 {cmd:help cvlassologit}
 {hline}

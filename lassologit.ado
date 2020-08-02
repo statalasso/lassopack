@@ -1,5 +1,5 @@
 *! lassologit (v0.3)
-*! part of lassopack v1.3.1
+*! part of lassopack v1.4
 *! last edited: 15oct2019
 *! authors: aa/ms/cbh
 
