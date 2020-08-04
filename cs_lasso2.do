@@ -1,5 +1,5 @@
 * certification script for 
-* lassopack package 1.1.4 4aug2020, aa/ms
+* lassopack package 1.4.0 4aug2020, aa/ms
 * parts of the script use R's glmnet, Matlab code "SqrtLassoIterative.m", 
 * and Wilbur Townsend's elasticregress for validation
 
