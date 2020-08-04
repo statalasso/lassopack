@@ -122,6 +122,7 @@
 *         Bug fix in adaptive lasso relating to omitted vars (would get a missing penalty loading).
 *         Reverted to adaptive lasso behavior where any omitted vars trigger univariate OLS.
 *         Bug fix in lmax+prestd option (lmax should be rescaled).
+*         Reporting bug fix with vverbose option and elastic net - wrong obj fn. (Reporting only.)
 
 
 program lassoutils, rclass sortpreserve
@@ -2616,7 +2617,7 @@ struct betaStruct DoShooting(									///
 					// elastic net
 					fobj	= mean( (((*d.y):-d.ymvec) - ((*d.X):-d.mvec)*beta):^2 )	///
 								+ lambda/d.n *alpha    *Psi*abs(beta)					///
-								+ lambda2/d.n*(1-alpha)*Psi*(beta:^2)
+								+ lambda2/d.n*(1-alpha)*Psi2*(beta:^2)
 					printf("{res}%8.0g %8.0g %14.8e %14.8e %14.8e %14.8e %14.8e\n",		///
 						m,																///
 						m*d.p,															///
