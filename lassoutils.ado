@@ -1,4 +1,4 @@
-*! lassoutils 1.2.01 29july2020
+*! lassoutils 1.2.02 4aug2020
 *! lassopack package 1.4.0
 *! authors aa/cbh/ms
 
@@ -117,6 +117,11 @@
 *         Default solver for partialling is now qrxx = QR+quadcross (was SVD+QR).
 *         Warning issued if collinearities encountered when partialling out.
 *         Bug fix in case all ICs were missing.
+*         nodevcrit option (uses full lambda list irrespective of size of deviance in path)
+* 1.2.02 (4aug2020)
+*         Bug fix in adaptive lasso relating to omitted vars (would get a missing penalty loading).
+*         Reverted to adaptive lasso behavior where any omitted vars trigger univariate OLS.
+*         Bug fix in lmax+prestd option (lmax should be rescaled).
 
 
 program lassoutils, rclass sortpreserve
@@ -964,12 +969,13 @@ program define _lassopath, rclass sortpreserve
 					mat `adaptivePsi' = `adaptivePsi'[1,1..`pmodel']
 				}
 				*** check if there are any zeros in e(b)
+				// nb: will be triggered by e.g. base factor variables as well
 				forvalue i = 1(1)`pmodel' {
 					local zerosinada = `zerosinada' + (abs(el(`adaptivePsi',1,`i'))<10e-10)
 				}
 			}
 			if (`pmodel'>=`nobs') | (`zerosinada'>0) { // is dim(X)> n ? if yes, do univariate OLS
-					`quietly' di as text "Adaptive weights calculated using univariate OLS regressions." // since dim(X)>#Observation."
+				`quietly' di as text "Adaptive weights calculated using univariate OLS regressions." // since dim(X)>#Observation."
 					mat `adaptivePsi' = J(1,`pmodel',0)
 					local ip=1
 					foreach var of varlist `varXmodel' {
@@ -1004,12 +1010,14 @@ program define _lassopath, rclass sortpreserve
 			fvstrip `ebnames'
 			local ebnames `r(varlist)'
 			// need to check against original names since varXmodel names can have temps (partial, FE, etc.)
-			local ebnamescheck: list xnames_o - ebnames
+			fvstrip `xnames_o'
+			local onames `r(varlist)'
+			local ebnamescheck: list onames - ebnames
 			if ("`ebnamescheck'"!="") {
 				di as err "`ebnamescheck' not in matrix `adaloadings' as colnames."
 				exit 198
 			}
-			local ebnamescheck: list ebnames - xnames_o
+			local ebnamescheck: list ebnames - onames
 			// automatically ignore _cons
 			if ("`ebnamescheck'"!="") & ("`ebnamescheck'"!="_cons") {
 				local consname _cons
@@ -1053,6 +1061,11 @@ program define _lassopath, rclass sortpreserve
 				// term sqrt(r(N)/(r(N)-1)) needed to remove Stata's finite-sample adj for variance
 				mat `adaptivePsi'[1,`j']	=`adaptivePsi'[1,`j'] * (1/r(sd) * sqrt(r(N)/(r(N)-1)))^(`adatheta'-1)
 			}
+		}
+		// missings were zeros from (presumably) omitted variables (e.g. base var of factor vars)
+		// so replace with zero penalty loadings
+		if matmissing(`adaptivePsi') {
+			mata: st_matrix("`adaptivePsi'",editmissing(st_matrix("`adaptivePsi'"),0))
 		}
 		tempname Psi
 		mat `Psi' = `adaptivePsi'
@@ -1212,6 +1225,7 @@ program define _lassopath, rclass sortpreserve
 
 		// added to lasso2
 		tempname df
+
 		scalar `df'			=r(dof)
 
 		*** check notpen is in selected0
@@ -2284,6 +2298,7 @@ struct outputStructPath DoLassoPath(									///
 		
 		lmax	= max(lvec)
 		lcount	= cols(lvec)
+
 		beta	= anysolver(d.XX+lmax/2*diag(Psi2),d.Xy,r=.)	// beta start; r=rank; default LU, use QR if rank-deficient
 		if ((verbose>=1) & (r<cols(d.XX))) {
 			printf("{txt}Note: collinearities encountered in obtaining initial beta.\n")
@@ -4045,6 +4060,9 @@ void EstimateLassoPath(							///  Complete Mata code for lassopath
 				// see Friedman et al (J of Stats Software, 2010)  
 				lmax = max(abs((d.Xy)):/((Psi)'))*2/max((0.001,alpha))
 			}
+		}
+		else if ((d.prestdflag) & (!d.sqrtflag)) {
+				lmax = lmax / d.prestdy
 		}
 		lmin = lminratio*lmax
 		lambda=exp(rangen(log(lmax),log(lmin),lcount))'
