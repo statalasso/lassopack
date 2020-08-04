@@ -1,5 +1,5 @@
 * certification script for 
-* lassopack package 1.1.xx 27july2020, aa/ms
+* lassopack package 1.1.4 4aug2020, aa/ms
 * parts of the script use R's glmnet, Matlab code "SqrtLassoIterative.m", 
 * and Wilbur Townsend's elasticregress for validation
 
@@ -353,6 +353,41 @@ foreach li of numlist 0.1 1 3 5 10 50 100 {
  }
 }
 */
+
+********************************************************************************
+*** validation using Stata's elasticnet										 ***
+********************************************************************************
+
+// ridge
+cap noi elasticnet linear $model, alphas(0) grid(2, min(0.25))
+lassoselect alpha = 0 lambda = 0.25
+lassocoef, display(coef, penalized)
+mat b=e(b)
+// Stata lambda = 2N*lambda
+global L=2*e(N)*0.25
+lasso2 $model, lambda($L) alpha(0)
+assert mreldif(b,e(b))<1e-7
+
+// lasso
+cap noi elasticnet linear $model, alphas(1) grid(2, min(0.25))
+lassoselect alpha = 1 lambda = 0.25
+lassocoef, display(coef, penalized)
+mat b=e(b)
+// Stata lambda = 2N*lambda
+global L=2*e(N)*0.25
+lasso2 $model, lambda($L)
+assert mreldif(b,e(b))<1e-7
+
+// elastic net
+cap noi elasticnet linear $model, alphas(0.5) grid(2, min(0.25))
+lassoselect alpha = 0.5 lambda = 0.25
+lassocoef, display(coef, penalized)
+mat b=e(b)
+// Stata lambda = 2N*lambda
+global L=2*e(N)*0.25
+lasso2 $model, lambda($L) alpha(0.5)
+assert mreldif(b,e(b))<1e-7
+
 
 ********************************************************************************
 *** norecover option														 ***
