@@ -1,48 +1,52 @@
 {smcl}
 {com}{sf}{ul off}{txt}{.-}
       name:  {res}<unnamed>
-       {txt}log:  {res}C:\Users\ecomes\Documents\GitHub\lassopack\cs_rlasso.smcl
+       {txt}log:  {res}C:\LocalStore\ecomes\Dropbox\statalasso\working\cs_rlasso.smcl
   {txt}log type:  {res}smcl
- {txt}opened on:  {res}20 Aug 2020, 13:06:51
-{txt}r; t=0.01 13:06:51
+ {txt}opened on:  {res}27 Jul 2020, 19:20:18
+{txt}r; t=0.01 19:20:18
 
 {com}. about
 
-{txt}Stata/SE 16.1 for Windows (64-bit x86-64)
-Revision 30 Jun 2020
+{txt}Stata/SE 16.0 for Windows (64-bit x86-64)
+Revision 14 Nov 2019
 Copyright 1985-2019 StataCorp LLC
 
 Total physical memory:     {res}  16.00 GB
-{txt}Available physical memory: {res}   5.51 GB
+{txt}Available physical memory: {res}   7.81 GB
 
-{txt}Stata license: {res}5-user network perpetual
-{txt}Serial number: {res}401606228165
-  {txt}Licensed to: {res}Mark Schaffer
-               Heriot-Watt University
-{txt}r; t=0.00 13:06:51
+5-user Stata network perpetual license:
+       Serial number:  401606228165
+         Licensed to:  Mark Schaffer
+                       Heriot-Watt University
+{txt}r; t=0.01 19:20:18
 
 {com}. which rlasso
 {txt}.\rlasso.ado
-{res}*! rlasso 1.0.11 29jul2020
-*! lassopack package 1.4.0
+{res}*! rlasso 1.0.11 26jul2020
+*! lassopack package 1.3
 *! authors aa/cbh/ms
-{txt}r; t=0.00 13:06:51
+{txt}r; t=0.00 19:20:18
 
 {com}. which lassoutils
 {txt}.\lassoutils.ado
-{res}*! lassoutils 1.2.03 xxxaug2020
-*! lassopack package 1.4.0
+{res}*! lassoutils 1.2.01 24july2020
+*! lassopack package 1.3
 *! authors aa/cbh/ms
-{txt}r; t=0.01 13:06:51
+{txt}r; t=0.01 19:20:18
 
 {com}. // original code by CBH, modified to use quad precision etc.; not needed.
 . cap noi which lassoShootingCBH
-{err}command {bf}lassoShootingCBH{sf} not found as either built-in or ado-file
-{txt}r; t=0.00 13:06:51
+{txt}C:\LocalStore\ecomes\Dropbox\StataLasso\Current\lassoShootingCBH.ado
+{res}*! lassoShooting.ado -- version 12, CBH 2012.09.25
+*! mods by MS: save r(lambda); predict double; quadcross
+{txt}r; t=0.00 19:20:18
 
 {com}. cap noi which lassoClusterCBH
-{err}command {bf}lassoClusterCBH{sf} not found as either built-in or ado-file
-{txt}r; t=0.00 13:06:51
+{txt}C:\LocalStore\ecomes\Dropbox\StataLasso\Current\lassoClusterCBH.ado
+{res}*! lassoCluster.ado -- version 12, CBH 2014.05.19
+*! mods by MS: save r(lambda); predict double; quadcross; sort
+{txt}r; t=0.01 19:20:18
 
 {com}. 
 . // Initial checks of rlasso are vs. CBH code.
@@ -55,22 +59,22 @@ Total physical memory:     {res}  16.00 GB
 . // Currently uses Kiel-McClain 1995 housing/incinerator example dataset.
 . // Includes some badly-scaled variables so useful.
 . qui bcuse kielmc, clear
-{txt}r; t=0.62 13:06:51
+{txt}r; t=0.62 19:20:19
 
 {com}. gen lcbd=ln(cbd)
-{txt}r; t=0.00 13:06:51
+{txt}r; t=0.00 19:20:19
 
 {com}. gen lcbdsq=lcbd^2
-{txt}r; t=0.00 13:06:51
+{txt}r; t=0.00 19:20:19
 
 {com}. gen byte one=1
-{txt}r; t=0.00 13:06:51
+{txt}r; t=0.00 19:20:19
 
 {com}. gen n=_n
-{txt}r; t=0.00 13:06:51
+{txt}r; t=0.00 19:20:19
 
 {com}. gen id=ceil(_n/10)
-{txt}r; t=0.00 13:06:51
+{txt}r; t=0.00 19:20:19
 
 {com}. 
 . 
@@ -88,16 +92,16 @@ Total physical memory:     {res}  16.00 GB
 > local s = colsof(CBHbetaL)
 > */
 . mat CBHbetaL    = .55033459 , .0958016  , .00259465
-{txt}r; t=0.00 13:06:51
+{txt}r; t=0.00 19:20:19
 
 {com}. mat CBHbetaPL   = .65128713 , .15561146 , .01297576
-{txt}r; t=0.00 13:06:51
+{txt}r; t=0.00 19:20:19
 
 {com}. scalar lambda   = 144.22858784
-{txt}r; t=0.00 13:06:51
+{txt}r; t=0.00 19:20:19
 
 {com}. local s = 3
-{txt}r; t=0.00 13:06:51
+{txt}r; t=0.00 19:20:19
 
 {com}. // Basic
 . rlasso lrprice larea cbd intst lintst y81ldist lintstsq y81nrinc,       ///
@@ -113,34 +117,34 @@ Total physical memory:     {res}  16.00 GB
 {txt}{space 12}_cons {c |}{helpb rlasso##notpen:*}{col 21}{res}      6.1608410      4.7817721
 {txt}{hline 18}{c BT}{hline 32}
 {help rlasso##notpen:*Not penalized}
-r; t=0.29 13:06:52
+r; t=0.23 19:20:19
 
 {com}. mat b=e(b)
-{txt}r; t=0.00 13:06:52
+{txt}r; t=0.00 19:20:19
 
 {com}. mat beta=e(beta)
-{txt}r; t=0.00 13:06:52
+{txt}r; t=0.00 19:20:19
 
 {com}. mat betaOLS=e(betaOLS)
-{txt}r; t=0.00 13:06:52
+{txt}r; t=0.00 19:20:19
 
 {com}. assert mreldif(b,beta)<1e-8
-{txt}r; t=0.00 13:06:52
+{txt}r; t=0.00 19:20:19
 
 {com}. mat beta=beta[1,1..`s']
-{txt}r; t=0.00 13:06:52
+{txt}r; t=0.00 19:20:19
 
 {com}. mat betaOLS=betaOLS[1,1..`s']
-{txt}r; t=0.00 13:06:52
+{txt}r; t=0.00 19:20:19
 
 {com}. assert mreldif(beta,CBHbetaL)<1e-8
-{txt}r; t=0.00 13:06:52
+{txt}r; t=0.00 19:20:19
 
 {com}. assert mreldif(betaOLS,CBHbetaPL)<1e-8
-{txt}r; t=0.00 13:06:52
+{txt}r; t=0.00 19:20:19
 
 {com}. assert reldif(lambda,e(lambda0))<1e-8
-{txt}r; t=0.00 13:06:52
+{txt}r; t=0.00 19:20:19
 
 {com}. // Partial-out constant
 . rlasso lrprice larea cbd intst lintst y81ldist lintstsq y81nrinc,       ///
@@ -158,41 +162,41 @@ r; t=0.29 13:06:52
 {hline 18}{c +}{hline 32}
 {space 12}_cons {c |}{col 21}{res}      6.1608410      4.7817721
 {txt}{hline 18}{c BT}{hline 32}
-r; t=0.93 13:06:53
+r; t=0.86 19:20:20
 
 {com}. mat b=e(b)
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. mat beta=e(beta)
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. mat betaOLS=e(betaOLS)
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. assert mreldif(b,beta)<1e-8
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. mat beta=beta[1,1..`s']
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. mat betaOLS=betaOLS[1,1..`s']
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. assert mreldif(beta,CBHbetaL)<1e-8
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. assert mreldif(betaOLS,CBHbetaPL)<1e-8
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. assert reldif(lambda,e(lambda0))<1e-8
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. // Include unpenalized constant by hand
 . // Needs high setting for maxpsiiter
 . // Also needs looser tolerance
 . rlasso lrprice larea cbd intst lintst y81ldist lintstsq y81nrinc one,   ///
 >         lalt corrnum(0) tolzero(1e-10) tolpsi(1e-10) tolopt(1e-8)                       ///
->         maxiter(10000) nocons pnotpen(one) maxpsiiter(10) c0(0.55) psolver(chol)
+>         maxiter(10000) nocons pnotpen(one) maxpsiiter(10) c0(0.55) solver(chol)
 
 {txt}{hline 18}{c TT}{hline 32}
 {col 10}Selected {c |}           Lasso   Post-est OLS
@@ -203,31 +207,31 @@ r; t=0.93 13:06:53
 {txt}{space 14}one {c |}{helpb rlasso##notpen:*}{col 21}{res}      6.1608162      4.7817721
 {txt}{hline 18}{c BT}{hline 32}
 {help rlasso##notpen:*Not penalized}
-r; t=0.12 13:06:53
+r; t=0.19 19:20:20
 
 {com}. mat b=e(b)
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. mat beta=e(beta)
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. mat betaOLS=e(betaOLS)
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. mat beta=beta[1,1..`s']
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. mat betaOLS=betaOLS[1,1..`s']
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. assert mreldif(beta,CBHbetaL)<1e-5                      // looser tolerance
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. assert mreldif(betaOLS,CBHbetaPL)<1e-8
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. assert reldif(lambda,e(lambda0))<1e-8
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. 
 . ******************************************************************************
@@ -246,16 +250,16 @@ r; t=0.12 13:06:53
 > local s = colsof(CBHbetaL)
 > */
 . mat CBHbetaL    = .04572585 , .00175637
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. mat CBHbetaPL   = .20415454 , .01272592
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. scalar lambda   = 140.55736231
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. local s = 2
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. // pnotpen
 . rlasso lrprice larea cbd intst lintst y81ldist lintstsq y81nrinc,       ///
@@ -276,38 +280,38 @@ r; t=0.12 13:06:53
 {space 12}_cons {c |}{col 21}{res}      5.3072922      4.4373393
 {txt}{hline 18}{c BT}{hline 32}
 {help rlasso##notpen:*Not penalized}
-r; t=0.03 13:06:53
+r; t=0.03 19:20:20
 
 {com}. mat b=e(b)
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. mat beta=e(beta)
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. mat betaOLS=e(betaOLS)
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. assert mreldif(b,beta)<1e-8
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. // trim
 . mat beta=beta[1,3..4]
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. mat betaOLS=betaOLS[1,3..4]
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. local s = colsof(CBHbetaL) 
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. forvalues i=1/`s' {c -(}
 {txt}  2{com}.         assert reldif(CBHbetaL[1,`i'],beta[1,`i'])<1e-6
 {txt}  3{com}.         assert reldif(CBHbetaPL[1,`i'],betaOLS[1,`i'])<1e-6
 {txt}  4{com}. {c )-}
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. assert reldif(lambda,e(lambda0))<1e-8
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. // partial
 . rlasso lrprice larea cbd intst lintst y81ldist lintstsq y81nrinc,       ///
@@ -326,38 +330,38 @@ r; t=0.03 13:06:53
 {txt}{space 14}cbd {c |}{col 21}{res}      0.0000069     -0.0000046
 {txt}{space 12}_cons {c |}{col 21}{res}      5.3072922      4.4373393
 {txt}{hline 18}{c BT}{hline 32}
-r; t=0.02 13:06:53
+r; t=0.02 19:20:20
 
 {com}. mat b=e(b)
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. mat beta=e(beta)
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. mat betaOLS=e(betaOLS)
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. assert mreldif(b,beta)<1e-8
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. // trim
 . mat beta=beta[1,1..2]
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. mat betaOLS=betaOLS[1,1..2]
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. local s = colsof(CBHbetaL) 
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. forvalues i=1/`s' {c -(}
 {txt}  2{com}.         assert reldif(CBHbetaL[1,`i'],beta[1,`i'])<1e-8
 {txt}  3{com}.         assert reldif(CBHbetaPL[1,`i'],betaOLS[1,`i'])<1e-8
 {txt}  4{com}. {c )-}
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. assert reldif(lambda,e(lambda0))<1e-8
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. 
 . ******************************************************************************
@@ -373,16 +377,16 @@ r; t=0.02 13:06:53
 > local s = colsof(CBHbetaL)
 > */
 . mat CBHbetaL    = .52823835 , .09894578 , .0030307
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. mat CBHbetaPL   = .65128713 , .15561146 , .01297576
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. scalar lambda   = 144.22858784
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. local s = 3
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. // Basic
 . rlasso lrprice larea cbd intst lintst y81ldist lintstsq y81nrinc,       ///
@@ -392,34 +396,34 @@ r; t=0.02 13:06:53
 {txt}{hline 18}{c TT}{hline 32}
 {col 10}Selected {c |}           Lasso   Post-est OLS
 {hline 18}{c +}{hline 32}
-{space 12}larea {c |}{col 21}{res}      0.5282384      0.6512871
+{space 12}larea {c |}{col 21}{res}      0.5282383      0.6512871
 {txt}{space 11}lintst {c |}{col 21}{res}      0.0989458      0.1556115
 {txt}{space 9}y81ldist {c |}{col 21}{res}      0.0030307      0.0129758
 {txt}{space 12}_cons {c |}{helpb rlasso##notpen:*}{col 21}{res}      6.2970092      4.7817721
 {txt}{hline 18}{c BT}{hline 32}
 {help rlasso##notpen:*Not penalized}
-r; t=0.01 13:06:53
+r; t=0.01 19:20:20
 
 {com}. mat b=e(b)
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. mat beta=e(beta)
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. mat betaOLS=e(betaOLS)
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. assert mreldif(b,beta)<1e-8
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. forvalues i=1/`s' {c -(}
 {txt}  2{com}.         assert reldif(CBHbetaL[1,`i'],beta[1,`i'])<1e-8
 {txt}  3{com}.         assert reldif(CBHbetaPL[1,`i'],betaOLS[1,`i'])<1e-8
 {txt}  4{com}. {c )-}
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. assert reldif(lambda,e(lambda0))<1e-8
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. // partial-out cons
 . rlasso lrprice larea cbd intst lintst y81ldist lintstsq y81nrinc,       ///
@@ -428,7 +432,7 @@ r; t=0.01 13:06:53
 {txt}{hline 18}{c TT}{hline 32}
 {col 10}Selected {c |}           Lasso   Post-est OLS
 {hline 18}{c +}{hline 32}
-{space 12}larea {c |}{col 21}{res}      0.5282384      0.6512871
+{space 12}larea {c |}{col 21}{res}      0.5282383      0.6512871
 {txt}{space 11}lintst {c |}{col 21}{res}      0.0989458      0.1556115
 {txt}{space 9}y81ldist {c |}{col 21}{res}      0.0030307      0.0129758
 {txt}{hline 18}{c +}{hline 32}
@@ -436,31 +440,31 @@ r; t=0.01 13:06:53
 {hline 18}{c +}{hline 32}
 {space 12}_cons {c |}{col 21}{res}      6.2970092      4.7817721
 {txt}{hline 18}{c BT}{hline 32}
-r; t=0.02 13:06:53
+r; t=0.02 19:20:20
 
 {com}. mat b=e(b)
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. mat beta=e(beta)
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. mat betaOLS=e(betaOLS)
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. assert mreldif(b,beta)<1e-8
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. local s = colsof(CBHbetaL) 
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. forvalues i=1/`s' {c -(}
 {txt}  2{com}.         assert reldif(CBHbetaL[1,`i'],beta[1,`i'])<1e-8
 {txt}  3{com}.         assert reldif(CBHbetaPL[1,`i'],betaOLS[1,`i'])<1e-8
 {txt}  4{com}. {c )-}
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. assert reldif(lambda,e(lambda0))<1e-8
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. 
 . // With controls/pnotpen - note that controls do not appear in CBH X list
@@ -472,16 +476,16 @@ r; t=0.02 13:06:53
 > scalar lambda=r(lambda)
 > */
 . mat CBHbetaL    = .01229867 , .00161341
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. mat CBHbetaPL   = .20415454 , .01272592
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. scalar lambda   = 140.55736231
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. local s = 2
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. // pnotpen
 . rlasso lrprice larea cbd intst lintst y81ldist lintstsq y81nrinc,       ///
@@ -500,35 +504,35 @@ r; t=0.02 13:06:53
 {space 12}_cons {c |}{col 21}{res}      5.5227424      4.4373393
 {txt}{hline 18}{c BT}{hline 32}
 {help rlasso##notpen:*Not penalized}
-r; t=0.02 13:06:53
+r; t=0.03 19:20:20
 
 {com}. mat b=e(b)
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. mat beta=e(beta)
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. mat betaOLS=e(betaOLS)
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. assert mreldif(b,beta)<1e-8
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. // trim
 . mat beta=beta[1,3..4]
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. mat betaOLS=betaOLS[1,3..4]
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. forvalues i=1/`s' {c -(}
 {txt}  2{com}.         assert reldif(CBHbetaL[1,`i'],beta[1,`i'])<1e-6
 {txt}  3{com}.         assert reldif(CBHbetaPL[1,`i'],betaOLS[1,`i'])<1e-6
 {txt}  4{com}. {c )-}
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. assert reldif(lambda,e(lambda0))<1e-8
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. // partial
 . rlasso lrprice larea cbd intst lintst y81ldist lintstsq y81nrinc,       ///
@@ -546,38 +550,38 @@ r; t=0.02 13:06:53
 {txt}{space 14}cbd {c |}{col 21}{res}      0.0000095     -0.0000046
 {txt}{space 12}_cons {c |}{col 21}{res}      5.5227424      4.4373393
 {txt}{hline 18}{c BT}{hline 32}
-r; t=0.02 13:06:53
+r; t=0.02 19:20:20
 
 {com}. mat b=e(b)
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. mat beta=e(beta)
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. mat betaOLS=e(betaOLS)
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. assert mreldif(b,beta)<1e-8
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. // trim
 . mat beta=beta[1,1..2]
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. mat betaOLS=betaOLS[1,1..2]
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. local s = colsof(CBHbetaL) 
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. forvalues i=1/`s' {c -(}
 {txt}  2{com}.         assert reldif(CBHbetaL[1,`i'],beta[1,`i'])<1e-8
 {txt}  3{com}.         assert reldif(CBHbetaPL[1,`i'],betaOLS[1,`i'])<1e-8
 {txt}  4{com}. {c )-}
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. assert reldif(lambda,e(lambda0))<1e-8
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. 
 . ********************** CLUSTER *********************************
@@ -597,16 +601,16 @@ r; t=0.02 13:06:53
 > scalar lambda=r(lambda)
 > */
 . mat CBHbetaL    = .46261782 , .11510062
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. mat CBHbetaPL   = .68488126 , .15090246
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. scalar lambda   = 50.21173664
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. local s = 2
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. // Basic
 . // need nclust1 option to replicate CBH
@@ -623,25 +627,25 @@ r; t=0.02 13:06:53
 {txt}{space 12}_cons {c |}{helpb rlasso##notpen:*}{col 21}{res}      6.6555486      4.6275416
 {txt}{hline 18}{c BT}{hline 32}
 {help rlasso##notpen:*Not penalized}
-r; t=0.04 13:06:53
+r; t=0.04 19:20:20
 
 {com}. mat b=e(b)
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. mat beta=e(beta)
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. mat betaOLS=e(betaOLS)
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. assert mreldif(b,beta)<1e-8
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. forvalues i=1/`s' {c -(}
 {txt}  2{com}.         assert reldif(CBHbetaL[1,`i'],beta[1,`i'])<1e-8
 {txt}  3{com}.         assert reldif(CBHbetaPL[1,`i'],betaOLS[1,`i'])<1e-8
 {txt}  4{com}. {c )-}
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. // assert reldif(lambda,e(lambda0))<1e-8
 . // partial-out cons
@@ -661,25 +665,25 @@ r; t=0.04 13:06:53
 {hline 18}{c +}{hline 32}
 {space 12}_cons {c |}{col 21}{res}      6.6555486      4.6275416
 {txt}{hline 18}{c BT}{hline 32}
-r; t=0.04 13:06:53
+r; t=0.05 19:20:20
 
 {com}. mat b=e(b)
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. mat beta=e(beta)
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. mat betaOLS=e(betaOLS)
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. assert mreldif(b,beta)<1e-8
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. forvalues i=1/`s' {c -(}
 {txt}  2{com}.         assert reldif(CBHbetaL[1,`i'],beta[1,`i'])<1e-8
 {txt}  3{com}.         assert reldif(CBHbetaPL[1,`i'],betaOLS[1,`i'])<1e-8
 {txt}  4{com}. {c )-}
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. // assert reldif(lambda,e(lambda0))<1e-8
 . 
@@ -692,16 +696,16 @@ r; t=0.04 13:06:53
 > scalar lambda=r(lambda)
 > */
 . mat CBHbetaL    = .00552125 , .00301795
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. mat CBHbetaPL   = .01283716 , .01236437
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. scalar lambda   = 48.38313172
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. local s = 2
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. // pnotpen
 . // need nclust1 option to replicate CBH
@@ -720,32 +724,32 @@ r; t=0.04 13:06:53
 {txt}{space 12}_cons {c |}{helpb rlasso##notpen:*}{col 21}{res}      5.5434560      5.2894131
 {txt}{hline 18}{c BT}{hline 32}
 {help rlasso##notpen:*Not penalized}
-r; t=0.01 13:06:53
+r; t=0.01 19:20:20
 
 {com}. mat b=e(b)
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. mat beta=e(beta)
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. mat betaOLS=e(betaOLS)
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. assert mreldif(b,beta)<1e-8
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. // trim
 . mat beta=beta[1,3..4]
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. mat betaOLS=betaOLS[1,3..4]
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. forvalues i=1/`s' {c -(}
 {txt}  2{com}.         assert reldif(CBHbetaL[1,`i'],beta[1,`i'])<1e-6
 {txt}  3{com}.         assert reldif(CBHbetaPL[1,`i'],betaOLS[1,`i'])<1e-6
 {txt}  4{com}. {c )-}
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. // assert reldif(lambda,e(lambda0))<1e-8
 . // partial
@@ -767,32 +771,32 @@ r; t=0.01 13:06:53
 {txt}{space 14}cbd {c |}{col 21}{res}      0.0000063     -0.0000065
 {txt}{space 12}_cons {c |}{col 21}{res}      5.5434559      5.2894131
 {txt}{hline 18}{c BT}{hline 32}
-r; t=0.02 13:06:53
+r; t=0.02 19:20:20
 
 {com}. mat b=e(b)
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. mat beta=e(beta)
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. mat betaOLS=e(betaOLS)
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. assert mreldif(b,beta)<1e-8
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. // trim
 . mat beta=beta[1,1..2]
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. mat betaOLS=betaOLS[1,1..2]
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. forvalues i=1/`s' {c -(}
 {txt}  2{com}.         assert reldif(CBHbetaL[1,`i'],beta[1,`i'])<1e-8
 {txt}  3{com}.         assert reldif(CBHbetaPL[1,`i'],betaOLS[1,`i'])<1e-8
 {txt}  4{com}. {c )-}
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. // assert reldif(lambda,e(lambda0))<1e-8
 . 
@@ -802,7 +806,7 @@ r; t=0.02 13:06:53
 . 
 . xtset age
 {txt}{col 8}panel variable:  {res}age (unbalanced)
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.01 19:20:20
 
 {com}. // clustering (note no lalt required) + fixed effects
 . // note center and maxpsiiter are required to match CBH code
@@ -814,16 +818,16 @@ r; t=0.02 13:06:53
 > scalar lambda=r(lambda)
 > */
 . mat CBHbetaL    = .38441642 , .00767435
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. mat CBHbetaPL   = .53696874 , .01285201
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. scalar lambda   = 50.21173664
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. local s = 2
-{txt}r; t=0.00 13:06:53
+{txt}r; t=0.00 19:20:20
 
 {com}. // Basic
 . // need nclust1 option to replicate CBH
@@ -839,25 +843,25 @@ r; t=0.02 13:06:53
 {space 12}larea {c |}{col 21}{res}      0.3844164      0.5369687
 {txt}{space 9}y81ldist {c |}{col 21}{res}      0.0076744      0.0128520
 {txt}{hline 18}{c BT}{hline 32}
-r; t=0.54 13:06:54
+r; t=0.49 19:20:21
 
 {com}. mat b=e(b)
-{txt}r; t=0.00 13:06:54
+{txt}r; t=0.00 19:20:21
 
 {com}. mat beta=e(beta)
-{txt}r; t=0.00 13:06:54
+{txt}r; t=0.00 19:20:21
 
 {com}. mat betaOLS=e(betaOLS)
-{txt}r; t=0.00 13:06:54
+{txt}r; t=0.00 19:20:21
 
 {com}. assert mreldif(b,beta)<1e-8
-{txt}r; t=0.00 13:06:54
+{txt}r; t=0.00 19:20:21
 
 {com}. forvalues i=1/`s' {c -(}
 {txt}  2{com}.         assert reldif(CBHbetaL[1,`i'],beta[1,`i'])<1e-8
 {txt}  3{com}.         assert reldif(CBHbetaPL[1,`i'],betaOLS[1,`i'])<1e-8
 {txt}  4{com}. {c )-}
-{txt}r; t=0.00 13:06:54
+{txt}r; t=0.00 19:20:21
 
 {com}. // assert reldif(lambda,e(lambda0))<1e-8
 . 
@@ -870,16 +874,16 @@ r; t=0.54 13:06:54
 > scalar lambda=r(lambda)
 > */
 . mat CBHbetaL    = .00308359
-{txt}r; t=0.00 13:06:54
+{txt}r; t=0.00 19:20:21
 
 {com}. mat CBHbetaPL   = .01266582
-{txt}r; t=0.00 13:06:54
+{txt}r; t=0.00 19:20:21
 
 {com}. scalar lambda   = 48.38313172
-{txt}r; t=0.00 13:06:54
+{txt}r; t=0.00 19:20:21
 
 {com}. local s = 1
-{txt}r; t=0.00 13:06:54
+{txt}r; t=0.00 19:20:21
 
 {com}. // pnotpen
 . // need nclust1 option to replicate CBH
@@ -897,32 +901,32 @@ r; t=0.54 13:06:54
 {txt}{space 9}y81ldist {c |}{col 21}{res}      0.0030836      0.0126658
 {txt}{hline 18}{c BT}{hline 32}
 {help rlasso##notpen:*Not penalized}
-r; t=0.01 13:06:54
+r; t=0.01 19:20:21
 
 {com}. mat b=e(b)
-{txt}r; t=0.00 13:06:54
+{txt}r; t=0.00 19:20:21
 
 {com}. mat beta=e(beta)
-{txt}r; t=0.00 13:06:54
+{txt}r; t=0.00 19:20:21
 
 {com}. mat betaOLS=e(betaOLS)
-{txt}r; t=0.00 13:06:54
+{txt}r; t=0.00 19:20:21
 
 {com}. assert mreldif(b,beta)<1e-8
-{txt}r; t=0.00 13:06:54
+{txt}r; t=0.00 19:20:21
 
 {com}. // trim
 . mat beta=beta[1,3..3]
-{txt}r; t=0.00 13:06:54
+{txt}r; t=0.00 19:20:21
 
 {com}. mat betaOLS=betaOLS[1,3..3]
-{txt}r; t=0.00 13:06:54
+{txt}r; t=0.00 19:20:21
 
 {com}. forvalues i=1/`s' {c -(}
 {txt}  2{com}.         assert reldif(CBHbetaL[1,`i'],beta[1,`i'])<1e-6
 {txt}  3{com}.         assert reldif(CBHbetaPL[1,`i'],betaOLS[1,`i'])<1e-6
 {txt}  4{com}. {c )-}
-{txt}r; t=0.00 13:06:54
+{txt}r; t=0.00 19:20:21
 
 {com}. // assert reldif(lambda,e(lambda0))<1e-8
 . // partial
@@ -943,32 +947,32 @@ r; t=0.01 13:06:54
 {space 12}larea {c |}{col 21}{res}      0.5719870      0.5368213
 {txt}{space 14}cbd {c |}{col 21}{res}     -0.0000016     -0.0000007
 {txt}{hline 18}{c BT}{hline 32}
-r; t=0.02 13:06:54
+r; t=0.03 19:20:21
 
 {com}. mat b=e(b)
-{txt}r; t=0.00 13:06:54
+{txt}r; t=0.00 19:20:21
 
 {com}. mat beta=e(beta)
-{txt}r; t=0.00 13:06:54
+{txt}r; t=0.00 19:20:21
 
 {com}. mat betaOLS=e(betaOLS)
-{txt}r; t=0.00 13:06:54
+{txt}r; t=0.00 19:20:21
 
 {com}. assert mreldif(b,beta)<1e-8
-{txt}r; t=0.00 13:06:54
+{txt}r; t=0.00 19:20:21
 
 {com}. // trim
 . mat beta=beta[1,1..1]
-{txt}r; t=0.00 13:06:54
+{txt}r; t=0.00 19:20:21
 
 {com}. mat betaOLS=betaOLS[1,1..1]
-{txt}r; t=0.00 13:06:54
+{txt}r; t=0.00 19:20:21
 
 {com}. forvalues i=1/`s' {c -(}
 {txt}  2{com}.         assert reldif(CBHbetaL[1,`i'],beta[1,`i'])<1e-8
 {txt}  3{com}.         assert reldif(CBHbetaPL[1,`i'],betaOLS[1,`i'])<1e-8
 {txt}  4{com}. {c )-}
-{txt}r; t=0.00 13:06:54
+{txt}r; t=0.00 19:20:21
 
 {com}. // assert reldif(lambda,e(lambda0))<1e-8
 . 
@@ -988,10 +992,10 @@ r; t=0.02 13:06:54
 {txt}{space 12}_cons {c |}{helpb rlasso##notpen:*}{col 21}{res}      6.0349821      4.7817721
 {txt}{hline 18}{c BT}{hline 32}
 {help rlasso##notpen:*Not penalized}
-r; t=0.01 13:06:54
+r; t=0.01 19:20:21
 
 {com}. savedresults save rob e()
-{txt}r; t=0.00 13:06:54
+{txt}r; t=0.00 19:20:21
 
 {com}. rlasso lrprice larea cbd intst lintst y81ldist lintstsq y81nrinc,       ///
 >         cluster(n) tolzero(1e-10) tolpsi(1e-10) tolopt(1e-8) maxiter(10000) maxpsiiter(10)
@@ -1005,10 +1009,10 @@ r; t=0.01 13:06:54
 {txt}{space 12}_cons {c |}{helpb rlasso##notpen:*}{col 21}{res}      6.0349821      4.7817721
 {txt}{hline 18}{c BT}{hline 32}
 {help rlasso##notpen:*Not penalized}
-r; t=0.01 13:06:54
+r; t=0.01 19:20:21
 
 {com}. savedresults comp rob e(), exclude(macro: cmdline robust cluster)  tol(1e-8)
-{txt}r; t=0.00 13:06:54
+{txt}r; t=0.00 19:20:21
 
 {com}. 
 . // center option
@@ -1024,10 +1028,10 @@ r; t=0.01 13:06:54
 {txt}{space 12}_cons {c |}{helpb rlasso##notpen:*}{col 21}{res}      6.0349821      4.7817721
 {txt}{hline 18}{c BT}{hline 32}
 {help rlasso##notpen:*Not penalized}
-r; t=0.01 13:06:54
+r; t=0.01 19:20:21
 
 {com}. savedresults save rob e()
-{txt}r; t=0.00 13:06:54
+{txt}r; t=0.00 19:20:21
 
 {com}. rlasso lrprice larea cbd intst lintst y81ldist lintstsq y81nrinc,       ///
 >         cluster(n) center tolzero(1e-10) tolpsi(1e-10) tolopt(1e-8) maxiter(10000) maxpsiiter(10)
@@ -1041,10 +1045,10 @@ r; t=0.01 13:06:54
 {txt}{space 12}_cons {c |}{helpb rlasso##notpen:*}{col 21}{res}      6.0349821      4.7817721
 {txt}{hline 18}{c BT}{hline 32}
 {help rlasso##notpen:*Not penalized}
-r; t=0.01 13:06:54
+r; t=0.01 19:20:21
 
 {com}. savedresults comp rob e(), exclude(macro: cmdline robust cluster)  tol(1e-8)
-{txt}r; t=0.00 13:06:54
+{txt}r; t=0.00 19:20:21
 
 {com}. 
 . // partial and pnotpen
@@ -1063,10 +1067,10 @@ r; t=0.01 13:06:54
 {txt}{space 9}y81ldist {c |}{col 21}{res}      0.0145826      0.0129758
 {txt}{space 12}_cons {c |}{col 21}{res}      5.6673104      4.7817721
 {txt}{hline 18}{c BT}{hline 32}
-r; t=0.02 13:06:54
+r; t=0.02 19:20:21
 
 {com}. savedresults save partial e()
-{txt}r; t=0.00 13:06:54
+{txt}r; t=0.00 19:20:21
 
 {com}. rlasso lrprice larea cbd intst lintst y81ldist lintstsq y81nrinc,       ///
 >         pnotpen(lintst y81ldist)
@@ -1080,14 +1084,14 @@ r; t=0.02 13:06:54
 {txt}{space 12}_cons {c |}{helpb rlasso##notpen:*}{col 21}{res}      5.6673104      4.7817721
 {txt}{hline 18}{c BT}{hline 32}
 {help rlasso##notpen:*Not penalized}
-r; t=0.01 13:06:54
+r; t=0.01 19:20:21
 
 {com}. savedresults comp partial e(), exclude(                                                         ///
 >                 macro: cmdline pnotpen partial varXmodel                                        ///
 >                 scalar: niter pminus pnotpen_ct partial_ct r2                           ///
 >                 matrix: betaAll betaAllOLS Psi ePsi sPsi                                        /// order/components differ
 >                 )  tol(1e-8)
-{txt}r; t=0.00 13:06:54
+{txt}r; t=0.00 19:20:21
 
 {com}. // with constant + prestd
 . rlasso lrprice larea cbd intst lintst y81ldist lintstsq y81nrinc,       ///
@@ -1104,10 +1108,10 @@ r; t=0.01 13:06:54
 {txt}{space 9}y81ldist {c |}{col 21}{res}      0.0145826      0.0129758
 {txt}{space 12}_cons {c |}{col 21}{res}      5.6673104      4.7817721
 {txt}{hline 18}{c BT}{hline 32}
-r; t=0.02 13:06:54
+r; t=0.02 19:20:21
 
 {com}. savedresults save partial e()
-{txt}r; t=0.00 13:06:54
+{txt}r; t=0.00 19:20:21
 
 {com}. rlasso lrprice larea cbd intst lintst y81ldist lintstsq y81nrinc,       ///
 >         pnotpen(lintst y81ldist) prestd
@@ -1121,14 +1125,14 @@ r; t=0.02 13:06:54
 {txt}{space 12}_cons {c |}{helpb rlasso##notpen:*}{col 21}{res}      5.6673104      4.7817721
 {txt}{hline 18}{c BT}{hline 32}
 {help rlasso##notpen:*Not penalized}
-r; t=0.03 13:06:54
+r; t=0.02 19:20:21
 
 {com}. savedresults comp partial e(), exclude(                                                         ///
 >                 macro: cmdline pnotpen partial varXmodel                                        ///
 >                 scalar: niter pminus pnotpen_ct partial_ct r2                           ///
 >                 matrix: betaAll betaAllOLS Psi ePsi sPsi                                        /// order/components differ
 >                 )  tol(1e-8)
-{txt}r; t=0.00 13:06:54
+{txt}r; t=0.00 19:20:21
 
 {com}. // with constant + sqrt
 . rlasso lrprice larea cbd intst lintst y81ldist lintstsq y81nrinc,       ///
@@ -1145,10 +1149,10 @@ r; t=0.03 13:06:54
 {txt}{space 9}y81ldist {c |}{col 21}{res}      0.0146091      0.0129758
 {txt}{space 12}_cons {c |}{col 21}{res}      5.6819256      4.7817721
 {txt}{hline 18}{c BT}{hline 32}
-r; t=0.02 13:06:54
+r; t=0.03 19:20:21
 
 {com}. savedresults save partial e()
-{txt}r; t=0.00 13:06:54
+{txt}r; t=0.00 19:20:21
 
 {com}. rlasso lrprice larea cbd intst lintst y81ldist lintstsq y81nrinc,       ///
 >         pnotpen(lintst y81ldist) sqrt
@@ -1162,14 +1166,14 @@ r; t=0.02 13:06:54
 {txt}{space 12}_cons {c |}{helpb rlasso##notpen:*}{col 21}{res}      5.6819256      4.7817721
 {txt}{hline 18}{c BT}{hline 32}
 {help rlasso##notpen:*Not penalized}
-r; t=0.03 13:06:54
+r; t=0.07 19:20:21
 
 {com}. savedresults comp partial e(), exclude(                                                         ///
 >                 macro: cmdline pnotpen partial varXmodel                                        ///
 >                 scalar: niter pminus pnotpen_ct partial_ct r2                           ///
 >                 matrix: betaAll betaAllOLS Psi ePsi sPsi                                        /// order/components differ
 >                 )  tol(1e-8)
-{txt}r; t=0.00 13:06:54
+{txt}r; t=0.00 19:20:21
 
 {com}. // nocons - need an easier minimization
 . rlasso lrprice nbh rooms baths y81 nearinc y81nrinc,                            ///
@@ -1188,10 +1192,10 @@ r; t=0.03 13:06:54
 {space 10}nearinc {c |}{col 21}{res}      1.4407318      1.2871243
 {txt}{space 9}y81nrinc {c |}{col 21}{res}     -0.4910026     -0.7296275
 {txt}{hline 18}{c BT}{hline 32}
-r; t=0.02 13:06:54
+r; t=0.02 19:20:21
 
 {com}. savedresults save partial e()
-{txt}r; t=0.00 13:06:54
+{txt}r; t=0.00 19:20:21
 
 {com}. rlasso lrprice nbh rooms baths y81 nearinc y81nrinc,                            ///
 >         pnotpen(nearinc y81nrinc) nocons
@@ -1207,14 +1211,14 @@ r; t=0.02 13:06:54
 {txt}{space 9}y81nrinc {c |}{helpb rlasso##notpen:*}{col 21}{res}     -0.4910026     -0.7296275
 {txt}{hline 18}{c BT}{hline 32}
 {help rlasso##notpen:*Not penalized}
-r; t=0.01 13:06:54
+r; t=0.01 19:20:21
 
 {com}. savedresults comp partial e(), exclude(                                                         ///
 >                 macro: cmdline pnotpen partial varXmodel                                        ///
 >                 scalar: niter pminus pnotpen_ct partial_ct r2                           ///
 >                 matrix: betaAll betaAllOLS Psi ePsi sPsi                                        /// order/components differ
 >                 )  tol(1e-8)
-{txt}r; t=0.00 13:06:54
+{txt}r; t=0.00 19:20:21
 
 {com}. // nocons + prestd
 . rlasso lrprice nbh rooms baths y81 nearinc y81nrinc,                            ///
@@ -1233,10 +1237,10 @@ r; t=0.01 13:06:54
 {space 10}nearinc {c |}{col 21}{res}      1.4407318      1.2871243
 {txt}{space 9}y81nrinc {c |}{col 21}{res}     -0.4910026     -0.7296275
 {txt}{hline 18}{c BT}{hline 32}
-r; t=0.03 13:06:54
+r; t=0.03 19:20:21
 
 {com}. savedresults save partial e()
-{txt}r; t=0.00 13:06:54
+{txt}r; t=0.00 19:20:21
 
 {com}. rlasso lrprice nbh rooms baths y81 nearinc y81nrinc,                            ///
 >         pnotpen(nearinc y81nrinc) nocons prestd
@@ -1252,14 +1256,14 @@ r; t=0.03 13:06:54
 {txt}{space 9}y81nrinc {c |}{helpb rlasso##notpen:*}{col 21}{res}     -0.4910026     -0.7296275
 {txt}{hline 18}{c BT}{hline 32}
 {help rlasso##notpen:*Not penalized}
-r; t=0.01 13:06:54
+r; t=0.01 19:20:21
 
 {com}. savedresults comp partial e(), exclude(                                                         ///
 >                 macro: cmdline pnotpen partial varXmodel                                        ///
 >                 scalar: niter pminus pnotpen_ct partial_ct r2                           ///
 >                 matrix: betaAll betaAllOLS Psi ePsi sPsi                                        /// order/components differ
 >                 )  tol(1e-8)
-{txt}r; t=0.00 13:06:54
+{txt}r; t=0.00 19:20:21
 
 {com}. // nocons + sqrt
 . rlasso lrprice nbh rooms baths y81 nearinc y81nrinc,                            ///
@@ -1278,10 +1282,10 @@ r; t=0.01 13:06:54
 {space 10}nearinc {c |}{col 21}{res}      1.4444094      1.2871243
 {txt}{space 9}y81nrinc {c |}{col 21}{res}     -0.4852896     -0.7296275
 {txt}{hline 18}{c BT}{hline 32}
-r; t=0.07 13:06:54
+r; t=0.07 19:20:21
 
 {com}. savedresults save partial e()
-{txt}r; t=0.00 13:06:54
+{txt}r; t=0.00 19:20:21
 
 {com}. rlasso lrprice nbh rooms baths y81 nearinc y81nrinc,                            ///
 >         pnotpen(nearinc y81nrinc) nocons sqrt
@@ -1297,131 +1301,14 @@ r; t=0.07 13:06:54
 {txt}{space 9}y81nrinc {c |}{helpb rlasso##notpen:*}{col 21}{res}     -0.4852896     -0.7296275
 {txt}{hline 18}{c BT}{hline 32}
 {help rlasso##notpen:*Not penalized}
-r; t=0.11 13:06:54
+r; t=0.09 19:20:21
 
 {com}. savedresults comp partial e(), exclude(                                                         ///
 >                 macro: cmdline pnotpen partial varXmodel                                        ///
 >                 scalar: niter pminus pnotpen_ct partial_ct r2                           ///
 >                 matrix: betaAll betaAllOLS Psi ePsi sPsi                                        /// order/components differ
 >                 )  tol(1e-8)
-{txt}r; t=0.00 13:06:54
-
-{com}. 
-. // psolver option
-. rlasso lrprice nbh rooms baths y81 nearinc y81nrinc,                            ///
->         partial(nearinc y81nrinc)
-{res}
-{txt}{hline 18}{c TT}{hline 32}
-{col 10}Selected {c |}           Lasso   Post-est OLS
-{hline 18}{c +}{hline 32}
-{space 12}rooms {c |}{col 21}{res}      0.0292232      0.0653731
-{txt}{space 12}baths {c |}{col 21}{res}      0.2635702      0.2964328
-{txt}{space 14}y81 {c |}{col 21}{res}      0.0735169      0.1718676
-{txt}{hline 18}{c +}{hline 32}
-{col 4}Partialled-out{help lasso2##notpen:*}{c |}
-{hline 18}{c +}{hline 32}
-{space 10}nearinc {c |}{col 21}{res}     -0.1888857     -0.0938656
-{txt}{space 9}y81nrinc {c |}{col 21}{res}      0.0620594     -0.0393664
-{txt}{space 12}_cons {c |}{col 21}{res}     10.4685177     10.0942764
-{txt}{hline 18}{c BT}{hline 32}
-r; t=0.02 13:06:54
-
-{com}. savedresults save partial e()
-{txt}r; t=0.00 13:06:54
-
-{com}. // default solver is qrxx = QR+quadcross
-. foreach solver in svd svdxx qr lu luxx chol {c -(}
-{txt}  2{com}.         rlasso lrprice nbh rooms baths y81 nearinc y81nrinc,                    ///
->                 partial(nearinc y81nrinc) psolver(`solver')
-{txt}  3{com}.         savedresults comp partial e(), exclude(                                                 ///
->                 macro: cmdline                                                                                          ///
->                         )  tol(1e-8)
-{txt}  4{com}. {c )-}
-{res}
-{txt}{hline 18}{c TT}{hline 32}
-{col 10}Selected {c |}           Lasso   Post-est OLS
-{hline 18}{c +}{hline 32}
-{space 12}rooms {c |}{col 21}{res}      0.0292232      0.0653731
-{txt}{space 12}baths {c |}{col 21}{res}      0.2635702      0.2964328
-{txt}{space 14}y81 {c |}{col 21}{res}      0.0735169      0.1718676
-{txt}{hline 18}{c +}{hline 32}
-{col 4}Partialled-out{help lasso2##notpen:*}{c |}
-{hline 18}{c +}{hline 32}
-{space 10}nearinc {c |}{col 21}{res}     -0.1888857     -0.0938656
-{txt}{space 9}y81nrinc {c |}{col 21}{res}      0.0620594     -0.0393664
-{txt}{space 12}_cons {c |}{col 21}{res}     10.4685177     10.0942764
-{txt}{hline 18}{c BT}{hline 32}
-{res}
-{txt}{hline 18}{c TT}{hline 32}
-{col 10}Selected {c |}           Lasso   Post-est OLS
-{hline 18}{c +}{hline 32}
-{space 12}rooms {c |}{col 21}{res}      0.0292232      0.0653731
-{txt}{space 12}baths {c |}{col 21}{res}      0.2635702      0.2964328
-{txt}{space 14}y81 {c |}{col 21}{res}      0.0735169      0.1718676
-{txt}{hline 18}{c +}{hline 32}
-{col 4}Partialled-out{help lasso2##notpen:*}{c |}
-{hline 18}{c +}{hline 32}
-{space 10}nearinc {c |}{col 21}{res}     -0.1888857     -0.0938656
-{txt}{space 9}y81nrinc {c |}{col 21}{res}      0.0620594     -0.0393664
-{txt}{space 12}_cons {c |}{col 21}{res}     10.4685177     10.0942764
-{txt}{hline 18}{c BT}{hline 32}
-{res}
-{txt}{hline 18}{c TT}{hline 32}
-{col 10}Selected {c |}           Lasso   Post-est OLS
-{hline 18}{c +}{hline 32}
-{space 12}rooms {c |}{col 21}{res}      0.0292232      0.0653731
-{txt}{space 12}baths {c |}{col 21}{res}      0.2635702      0.2964328
-{txt}{space 14}y81 {c |}{col 21}{res}      0.0735169      0.1718676
-{txt}{hline 18}{c +}{hline 32}
-{col 4}Partialled-out{help lasso2##notpen:*}{c |}
-{hline 18}{c +}{hline 32}
-{space 10}nearinc {c |}{col 21}{res}     -0.1888857     -0.0938656
-{txt}{space 9}y81nrinc {c |}{col 21}{res}      0.0620594     -0.0393664
-{txt}{space 12}_cons {c |}{col 21}{res}     10.4685177     10.0942764
-{txt}{hline 18}{c BT}{hline 32}
-{res}
-{txt}{hline 18}{c TT}{hline 32}
-{col 10}Selected {c |}           Lasso   Post-est OLS
-{hline 18}{c +}{hline 32}
-{space 12}rooms {c |}{col 21}{res}      0.0292232      0.0653731
-{txt}{space 12}baths {c |}{col 21}{res}      0.2635702      0.2964328
-{txt}{space 14}y81 {c |}{col 21}{res}      0.0735169      0.1718676
-{txt}{hline 18}{c +}{hline 32}
-{col 4}Partialled-out{help lasso2##notpen:*}{c |}
-{hline 18}{c +}{hline 32}
-{space 10}nearinc {c |}{col 21}{res}     -0.1888857     -0.0938656
-{txt}{space 9}y81nrinc {c |}{col 21}{res}      0.0620594     -0.0393664
-{txt}{space 12}_cons {c |}{col 21}{res}     10.4685177     10.0942764
-{txt}{hline 18}{c BT}{hline 32}
-{res}
-{txt}{hline 18}{c TT}{hline 32}
-{col 10}Selected {c |}           Lasso   Post-est OLS
-{hline 18}{c +}{hline 32}
-{space 12}rooms {c |}{col 21}{res}      0.0292232      0.0653731
-{txt}{space 12}baths {c |}{col 21}{res}      0.2635702      0.2964328
-{txt}{space 14}y81 {c |}{col 21}{res}      0.0735169      0.1718676
-{txt}{hline 18}{c +}{hline 32}
-{col 4}Partialled-out{help lasso2##notpen:*}{c |}
-{hline 18}{c +}{hline 32}
-{space 10}nearinc {c |}{col 21}{res}     -0.1888857     -0.0938656
-{txt}{space 9}y81nrinc {c |}{col 21}{res}      0.0620594     -0.0393664
-{txt}{space 12}_cons {c |}{col 21}{res}     10.4685177     10.0942764
-{txt}{hline 18}{c BT}{hline 32}
-{res}
-{txt}{hline 18}{c TT}{hline 32}
-{col 10}Selected {c |}           Lasso   Post-est OLS
-{hline 18}{c +}{hline 32}
-{space 12}rooms {c |}{col 21}{res}      0.0292232      0.0653731
-{txt}{space 12}baths {c |}{col 21}{res}      0.2635702      0.2964328
-{txt}{space 14}y81 {c |}{col 21}{res}      0.0735169      0.1718676
-{txt}{hline 18}{c +}{hline 32}
-{col 4}Partialled-out{help lasso2##notpen:*}{c |}
-{hline 18}{c +}{hline 32}
-{space 10}nearinc {c |}{col 21}{res}     -0.1888857     -0.0938656
-{txt}{space 9}y81nrinc {c |}{col 21}{res}      0.0620594     -0.0393664
-{txt}{space 12}_cons {c |}{col 21}{res}     10.4685177     10.0942764
-{txt}{hline 18}{c BT}{hline 32}
-r; t=0.14 13:06:54
+{txt}r; t=0.00 19:20:21
 
 {com}. 
 . ********************** FE ONLY *********************************
@@ -1430,7 +1317,7 @@ r; t=0.14 13:06:54
 . // fe vs. explicit dummies
 . xtset age
 {txt}{col 8}panel variable:  {res}age (unbalanced)
-{txt}r; t=0.00 13:06:54
+{txt}r; t=0.00 19:20:21
 
 {com}. rlasso lrprice larea cbd intst lintst y81ldist lintstsq y81nrinc,       ///
 >         fe tolzero(1e-10) tolpsi(1e-10) tolopt(1e-8) maxiter(10000) maxpsiiter(10)
@@ -1442,16 +1329,16 @@ r; t=0.14 13:06:54
 {space 12}larea {c |}{col 21}{res}      0.4188396      0.5369687
 {txt}{space 9}y81ldist {c |}{col 21}{res}      0.0057321      0.0128520
 {txt}{hline 18}{c BT}{hline 32}
-r; t=0.01 13:06:54
+r; t=0.01 19:20:21
 
 {com}. mat b=e(b)
-{txt}r; t=0.00 13:06:54
+{txt}r; t=0.00 19:20:21
 
 {com}. mat beta=e(beta)
-{txt}r; t=0.00 13:06:54
+{txt}r; t=0.00 19:20:21
 
 {com}. mat betaOLS=e(betaOLS)
-{txt}r; t=0.00 13:06:54
+{txt}r; t=0.00 19:20:21
 
 {com}. rlasso lrprice larea cbd intst lintst y81ldist lintstsq y81nrinc i.age, ///
 >         partial(i.age) tolzero(1e-10) tolpsi(1e-10) tolopt(1e-8) maxiter(10000) maxpsiiter(10)
@@ -1531,31 +1418,31 @@ r; t=0.01 13:06:54
 {txt}{space 17} {c |}
 {space 12}_cons {c |}{col 21}{res}      8.2575448      7.3008346
 {txt}{hline 18}{c BT}{hline 32}
-r; t=0.06 13:06:54
+r; t=0.06 19:20:22
 
 {com}. mat btemp=(el(e(b),1,1), el(e(b),1,2))
-{txt}r; t=0.00 13:06:54
+{txt}r; t=0.00 19:20:22
 
 {com}. assert mreldif(b,btemp)<1e-8
-{txt}r; t=0.00 13:06:54
+{txt}r; t=0.00 19:20:22
 
 {com}. mat btemp=(el(e(beta),1,1), el(e(beta),1,2))
-{txt}r; t=0.00 13:06:54
+{txt}r; t=0.00 19:20:22
 
 {com}. assert mreldif(beta,btemp)<1e-8
-{txt}r; t=0.00 13:06:54
+{txt}r; t=0.00 19:20:22
 
 {com}. mat btemp=(el(e(betaOLS),1,1), el(e(betaOLS),1,2))
-{txt}r; t=0.00 13:06:54
+{txt}r; t=0.00 19:20:22
 
 {com}. assert mreldif(betaOLS,btemp)<1e-8
-{txt}r; t=0.00 13:06:54
+{txt}r; t=0.00 19:20:22
 
 {com}. 
 . // Controls vs pnotpen
 . xtset age
 {txt}{col 8}panel variable:  {res}age (unbalanced)
-{txt}r; t=0.00 13:06:54
+{txt}r; t=0.00 19:20:22
 
 {com}. rlasso lrprice larea cbd intst lintst y81ldist lintstsq y81nrinc,       ///
 >         fe partial(larea cbd) tolzero(1e-10) tolpsi(1e-10) tolopt(1e-8)
@@ -1571,16 +1458,16 @@ r; t=0.06 13:06:54
 {space 12}larea {c |}{col 21}{res}      0.5691556      0.5368213
 {txt}{space 14}cbd {c |}{col 21}{res}     -0.0000015     -0.0000007
 {txt}{hline 18}{c BT}{hline 32}
-r; t=0.02 13:06:54
+r; t=0.02 19:20:22
 
 {com}. mat b=e(b)
-{txt}r; t=0.00 13:06:54
+{txt}r; t=0.00 19:20:22
 
 {com}. mat beta=e(beta)
-{txt}r; t=0.00 13:06:54
+{txt}r; t=0.00 19:20:22
 
 {com}. mat betaOLS=e(betaOLS)
-{txt}r; t=0.00 13:06:54
+{txt}r; t=0.00 19:20:22
 
 {com}. rlasso lrprice larea cbd intst lintst y81ldist lintstsq y81nrinc,       ///
 >         fe pnotpen(larea cbd) tolzero(1e-10) tolpsi(1e-10) tolopt(1e-8)
@@ -1594,43 +1481,43 @@ r; t=0.02 13:06:54
 {txt}{space 9}y81ldist {c |}{col 21}{res}      0.0038551      0.0126658
 {txt}{hline 18}{c BT}{hline 32}
 {help rlasso##notpen:*Not penalized}
-r; t=0.01 13:06:54
+r; t=0.01 19:20:22
 
 {com}. mat btemp=e(b)
-{txt}r; t=0.00 13:06:54
+{txt}r; t=0.00 19:20:22
 
 {com}. assert reldif(b[1,1],btemp[1,3])<1e-8
-{txt}r; t=0.00 13:06:54
+{txt}r; t=0.00 19:20:22
 
 {com}. assert reldif(b[1,2],btemp[1,1])<1e-8
-{txt}r; t=0.00 13:06:54
+{txt}r; t=0.00 19:20:22
 
 {com}. assert reldif(b[1,3],btemp[1,2])<1e-8
-{txt}r; t=0.00 13:06:54
+{txt}r; t=0.00 19:20:22
 
 {com}. mat btemp=e(beta)
-{txt}r; t=0.00 13:06:54
+{txt}r; t=0.00 19:20:22
 
 {com}. assert reldif(beta[1,1],btemp[1,3])<1e-8
-{txt}r; t=0.00 13:06:54
+{txt}r; t=0.00 19:20:22
 
 {com}. assert reldif(beta[1,2],btemp[1,1])<1e-8
-{txt}r; t=0.00 13:06:54
+{txt}r; t=0.00 19:20:22
 
 {com}. assert reldif(beta[1,3],btemp[1,2])<1e-8
-{txt}r; t=0.00 13:06:54
+{txt}r; t=0.00 19:20:22
 
 {com}. mat btemp=e(betaOLS)
-{txt}r; t=0.00 13:06:54
+{txt}r; t=0.00 19:20:22
 
 {com}. assert reldif(betaOLS[1,1],btemp[1,3])<1e-8
-{txt}r; t=0.00 13:06:54
+{txt}r; t=0.00 19:20:22
 
 {com}. assert reldif(betaOLS[1,2],btemp[1,1])<1e-8
-{txt}r; t=0.00 13:06:54
+{txt}r; t=0.00 19:20:22
 
 {com}. assert reldif(betaOLS[1,3],btemp[1,2])<1e-8
-{txt}r; t=0.00 13:06:54
+{txt}r; t=0.00 19:20:22
 
 {com}. 
 . // noftools option
@@ -1643,13 +1530,13 @@ r; t=0.01 13:06:54
 {space 12}larea {c |}{col 21}{res}      0.4188396      0.5369687
 {txt}{space 9}y81ldist {c |}{col 21}{res}      0.0057321      0.0128520
 {txt}{hline 18}{c BT}{hline 32}
-r; t=0.01 13:06:54
+r; t=0.01 19:20:22
 
 {com}. savedresults save ftools e()
-{txt}r; t=0.00 13:06:54
+{txt}r; t=0.00 19:20:22
 
 {com}. cap noi assert "`e(noftools)'"==""  // will be error if ftools not installed
-{txt}r; t=0.00 13:06:54
+{txt}r; t=0.00 19:20:22
 
 {com}. rlasso lrprice larea cbd intst lintst y81ldist lintstsq y81nrinc, fe noftools
 {txt}(sorting by xtset panelvar age)
@@ -1660,13 +1547,13 @@ r; t=0.01 13:06:54
 {space 12}larea {c |}{col 21}{res}      0.4188396      0.5369687
 {txt}{space 9}y81ldist {c |}{col 21}{res}      0.0057321      0.0128520
 {txt}{hline 18}{c BT}{hline 32}
-r; t=0.01 13:06:54
+r; t=0.01 19:20:22
 
 {com}. assert "`e(noftools)'"=="noftools"
-{txt}r; t=0.00 13:06:54
+{txt}r; t=0.00 19:20:22
 
 {com}. savedresults comp ftools e(), exclude(macro: cmdline) tol(1e-10)
-{txt}r; t=0.00 13:06:54
+{txt}r; t=0.00 19:20:22
 
 {com}. 
 . ********************** Standardization **************************
@@ -1952,7 +1839,7 @@ r; t=0.01 13:06:54
 {hline 18}{c +}{hline 32}
 {space 12}larea {c |}{col 21}{res}      0.6052398      0.5869142
 {txt}{hline 18}{c BT}{hline 32}
-r; t=0.70 13:06:55
+r; t=0.59 19:20:22
 
 {com}. 
 . ********************** Misc options **************************
@@ -1960,7 +1847,7 @@ r; t=0.70 13:06:55
 . // Confirm these don't crash it and that post-lasso is the same.
 . // Lasso est may differ because of slightly different lambda.
 . mat betaOLS     = .65128713 , .15561146 , .01297576 , 4.7817721
-{txt}r; t=0.00 13:06:55
+{txt}r; t=0.00 19:20:22
 
 {com}. foreach opt in  tolopt(1e-8) tolpsi(1e-3) tolzero(1e-3) ///
 >                                 maxiter(1000) maxpsiiter(5)                             ///
@@ -2092,7 +1979,7 @@ opt=gammad(1)
 {txt}{space 12}_cons {c |}{helpb rlasso##notpen:*}{col 21}{res}      5.7963143      4.7817721
 {txt}{hline 18}{c BT}{hline 32}
 {help rlasso##notpen:*Not penalized}
-r; t=0.08 13:06:55
+r; t=0.09 19:20:22
 
 {com}. 
 . // xdep option - standard lasso
@@ -2109,10 +1996,10 @@ r; t=0.08 13:06:55
 {txt}{space 12}_cons {c |}{helpb rlasso##notpen:*}{col 21}{res}      5.9223612      4.7817721
 {txt}{hline 18}{c BT}{hline 32}
 {help rlasso##notpen:*Not penalized}
-r; t=0.01 13:06:55
+r; t=0.01 19:20:22
 
 {com}. mat betaOLS = e(betaOLS)
-{txt}r; t=0.00 13:06:55
+{txt}r; t=0.00 19:20:22
 
 {com}. // xdep, homoskedastic
 . // uses multiplier bootstrap so set seed for replicability
@@ -2127,16 +2014,16 @@ r; t=0.01 13:06:55
 {txt}{space 12}_cons {c |}{helpb rlasso##notpen:*}{col 21}{res}      5.8759434      4.7817721
 {txt}{hline 18}{c BT}{hline 32}
 {help rlasso##notpen:*Not penalized}
-r; t=0.70 13:06:56
+r; t=0.69 19:20:23
 
 {com}. assert mreldif(betaOLS,e(betaOLS))<1e-8
-{txt}r; t=0.00 13:06:56
+{txt}r; t=0.00 19:20:23
 
 {com}. assert reldif(e(lambda0),114.432846013)<1e-8
-{txt}r; t=0.00 13:06:56
+{txt}r; t=0.00 19:20:23
 
 {com}. assert reldif(el(e(beta),1,1),0.571190061895)<1e-8
-{txt}r; t=0.00 13:06:56
+{txt}r; t=0.00 19:20:23
 
 {com}. // benchmark - heteroskedastic, no xdep
 . rlasso lrprice larea cbd intst lintst y81ldist lintstsq y81nrinc, rob
@@ -2150,10 +2037,10 @@ r; t=0.70 13:06:56
 {txt}{space 12}_cons {c |}{helpb rlasso##notpen:*}{col 21}{res}      6.0349821      4.7817721
 {txt}{hline 18}{c BT}{hline 32}
 {help rlasso##notpen:*Not penalized}
-r; t=0.01 13:06:56
+r; t=0.01 19:20:23
 
 {com}. mat betaOLS = e(betaOLS)
-{txt}r; t=0.00 13:06:56
+{txt}r; t=0.00 19:20:23
 
 {com}. // xdep, heteroskedastic
 . // uses multiplier bootstrap so set seed for replicability
@@ -2168,16 +2055,16 @@ r; t=0.01 13:06:56
 {txt}{space 12}_cons {c |}{helpb rlasso##notpen:*}{col 21}{res}      5.9683382      4.7817721
 {txt}{hline 18}{c BT}{hline 32}
 {help rlasso##notpen:*Not penalized}
-r; t=0.77 13:06:57
+r; t=0.69 19:20:24
 
 {com}. assert mreldif(betaOLS,e(betaOLS))<1e-8
-{txt}r; t=0.00 13:06:57
+{txt}r; t=0.00 19:20:24
 
 {com}. assert reldif(e(lambda0),112.94387827)<1e-8
-{txt}r; t=0.00 13:06:57
+{txt}r; t=0.00 19:20:24
 
 {com}. assert reldif(el(e(beta),1,1),0.554928934936)<1e-8
-{txt}r; t=0.00 13:06:57
+{txt}r; t=0.00 19:20:24
 
 {com}. // benchmark - cluster, no xdep
 . rlasso lrprice larea cbd intst lintst y81ldist lintstsq y81nrinc, cluster(id)
@@ -2191,10 +2078,10 @@ r; t=0.77 13:06:57
 {txt}{space 12}_cons {c |}{helpb rlasso##notpen:*}{col 21}{res}      5.9917497      4.7817721
 {txt}{hline 18}{c BT}{hline 32}
 {help rlasso##notpen:*Not penalized}
-r; t=0.03 13:06:57
+r; t=0.01 19:20:24
 
 {com}. mat betaOLS = e(betaOLS)
-{txt}r; t=0.00 13:06:57
+{txt}r; t=0.00 19:20:24
 
 {com}. // xdep, cluster
 . // uses multiplier bootstrap so set seed for replicability
@@ -2209,16 +2096,16 @@ r; t=0.03 13:06:57
 {txt}{space 12}_cons {c |}{helpb rlasso##notpen:*}{col 21}{res}      5.9387351      4.7817721
 {txt}{hline 18}{c BT}{hline 32}
 {help rlasso##notpen:*Not penalized}
-r; t=3.17 13:07:00
+r; t=2.96 19:20:27
 
 {com}. assert mreldif(betaOLS,e(betaOLS))<1e-8
-{txt}r; t=0.00 13:07:00
+{txt}r; t=0.00 19:20:27
 
 {com}. assert reldif(e(lambda0),108.22341837697)<1e-8
-{txt}r; t=0.00 13:07:00
+{txt}r; t=0.00 19:20:27
 
 {com}. assert reldif(el(e(beta),1,1),0.571588016862)<1e-8
-{txt}r; t=0.00 13:07:00
+{txt}r; t=0.00 19:20:27
 
 {com}. 
 . // xdep option - sqrt-lasso
@@ -2235,10 +2122,10 @@ r; t=3.17 13:07:00
 {txt}{space 12}_cons {c |}{helpb rlasso##notpen:*}{col 21}{res}      5.9715237      4.7817721
 {txt}{hline 18}{c BT}{hline 32}
 {help rlasso##notpen:*Not penalized}
-r; t=0.02 13:07:00
+r; t=0.01 19:20:27
 
 {com}. mat betaOLS = e(betaOLS)
-{txt}r; t=0.00 13:07:00
+{txt}r; t=0.00 19:20:27
 
 {com}. // xdep, homoskedastic
 . // uses multiplier bootstrap so set seed for replicability
@@ -2253,16 +2140,16 @@ r; t=0.02 13:07:00
 {txt}{space 12}_cons {c |}{helpb rlasso##notpen:*}{col 21}{res}      5.9167762      4.7817721
 {txt}{hline 18}{c BT}{hline 32}
 {help rlasso##notpen:*Not penalized}
-r; t=0.40 13:07:00
+r; t=0.38 19:20:27
 
 {com}. assert mreldif(betaOLS,e(betaOLS))<1e-8
-{txt}r; t=0.00 13:07:00
+{txt}r; t=0.00 19:20:27
 
 {com}. assert reldif(e(lambda0),57.107312563841)<1e-8
-{txt}r; t=0.00 13:07:00
+{txt}r; t=0.00 19:20:27
 
 {com}. assert reldif(el(e(beta),1,1),0.568200965628)<1e-8
-{txt}r; t=0.00 13:07:00
+{txt}r; t=0.00 19:20:27
 
 {com}. // benchmark - heteroskedastic, no xdep
 . rlasso lrprice larea cbd intst lintst y81ldist lintstsq y81nrinc, rob sqrt
@@ -2276,10 +2163,10 @@ r; t=0.40 13:07:00
 {txt}{space 12}_cons {c |}{helpb rlasso##notpen:*}{col 21}{res}      6.0922598      4.7817721
 {txt}{hline 18}{c BT}{hline 32}
 {help rlasso##notpen:*Not penalized}
-r; t=0.03 13:07:00
+r; t=0.01 19:20:27
 
 {com}. mat betaOLS = e(betaOLS)
-{txt}r; t=0.00 13:07:00
+{txt}r; t=0.00 19:20:27
 
 {com}. // xdep, heteroskedastic
 . // uses multiplier bootstrap so set seed for replicability
@@ -2294,16 +2181,16 @@ r; t=0.03 13:07:00
 {txt}{space 12}_cons {c |}{helpb rlasso##notpen:*}{col 21}{res}      5.9860081      4.7817721
 {txt}{hline 18}{c BT}{hline 32}
 {help rlasso##notpen:*Not penalized}
-r; t=0.42 13:07:01
+r; t=0.41 19:20:27
 
 {com}. assert mreldif(betaOLS,e(betaOLS))<1e-8
-{txt}r; t=0.00 13:07:01
+{txt}r; t=0.00 19:20:27
 
 {com}. assert reldif(e(lambda0),55.179713611581)<1e-8
-{txt}r; t=0.00 13:07:01
+{txt}r; t=0.00 19:20:27
 
 {com}. assert reldif(el(e(beta),1,1),0.554027632301)<1e-8
-{txt}r; t=0.00 13:07:01
+{txt}r; t=0.00 19:20:27
 
 {com}. // benchmark - cluster, no xdep
 . rlasso lrprice larea cbd intst lintst y81ldist lintstsq y81nrinc, cluster(id) sqrt
@@ -2317,10 +2204,10 @@ r; t=0.42 13:07:01
 {txt}{space 12}_cons {c |}{helpb rlasso##notpen:*}{col 21}{res}      6.0582127      4.7817721
 {txt}{hline 18}{c BT}{hline 32}
 {help rlasso##notpen:*Not penalized}
-r; t=0.03 13:07:01
+r; t=0.02 19:20:27
 
 {com}. mat betaOLS = e(betaOLS)
-{txt}r; t=0.00 13:07:01
+{txt}r; t=0.00 19:20:27
 
 {com}. // xdep, cluster
 . // uses multiplier bootstrap so set seed for replicability
@@ -2335,16 +2222,16 @@ r; t=0.03 13:07:01
 {txt}{space 12}_cons {c |}{helpb rlasso##notpen:*}{col 21}{res}      5.9425831      4.7817721
 {txt}{hline 18}{c BT}{hline 32}
 {help rlasso##notpen:*Not penalized}
-r; t=1.69 13:07:02
+r; t=1.55 19:20:29
 
 {com}. assert mreldif(betaOLS,e(betaOLS))<1e-8
-{txt}r; t=0.00 13:07:02
+{txt}r; t=0.00 19:20:29
 
 {com}. assert reldif(e(lambda0),51.922234705643)<1e-8
-{txt}r; t=0.00 13:07:02
+{txt}r; t=0.00 19:20:29
 
 {com}. assert reldif(el(e(beta),1,1),0.571322946179)<1e-8
-{txt}r; t=0.00 13:07:02
+{txt}r; t=0.00 19:20:29
 
 {com}. 
 . // supscore option
@@ -2352,10 +2239,10 @@ r; t=1.69 13:07:02
 . // update for lassoutils 1.1.01 8nov2018 - now sqrt(n)*L instead of n*L
 . // set seed for null
 . set seed 1
-{txt}r; t=0.00 13:07:02
+{txt}r; t=0.00 19:20:29
 
 {com}. gen double ynull=rnormal()
-{txt}r; t=0.00 13:07:02
+{txt}r; t=0.00 19:20:29
 
 {com}. // homoskedastic
 . rlasso ynull cbd intst lintst y81ldist lintstsq y81nrinc, testonly seed(1)
@@ -2363,16 +2250,16 @@ r; t=1.69 13:07:02
 {txt}{help rlasso##supscore:Sup-score} test H0: beta=0
 CCK sup-score statistic{col 25}{res}  1.73{txt}{col 32}p-value={col 39}{res} 0.242
 {txt}CCK {res}5{txt}% critical value{res}{col 25}  2.90{col 32}{txt}(asympt bound)
-r; t=0.04 13:07:02
+r; t=0.03 19:20:29
 
 {com}. assert reldif(e(supscore),1.7293626410)<1e-8
-{txt}r; t=0.00 13:07:02
+{txt}r; t=0.00 19:20:29
 
 {com}. assert reldif(e(supscore_p),0.242)<1e-8
-{txt}r; t=0.00 13:07:02
+{txt}r; t=0.00 19:20:29
 
 {com}. assert reldif(e(supscore_cv),2.9020830008)<1e-8
-{txt}r; t=0.00 13:07:02
+{txt}r; t=0.00 19:20:29
 
 {com}. // critical value for gamma=10%
 . rlasso ynull cbd intst lintst y81ldist lintstsq y81nrinc, testonly ssgamma(0.1) seed(1)
@@ -2380,10 +2267,10 @@ r; t=0.04 13:07:02
 {txt}{help rlasso##supscore:Sup-score} test H0: beta=0
 CCK sup-score statistic{col 25}{res}  1.73{txt}{col 32}p-value={col 39}{res} 0.242
 {txt}CCK {res}10{txt}% critical value{res}{col 25}  2.63{col 32}{txt}(asympt bound)
-r; t=0.04 13:07:02
+r; t=0.04 19:20:29
 
 {com}. assert reldif(e(supscore_cv),2.63337777980)<1e-8
-{txt}r; t=0.00 13:07:02
+{txt}r; t=0.00 19:20:29
 
 {com}. // heteroskedastic
 . rlasso ynull cbd intst lintst y81ldist lintstsq y81nrinc, testonly rob seed(1)
@@ -2391,16 +2278,16 @@ r; t=0.04 13:07:02
 {txt}{help rlasso##supscore:Sup-score} test H0: beta=0
 CCK sup-score statistic{col 25}{res}  1.74{txt}{col 32}p-value={col 39}{res} 0.238
 {txt}CCK {res}5{txt}% critical value{res}{col 25}  2.90{col 32}{txt}(asympt bound)
-r; t=0.04 13:07:02
+r; t=0.03 19:20:29
 
 {com}. assert reldif(e(supscore),1.736085668840)<1e-8
-{txt}r; t=0.00 13:07:02
+{txt}r; t=0.00 19:20:29
 
 {com}. assert reldif(e(supscore_p),0.238)<1e-8
-{txt}r; t=0.00 13:07:02
+{txt}r; t=0.00 19:20:29
 
 {com}. assert reldif(e(supscore_cv),2.9020830008)<1e-8
-{txt}r; t=0.00 13:07:02
+{txt}r; t=0.00 19:20:29
 
 {com}. // clustered
 . rlasso ynull cbd intst lintst y81ldist lintstsq y81nrinc, testonly cluster(id) seed(1)
@@ -2408,16 +2295,16 @@ r; t=0.04 13:07:02
 {txt}{help rlasso##supscore:Sup-score} test H0: beta=0
 CCK sup-score statistic{col 25}{res}  1.83{txt}{col 32}p-value={col 39}{res} 0.218
 {txt}CCK {res}5{txt}% critical value{res}{col 25}  2.90{col 32}{txt}(asympt bound)
-r; t=0.15 13:07:03
+r; t=0.15 19:20:29
 
 {com}. assert reldif(e(supscore),1.833764450629)<1e-8
-{txt}r; t=0.00 13:07:03
+{txt}r; t=0.00 19:20:29
 
 {com}. assert reldif(e(supscore_p),0.218)<1e-8
-{txt}r; t=0.00 13:07:03
+{txt}r; t=0.00 19:20:29
 
 {com}. assert reldif(e(supscore_cv),2.9020830008)<1e-8
-{txt}r; t=0.00 13:07:03
+{txt}r; t=0.00 19:20:29
 
 {com}. 
 . ********************** Prediction *********************
@@ -2434,7 +2321,7 @@ r; t=0.15 13:07:03
 {txt}{space 12}_cons {c |}{helpb rlasso##notpen:*}{col 21}{res}      5.9223612      4.7817721
 {txt}{hline 18}{c BT}{hline 32}
 {help rlasso##notpen:*Not penalized}
-r; t=0.01 13:07:03
+r; t=0.01 19:20:29
 
 {com}. foreach option in "xb" "xb lasso" "xb ols" "resid" "resid lasso" "resid ols" {c -(}
 {txt}  2{com}.         cap drop newvar
@@ -2447,7 +2334,7 @@ option=xb ols
 option=resid
 option=resid lasso
 option=resid ols
-{txt}r; t=0.02 13:07:03
+{txt}r; t=0.03 19:20:29
 
 {com}. rlasso lrprice larea cbd intst lintst y81ldist lintstsq y81nrinc, fe
 {txt}(sorting by xtset panelvar id)
@@ -2459,7 +2346,7 @@ option=resid ols
 {txt}{space 11}lintst {c |}{col 21}{res}      0.0382092      0.1005835
 {txt}{space 9}y81nrinc {c |}{col 21}{res}     -0.0777246     -0.2035076
 {txt}{hline 18}{c BT}{hline 32}
-r; t=0.01 13:07:03
+r; t=0.01 19:20:29
 
 {com}. foreach option in "ue" "e" {c -(}
 {txt}  2{com}.         cap drop newvar
@@ -2468,7 +2355,7 @@ r; t=0.01 13:07:03
 {txt}  5{com}. {c )-}
 option=ue
 option=e
-{res}{txt}r; t=0.00 13:07:03
+{res}{txt}r; t=0.01 19:20:29
 
 {com}. // resids should be mean zero
 . rlasso lrprice larea cbd intst lintst y81ldist lintstsq y81nrinc
@@ -2482,7 +2369,7 @@ option=e
 {txt}{space 12}_cons {c |}{helpb rlasso##notpen:*}{col 21}{res}      5.9223612      4.7817721
 {txt}{hline 18}{c BT}{hline 32}
 {help rlasso##notpen:*Not penalized}
-r; t=0.01 13:07:03
+r; t=0.01 19:20:29
 
 {com}. foreach option in " " "lasso" "ols" {c -(}
 {txt}  2{com}.         cap drop resid
@@ -2490,7 +2377,7 @@ r; t=0.01 13:07:03
 {txt}  4{com}.         qui sum resid, meanonly
 {txt}  5{com}.         assert r(mean)<1e-8
 {txt}  6{com}. {c )-}
-{txt}r; t=0.00 13:07:03
+{txt}r; t=0.00 19:20:29
 
 {com}. rlasso lrprice larea cbd intst lintst y81ldist lintstsq y81nrinc, fe
 {txt}(sorting by xtset panelvar id)
@@ -2502,7 +2389,7 @@ r; t=0.01 13:07:03
 {txt}{space 11}lintst {c |}{col 21}{res}      0.0382092      0.1005835
 {txt}{space 9}y81nrinc {c |}{col 21}{res}     -0.0777246     -0.2035076
 {txt}{hline 18}{c BT}{hline 32}
-r; t=0.01 13:07:03
+r; t=0.01 19:20:29
 
 {com}. foreach option in "u" "e" "ue" {c -(}
 {txt}  2{com}.         cap drop resid
@@ -2510,7 +2397,7 @@ r; t=0.01 13:07:03
 {txt}  4{com}.         qui sum resid, meanonly
 {txt}  5{com}.         assert r(mean)<1e-8
 {txt}  6{com}. {c )-}
-{res}{txt}r; t=0.01 13:07:03
+{res}{txt}r; t=0.01 19:20:29
 
 {com}. // mean of predicted yhat = mean of y
 . rlasso lrprice larea cbd intst lintst y81ldist lintstsq y81nrinc
@@ -2524,13 +2411,13 @@ r; t=0.01 13:07:03
 {txt}{space 12}_cons {c |}{helpb rlasso##notpen:*}{col 21}{res}      5.9223612      4.7817721
 {txt}{hline 18}{c BT}{hline 32}
 {help rlasso##notpen:*Not penalized}
-r; t=0.01 13:07:03
+r; t=0.01 19:20:29
 
 {com}. qui sum lrprice, meanonly
-{txt}r; t=0.00 13:07:03
+{txt}r; t=0.00 19:20:29
 
 {com}. local ymean `r(mean)'
-{txt}r; t=0.00 13:07:03
+{txt}r; t=0.00 19:20:29
 
 {com}. foreach option in " " "lasso" "ols" {c -(}
 {txt}  2{com}.         cap drop yhat
@@ -2538,7 +2425,7 @@ r; t=0.01 13:07:03
 {txt}  4{com}.         qui sum yhat, meanonly
 {txt}  5{com}.         assert r(mean)-`ymean'<1e-8
 {txt}  6{com}. {c )-}
-{txt}r; t=0.00 13:07:03
+{txt}r; t=0.00 19:20:29
 
 {com}. // confirm post-lasso OLS matches regress
 . rlasso lrprice larea cbd intst lintst y81ldist lintstsq y81nrinc
@@ -2552,22 +2439,22 @@ r; t=0.01 13:07:03
 {txt}{space 12}_cons {c |}{helpb rlasso##notpen:*}{col 21}{res}      5.9223612      4.7817721
 {txt}{hline 18}{c BT}{hline 32}
 {help rlasso##notpen:*Not penalized}
-r; t=0.01 13:07:03
+r; t=0.01 19:20:29
 
 {com}. local selected `e(selected)'
-{txt}r; t=0.00 13:07:03
+{txt}r; t=0.00 19:20:29
 
 {com}. cap drop xb_rlasso
-{txt}r; t=0.00 13:07:03
+{txt}r; t=0.00 19:20:29
 
 {com}. cap drop resid_rlasso
-{txt}r; t=0.00 13:07:03
+{txt}r; t=0.00 19:20:29
 
 {com}. predict double xb_rlasso, xb ols
-{txt}r; t=0.00 13:07:03
+{txt}r; t=0.00 19:20:29
 
 {com}. predict double resid_rlasso, resid ols
-{txt}r; t=0.00 13:07:03
+{txt}r; t=0.00 19:20:29
 
 {com}. regress lrprice `selected'
 
@@ -2586,32 +2473,32 @@ r; t=0.01 13:07:03
 {txt}{space 4}y81ldist {c |}{col 14}{res}{space 2} .0129758{col 26}{space 2} .0029138{col 37}{space 1}    4.45{col 46}{space 3}0.000{col 54}{space 4}  .007243{col 67}{space 3} .0187085
 {txt}{space 7}_cons {c |}{col 14}{res}{space 2} 4.781772{col 26}{space 2} .3263734{col 37}{space 1}   14.65{col 46}{space 3}0.000{col 54}{space 4}  4.13964{col 67}{space 3} 5.423904
 {txt}{hline 13}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-{res}{txt}r; t=0.55 13:07:03
+{res}{txt}r; t=0.54 19:20:30
 
 {com}. cap drop xb_regress
-{txt}r; t=0.00 13:07:03
+{txt}r; t=0.00 19:20:30
 
 {com}. cap drop resid_regress
-{txt}r; t=0.00 13:07:03
+{txt}r; t=0.00 19:20:30
 
 {com}. predict double xb_regress, xb
-{txt}r; t=0.00 13:07:03
+{txt}r; t=0.00 19:20:30
 
 {com}. predict double resid_regress, resid
-{txt}r; t=0.00 13:07:03
+{txt}r; t=0.00 19:20:30
 
 {com}. assert reldif(xb_rlasso,xb_regress) < 1e-6
-{txt}r; t=0.00 13:07:03
+{txt}r; t=0.00 19:20:30
 
 {com}. assert reldif(resid_rlasso,resid_regress) < 1e-6
-{txt}r; t=0.00 13:07:03
+{txt}r; t=0.00 19:20:30
 
 {com}. // confirm post-lasso LSDV matches xtreg,fe
 . foreach opt in xb u e ue xbu {c -(}
 {txt}  2{com}.         cap drop `opt'hat_rlasso
 {txt}  3{com}.         cap drop `opt'hat_xtreg
 {txt}  4{com}. {c )-}
-{txt}r; t=0.00 13:07:03
+{txt}r; t=0.00 19:20:30
 
 {com}. rlasso lrprice larea cbd intst lintst y81ldist lintstsq y81nrinc, fe
 {txt}(sorting by xtset panelvar id)
@@ -2623,15 +2510,15 @@ r; t=0.01 13:07:03
 {txt}{space 11}lintst {c |}{col 21}{res}      0.0382092      0.1005835
 {txt}{space 9}y81nrinc {c |}{col 21}{res}     -0.0777246     -0.2035076
 {txt}{hline 18}{c BT}{hline 32}
-r; t=0.01 13:07:03
+r; t=0.01 19:20:30
 
 {com}. local selected `e(selected)'
-{txt}r; t=0.00 13:07:03
+{txt}r; t=0.00 19:20:30
 
 {com}. foreach opt in xb u e ue xbu {c -(}
 {txt}  2{com}.         predict double `opt'hat_rlasso, ols `opt'
 {txt}  3{com}. {c )-}
-{res}{txt}r; t=0.01 13:07:03
+{res}{txt}r; t=0.01 19:20:30
 
 {com}. xtreg lrprice `selected', fe
 {res}
@@ -2659,12 +2546,12 @@ r; t=0.01 13:07:03
          {txt}rho {c |} {res} .35179814{txt}   (fraction of variance due to u_i)
 {hline 13}{c BT}{hline 64}
 F test that all u_i=0: F({res}32{txt}, {res}285{txt}) = {res}2.69{col 62}{txt}Prob > F = {res}0.0000
-{txt}r; t=0.02 13:07:03
+{txt}r; t=0.02 19:20:30
 
 {com}. foreach opt in xb u e ue xbu {c -(}
 {txt}  2{com}.         predict double `opt'hat_xtreg, `opt'
 {txt}  3{com}. {c )-}
-{txt}r; t=0.00 13:07:03
+{txt}r; t=0.00 19:20:30
 
 {com}. foreach opt in xb u e ue xbu {c -(}
 {txt}  2{com}.         di "checking option `opt'
@@ -2675,27 +2562,27 @@ checking option u
 checking option e
 checking option ue
 checking option xbu
-{txt}r; t=0.00 13:07:03
+{txt}r; t=0.00 19:20:30
 
 {com}. 
 . 
 . **************** Weights *********************
 . 
 . cap drop one
-{txt}r; t=0.00 13:07:03
+{txt}r; t=0.00 19:20:30
 
 {com}. cap drop wt
-{txt}r; t=0.00 13:07:03
+{txt}r; t=0.00 19:20:30
 
 {com}. gen double one=1
-{txt}r; t=0.00 13:07:03
+{txt}r; t=0.00 19:20:30
 
 {com}. // use a non-integer weight
 . global wtvar lcbdsq
-{txt}r; t=0.00 13:07:03
+{txt}r; t=0.00 19:20:30
 
 {com}. gen double wt=$wtvar
-{txt}r; t=0.00 13:07:03
+{txt}r; t=0.00 19:20:30
 
 {com}. // assumes no missings for any regressors or dep var
 . sum wt
@@ -2703,11 +2590,11 @@ checking option xbu
 {txt}    Variable {c |}        Obs        Mean    Std. Dev.       Min        Max
 {hline 13}{c +}{hline 57}
 {space 10}wt {c |}{res}        321     89.5797    14.18291   47.71708   109.4765
-{txt}r; t=0.00 13:07:03
+{txt}r; t=0.00 19:20:30
 
 {com}. replace wt = wt * 1/r(mean)
 {txt}(321 real changes made)
-r; t=0.00 13:07:03
+r; t=0.00 19:20:30
 
 {com}. 
 . * Basic estimation with constant and no partialling etc.
@@ -2715,30 +2602,30 @@ r; t=0.00 13:07:03
 . * and then weighted by the sqrt of the weighting var.
 . 
 . cap drop w_*
-{txt}r; t=0.00 13:07:03
+{txt}r; t=0.00 19:20:30
 
 {com}. * weighted centering (so no intercept)
 . foreach var of varlist lrprice larea cbd intst lintst y81ldist lintstsq y81nrinc {c -(}
 {txt}  2{com}.         qui sum `var' [aw=wt], meanonly
 {txt}  3{com}.         gen double w_c_`var' = (`var'-r(mean))*sqrt(wt)
 {txt}  4{com}. {c )-}
-{txt}r; t=0.00 13:07:03
+{txt}r; t=0.00 19:20:30
 
 {com}. 
 . global vlist lrprice larea cbd intst lintst y81ldist lintstsq y81nrinc
-{txt}r; t=0.00 13:07:03
+{txt}r; t=0.00 19:20:30
 
 {com}. global w_c_vlist w_c_lrprice w_c_larea w_c_cbd w_c_intst w_c_lintst w_c_y81ldist w_c_lintstsq w_c_y81nrinc
-{txt}r; t=0.00 13:07:03
+{txt}r; t=0.00 19:20:30
 
 {com}. 
 . // disallowed options
 . cap noi rlasso $vlist [aw=$wtvar], nocons
 {err}incompatible options - weights + noconstant
-{txt}r; t=0.00 13:07:03
+{txt}r; t=0.00 19:20:30
 
 {com}. assert _rc==198
-{txt}r; t=0.00 13:07:03
+{txt}r; t=0.00 19:20:30
 
 {com}. 
 . foreach opt in "" "rob" {c -(}
@@ -2825,16 +2712,16 @@ r; t=0.00 13:07:03
 {txt}{space 7}w_c_lintst {c |}{col 21}{res}      0.0950719      0.1433958
 {txt}{space 5}w_c_y81ldist {c |}{col 21}{res}      0.0045284      0.0125833
 {txt}{hline 18}{c BT}{hline 32}
-r; t=0.11 13:07:03
+r; t=0.10 19:20:30
 
 {com}. 
 . * Estimation with constant and partial/notpen
 . 
 . cap drop w_*
-{txt}r; t=0.00 13:07:03
+{txt}r; t=0.00 19:20:30
 
 {com}. cap drop c_*
-{txt}r; t=0.00 13:07:03
+{txt}r; t=0.00 19:20:30
 
 {com}. * weighted partialling out of y81nrinc
 . foreach var of varlist lrprice larea cbd intst lintst y81ldist lintstsq {c -(}
@@ -2842,14 +2729,14 @@ r; t=0.11 13:07:03
 {txt}  3{com}.         predict double c_`var', resid
 {txt}  4{com}.         gen double w_c_`var' = c_`var'*sqrt(wt)
 {txt}  5{com}. {c )-}
-{txt}r; t=0.04 13:07:03
+{txt}r; t=0.04 19:20:30
 
 {com}. 
 . global vlist lrprice larea cbd intst lintst y81ldist lintstsq y81nrinc
-{txt}r; t=0.00 13:07:03
+{txt}r; t=0.00 19:20:30
 
 {com}. global w_c_vlist w_c_lrprice w_c_larea w_c_cbd w_c_intst w_c_lintst w_c_y81ldist w_c_lintstsq
-{txt}r; t=0.00 13:07:03
+{txt}r; t=0.00 19:20:30
 
 {com}. 
 . foreach opt in "" "rob" {c -(}
@@ -3005,7 +2892,7 @@ r; t=0.11 13:07:03
 {txt}{space 7}w_c_lintst {c |}{col 21}{res}      0.0789506      0.1297048
 {txt}{space 5}w_c_y81ldist {c |}{col 21}{res}      0.0069238      0.0141991
 {txt}{hline 18}{c BT}{hline 32}
-r; t=0.20 13:07:04
+r; t=0.19 19:20:30
 
 {com}. 
 . 
@@ -3013,14 +2900,14 @@ r; t=0.20 13:07:04
 . * id var created earlier
 . xtset id
 {txt}{col 8}panel variable:  {res}id (unbalanced)
-{txt}r; t=0.00 13:07:04
+{txt}r; t=0.00 19:20:30
 
 {com}. 
 . cap drop w_*
-{txt}r; t=0.00 13:07:04
+{txt}r; t=0.00 19:20:30
 
 {com}. cap drop c_*
-{txt}r; t=0.00 13:07:04
+{txt}r; t=0.00 19:20:30
 
 {com}. * weighted partialling out of y81nrinc and FEs
 . foreach var of varlist lrprice larea cbd intst lintst y81ldist lintstsq {c -(}
@@ -3028,14 +2915,14 @@ r; t=0.20 13:07:04
 {txt}  3{com}.         predict double c_`var', resid
 {txt}  4{com}.         gen double w_c_`var' = c_`var'*sqrt(wt)
 {txt}  5{com}. {c )-}
-{txt}r; t=0.05 13:07:04
+{txt}r; t=0.05 19:20:30
 
 {com}. 
 . global vlist lrprice larea cbd intst lintst y81ldist lintstsq y81nrinc
-{txt}r; t=0.00 13:07:04
+{txt}r; t=0.00 19:20:30
 
 {com}. global w_c_vlist w_c_lrprice w_c_larea w_c_cbd w_c_intst w_c_lintst w_c_y81ldist w_c_lintstsq
-{txt}r; t=0.00 13:07:04
+{txt}r; t=0.00 19:20:30
 
 {com}. 
 . // disallowed options
@@ -3044,10 +2931,10 @@ r; t=0.20 13:07:04
 (sum of wgt is     2.8755e+04)
 {res}{err}error - fe option with weights requires {rnethelp "http://fmwww.bc.edu/RePEc/bocode/f/ftools.sthlp":ftools} package to be installed
 see {rnethelp "http://fmwww.bc.edu/RePEc/bocode/f/ftools.sthlp":help ftools} for details
-{txt}r; t=0.00 13:07:04
+{txt}r; t=0.00 19:20:30
 
 {com}. assert _rc==198
-{txt}r; t=0.00 13:07:04
+{txt}r; t=0.00 19:20:30
 
 {com}. 
 . foreach opt in "" "rob" {c -(}
@@ -3276,7 +3163,7 @@ see {rnethelp "http://fmwww.bc.edu/RePEc/bocode/f/ftools.sthlp":help ftools} for
 {hline 18}{c +}{hline 32}
 {space 8}w_c_larea {c |}{col 21}{res}      0.4696058      0.6113602
 {txt}{hline 18}{c BT}{hline 32}
-r; t=0.25 13:07:04
+r; t=0.26 19:20:31
 
 {com}. 
 . **************** Misc syntax/options *****************************
@@ -3290,14 +3177,14 @@ r; t=0.25 13:07:04
 {space 12}_cons {c |}{helpb rlasso##notpen:*}{col 21}{res}     10.7981860     10.7981860
 {txt}{hline 18}{c BT}{hline 32}
 {help rlasso##notpen:*Not penalized}
-r; t=0.00 13:07:04
+r; t=0.01 19:20:31
 
 {com}. 
 . **************** Panel data with time series ops *****************
 . 
 . use "http://fmwww.bc.edu/ec-p/data/macro/abdata.dta", clear
 {txt}(Layard & Nickell, Unemployment in Britain, Economica 53, 1986 from Ox dist)
-r; t=0.93 13:07:05
+r; t=0.73 19:20:31
 
 {com}. 
 . // FE and noftools options
@@ -3312,13 +3199,13 @@ r; t=0.93 13:07:05
 {txt}{space 17} {c |}
 {space 16}n {c |}{col 21}{res}      0.0896224      0.1114129
 {txt}{hline 18}{c BT}{hline 32}
-r; t=0.02 13:07:05
+r; t=0.02 19:20:31
 
 {com}. savedresults save ftools e()
-{txt}r; t=0.00 13:07:05
+{txt}r; t=0.00 19:20:31
 
 {com}. cap noi assert "`e(noftools)'"==""  // will be error if ftools not installed
-{txt}r; t=0.00 13:07:05
+{txt}r; t=0.00 19:20:31
 
 {com}. rlasso ys l(0/3).k l(0/3).n, fe noftools
 {res}
@@ -3331,96 +3218,22 @@ r; t=0.02 13:07:05
 {txt}{space 17} {c |}
 {space 16}n {c |}{col 21}{res}      0.0896224      0.1114129
 {txt}{hline 18}{c BT}{hline 32}
-r; t=0.03 13:07:05
+r; t=0.04 19:20:31
 
 {com}. assert "`e(noftools)'"=="noftools"
-{txt}r; t=0.00 13:07:05
+{txt}r; t=0.00 19:20:31
 
 {com}. savedresults comp ftools e(), exclude(macro: cmdline)
-{txt}r; t=0.00 13:07:05
+{txt}r; t=0.00 19:20:31
 
 {com}. 
-. // two-way cluster-robust; order shouldn't matter
-. rlasso ys l(0/3).k l(0/3).n, fe cluster(id year)
-{res}
-{txt}{hline 18}{c TT}{hline 32}
-{col 10}Selected {c |}           Lasso   Post-est OLS
-{hline 18}{c +}{hline 32}
-{space 16}k {c |}{col 21}{res}      0.0594519      0.1288796
-{txt}{space 16}n {c |}{col 21}{res}      0.0478063      0.1147564
-{txt}{hline 18}{c BT}{hline 32}
-r; t=0.02 13:07:05
-
-{com}. savedresults save twoway e()
-{txt}r; t=0.00 13:07:05
-
-{com}. rlasso ys l(0/3).k l(0/3).n, fe cluster(year id)
-{res}
-{txt}{hline 18}{c TT}{hline 32}
-{col 10}Selected {c |}           Lasso   Post-est OLS
-{hline 18}{c +}{hline 32}
-{space 16}k {c |}{col 21}{res}      0.0594519      0.1288796
-{txt}{space 16}n {c |}{col 21}{res}      0.0478063      0.1147564
-{txt}{hline 18}{c BT}{hline 32}
-r; t=0.03 13:07:05
-
-{com}. savedresults comp twoway e(), exclude(                                                          ///
->         macro: cmdline loptions clustvar clustvar1 clustvar2                    ///
->         scalar: N_clust1 N_clust2                                                                               ///
->                 )  tol(1e-8)
-{txt}r; t=0.00 13:07:05
-
-{com}. 
-. // balanced panel
-. keep if year>=1978 & year<=1982
-{txt}(331 observations deleted)
-r; t=0.00 13:07:05
-
-{com}. // cluster-robust with a balanced panel is equivalent to
-. // HAC with bw=all lags and kernel=truncated (and same rlasso gamma)
-. // can use gamma(0.1) but HAC with maq theoretically appealing
-. rlasso n w k ys                                                                                 ///
->                 , rob bw(4) kernel(tru) maq
-
-{txt}{hline 18}{c TT}{hline 32}
-{col 10}Selected {c |}           Lasso   Post-est OLS
-{hline 18}{c +}{hline 32}
-{space 16}k {c |}{col 21}{res}      0.7145334      0.8128797
-{txt}{space 12}_cons {c |}{helpb rlasso##notpen:*}{col 21}{res}      1.3713302      1.4099982
-{txt}{hline 18}{c BT}{hline 32}
-{help rlasso##notpen:*Not penalized}
-r; t=0.01 13:07:05
-
-{com}. savedresults save hac e()
-{txt}r; t=0.00 13:07:05
-
-{com}. rlasso n w k ys                                                                         ///
->                 , cluster(id)
-
-{txt}{hline 18}{c TT}{hline 32}
-{col 10}Selected {c |}           Lasso   Post-est OLS
-{hline 18}{c +}{hline 32}
-{space 16}k {c |}{col 21}{res}      0.7145334      0.8128797
-{txt}{space 12}_cons {c |}{helpb rlasso##notpen:*}{col 21}{res}      1.3713302      1.4099982
-{txt}{hline 18}{c BT}{hline 32}
-{help rlasso##notpen:*Not penalized}
-r; t=0.01 13:07:05
-
-{com}. savedresults comp hac e(), exclude(                                                                     ///
->         macro: cmdline robust clustvar kernel                           ///
->         scalar: N_clust N_clust1 N_clust2 bw niter                                                      ///
->                 )  tol(1e-8)
-{txt}r; t=0.00 13:07:05
-
-{com}. 
-. 
 . // ******************* COMPLETE *********************** //
 . 
 . log close
       {txt}name:  {res}<unnamed>
-       {txt}log:  {res}C:\Users\ecomes\Documents\GitHub\lassopack\cs_rlasso.smcl
+       {txt}log:  {res}C:\LocalStore\ecomes\Dropbox\statalasso\working\cs_rlasso.smcl
   {txt}log type:  {res}smcl
- {txt}closed on:  {res}20 Aug 2020, 13:07:05
+ {txt}closed on:  {res}27 Jul 2020, 19:20:31
 {txt}{.-}
 {smcl}
 {txt}{sf}{ul off}

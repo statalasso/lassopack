@@ -1,5 +1,5 @@
 * certification script for 
-* lassopack package 1.4.X 18aug2020, aa/ms
+* lassopack package 1.1.xx 27july2020, aa/ms
 * parts of the script use R's glmnet, Matlab code "SqrtLassoIterative.m", 
 * and Wilbur Townsend's elasticregress for validation
 
@@ -105,12 +105,10 @@ global model lpsa lcavol lweight age lbph svi lcp gleason pgg45
 // y <- dta$lpsa
 // X <- as.matrix(subset(dta,select=c("lcavol","lweight","age","lbph","svi","lcp","gleason","pgg45")))
 
-/*
 lasso2 $model
 di e(lmax)
 lasso2 $model, lglmnet
 di e(lmax)
-*/
 // glmnet uses the same lambda max (but not the same minimum lambda)
 // note the 2*n adjustment required due to the different objective function.
 // alternatively, the lglmnet option can used.
@@ -211,10 +209,9 @@ mat G = ( 0,0,0.0326387149332038,0,0,0,0,0.0148835249197989 \ 0.558216559129859,
 comparemat L G
 
 *** now using lglmnet option ***
-/*
+
 lasso2 $model, l(.8 .6 .2) lglmnet
 mat L = e(betas)
-*/
 /*
 > # lasso estimation (standardize & intercept)
 > r<-glmnet(X,y,lambda=c(.8,.6,.2),standardize=TRUE,intercept=TRUE)
@@ -225,13 +222,11 @@ s0   2.4283862 0.03703726 .           .    . .           .       .     .
 s1   2.1981140 0.20760804 .           .    . .           .       .     .
 s2   0.7154547 0.45182494 0.2966946   .    . 0.3523241   .       .     .
 */
-/*
 mat G = ( 0.0370372606890949,0,0,0,0,0,0,0,2.42838622158533 \ 0.207608043458756,0,0,0,0,0,0,0,2.19811403069554 \ 0.45182494276911,0.296694633018004,0,0,0.352324077604082,0,0,0,0.715454720149449 )
 comparemat L G
 
 lasso2 $model, l(.8 .6 .2) lglmnet unitload
 mat L = e(betas)
-*/
 /*
 > # lasso estimation (w/o standardize & intercept)
 > r<-glmnet(X,y,lambda=c(.8,.6,.2),standardize=FALSE,intercept=TRUE)
@@ -243,13 +238,11 @@ s1    1.950896 0.1372576       .   . .            .   .       . 0.014034947
 s2    1.618724 0.4893253       .   . 0.02387818   .   .       . 0.008066494
 > asmat(t(coef(r)))
 */
-/*
 mat G = ( 0,0,0,0,0,0,0,0.0162682849336487,2.08174261166929 \ 0.137257628322798,0,0,0,0,0,0,0.0140349465593846,1.95089551137846 \ 0.489325292943062,0,0,0.0238781766783061,0,0,0,0.00806649425516767,1.61872396370499 )
 comparemat L G
 
 lasso2 $model, l(.8 .6 .2) lglmnet  nocons
 mat L = e(betas)
-*/
 /*
 > # lasso estimation (w/ standardize & w/o intercept)
 > r<-glmnet(X,y,lambda=c(.8,.6,.2),standardize=TRUE,intercept=FALSE)
@@ -261,13 +254,11 @@ s1           . 0.17424422 0.3773174   .    . .           . 0.12370274     .
 s2           . 0.43879201 0.4531537   .    . 0.3434186   . 0.02362562     .
 > asmat(t(coef(r)))
 */
-/*
 mat G = ( 0.0100161543047344,0.355748298540682,0,0,0,0,0.165819987155045,0 \ 0.174244224723816,0.377317383071473,0,0,0,0,0.123702743345189,0 \ 0.438792010313506,0.453153674363568,0,0,0.343418593611708,0,0.0236256173546178,0 )
 comparemat L G
 
 lasso2 $model, l(.8 .6 .2) lglmnet unitload nocons
 mat L = e(betas)
-*/
 /*
 > # lasso estimation (w/o standardize & w/o intercept)
 > r<-glmnet(X,y,lambda=c(.8,.6,.2),standardize=FALSE,intercept=FALSE)
@@ -279,10 +270,8 @@ s1           . 0.1357669       . 0.03062938    .   .   .       . 0.012720689
 s2           . 0.4877323       . 0.02542719    .   .   .       . 0.007070216
 > asmat(t(coef(r)))
 */
-/*
 mat G = ( 0,0,0.0326414588433045,0,0,0,0,0.0148609196162634 \ 0.13576687334887,0,0.0306293800710363,0,0,0,0,0.0127206887941435 \ 0.487732337283528,0,0.0254271936782152,0,0,0,0,0.00707021639137941 )
 comparemat L G
-*/
 
 ********************************************************************************
 *** replicate sqrt-lasso Matlab program										 ***
@@ -364,41 +353,6 @@ foreach li of numlist 0.1 1 3 5 10 50 100 {
  }
 }
 */
-
-********************************************************************************
-*** validation using Stata's elasticnet										 ***
-********************************************************************************
-
-// ridge
-cap noi elasticnet linear $model, alphas(0) grid(2, min(0.25))
-lassoselect alpha = 0 lambda = 0.25
-lassocoef, display(coef, penalized)
-mat b=e(b)
-// Stata lambda = 2N*lambda
-global L=2*e(N)*0.25
-lasso2 $model, lambda($L) alpha(0)
-assert mreldif(b,e(b))<1e-7
-
-// lasso
-cap noi elasticnet linear $model, alphas(1) grid(2, min(0.25))
-lassoselect alpha = 1 lambda = 0.25
-lassocoef, display(coef, penalized)
-mat b=e(b)
-// Stata lambda = 2N*lambda
-global L=2*e(N)*0.25
-lasso2 $model, lambda($L)
-assert mreldif(b,e(b))<1e-7
-
-// elastic net
-cap noi elasticnet linear $model, alphas(0.5) grid(2, min(0.25))
-lassoselect alpha = 0.5 lambda = 0.25
-lassocoef, display(coef, penalized)
-mat b=e(b)
-// Stata lambda = 2N*lambda
-global L=2*e(N)*0.25
-lasso2 $model, lambda($L) alpha(0.5)
-assert mreldif(b,e(b))<1e-7
-
 
 ********************************************************************************
 *** norecover option														 ***
@@ -1291,120 +1245,7 @@ assert abs(uehat_xtreg-uehat)<10e-8 | (missing(uehat_xtreg) | missing(uehat))
 assert abs(xbhat_xtreg-xbhat)<10e-8 | (missing(xbhat_xtreg) | missing(xbhat))
 assert abs(xbuhat_xtreg-xbuhat)<10e-8 | (missing(xbuhat_xtreg) | missing(xbuhat))
 assert abs(uhat_xtreg-uhat)<10e-8 | (missing(uhat_xtreg) | missing(uhat))
-
-
-********************************************************************************
-*** lglmnet option                                                           ***
-********************************************************************************
-
-* uses auto dataset
-* can change sd(y) and lambdas to suit
-
-// any lambda, any alpha
-sysuse auto, clear
-replace price = price/10
-local glmnetlambda_a = 100
-local glmnetlambda_b = 10
-drop if rep78==.
-qui sum price
-local sd = r(sd) * 1/sqrt( r(N)/(r(N)-1)   )
-local glmnetalpha = 0.5
-local L1lambda_a = `glmnetlambda_a' * 2 * 69
-local L2lambda_a = `L1lambda_a' / `sd'
-local L1lambda_b = `glmnetlambda_b' * 2 * 69
-local L2lambda_b = `L1lambda_b' / `sd'
-di "glmnetlambda_a=`glmnetlambda_a' L1lambda_a=`L1lambda_a' L2lambda_a=`L2lambda_a'"
-di "glmnetlambda_b=`glmnetlambda_b' L1lambda_b=`L1lambda_b' L2lambda_b=`L2lambda_b'"
-// Lasso / alpha=1
-lasso2 price mpg-foreign, lambda(`glmnetlambda_a') lglmnet
-storedresults save glmnet e()
-lasso2 price mpg-foreign, lambda(`L1lambda_a')
-storedresults compare glmnet e(), tol(1e-8)							///
-	exclude(macros: lasso2opt scalar: niter lambda)
-// lambda list
-lasso2 price mpg-foreign, lambda(`glmnetlambda_a' `glmnetlambda_b') lglmnet
-storedresults save glmnet e()
-lasso2 price mpg-foreign, lambda(`L1lambda_a' `L1lambda_b')
-storedresults compare glmnet e(), tol(1e-8)							///
-	exclude(macros: lasso2opt										///
-	scalar: niter lmax lmax0 lmin lmin0 laic laicc lbic lebic		///
-	matrix: lambdamat lambdamat0)
-// prestd
-lasso2 price mpg-foreign, lambda(`glmnetlambda_a') lglmnet prestd
-storedresults save glmnet e()
-lasso2 price mpg-foreign, lambda(`L1lambda_a') prestd
-storedresults compare glmnet e(), tol(1e-8)							///
-	exclude(macros: lasso2opt scalar: niter lambda)
-// lambda list
-lasso2 price mpg-foreign, lambda(`glmnetlambda_a' `glmnetlambda_b') lglmnet prestd
-storedresults save glmnet e()
-lasso2 price mpg-foreign, lambda(`L1lambda_a' `L1lambda_b') prestd
-storedresults compare glmnet e(), tol(1e-8)							///
-	exclude(macros: lasso2opt										///
-	scalar: niter lmax lmax0 lmin lmin0 laic laicc lbic lebic		///
-	matrix: lambdamat lambdamat0)
-// Ridge / alpha=0
-lasso2 price mpg-foreign, alpha(0) lambda(`glmnetlambda_a') lglmnet
-storedresults save glmnet e()
-lasso2 price mpg-foreign, alpha(0) lambda(`L2lambda_a')
-storedresults compare glmnet e(), tol(1e-8)							///
-	exclude(macros: lasso2opt scalar: niter lambda)
-// lambda list
-lasso2 price mpg-foreign, alpha(0) lambda(`glmnetlambda_a' `glmnetlambda_b') lglmnet
-storedresults save glmnet e()
-lasso2 price mpg-foreign, alpha(0) lambda(`L2lambda_a' `L2lambda_b')
-storedresults compare glmnet e(), tol(1e-8)							///
-	exclude(macros: lasso2opt										///
-	scalar: niter lmax lmax0 lmin lmin0 laic laicc lbic lebic		///
-	matrix: lambdamat lambdamat0)
-// prestd
-lasso2 price mpg-foreign, alpha(0) lambda(`glmnetlambda_a') lglmnet prestd
-storedresults save glmnet e()
-lasso2 price mpg-foreign, alpha(0) lambda(`L2lambda_a') prestd
-storedresults compare glmnet e(), tol(1e-8)							///
-	exclude(macros: lasso2opt scalar: niter lambda)
-// lambda list
-lasso2 price mpg-foreign, alpha(0) lambda(`glmnetlambda_a' `glmnetlambda_b') lglmnet prestd
-storedresults save glmnet e()
-lasso2 price mpg-foreign, alpha(0) lambda(`L2lambda_a' `L2lambda_b') prestd
-storedresults compare glmnet e(), tol(1e-8)							///
-	exclude(macros: lasso2opt										///
-	scalar: niter lmax lmax0 lmin lmin0 laic laicc lbic lebic		///
-	matrix: lambdamat lambdamat0)
-// Enet
-local alpha=(`glmnetalpha'*`sd')/( (1-`glmnetalpha') + `glmnetalpha'*`sd' )
-local lambda_a=(1-`glmnetalpha')*`L2lambda_a' + `glmnetalpha'*`L1lambda_a'
-local lambda_b=(1-`glmnetalpha')*`L2lambda_b' + `glmnetalpha'*`L1lambda_b'
-di "alpha=`alpha' lambda_a=`lambda_a' lambda_b=`lambda_b'"
-lasso2 price mpg-foreign, alpha(`glmnetalpha') lambda(`glmnetlambda_a') lglmnet
-storedresults save glmnet e()
-lasso2 price mpg-foreign, alpha(`alpha') lambda(`lambda_a')
-storedresults compare glmnet e(), tol(1e-8)							///
-	exclude(macros: lasso2opt scalar: niter alpha lambda)
-// lambda list
-lasso2 price mpg-foreign, alpha(`glmnetalpha') lambda(`glmnetlambda_a' `glmnetlambda_b') lglmnet
-storedresults save glmnet e()
-lasso2 price mpg-foreign, alpha(`alpha') lambda(`lambda_a' `lambda_b')
-storedresults compare glmnet e(), tol(1e-8)							///
-	exclude(macros: lasso2opt										///
-	scalar: niter lmax lmax0 lmin lmin0 laic laicc lbic lebic alpha	///
-	matrix: lambdamat lambdamat0)
-// prestd
-lasso2 price mpg-foreign, alpha(`glmnetalpha') lambda(`glmnetlambda_a') lglmnet prestd
-storedresults save glmnet e()
-lasso2 price mpg-foreign, alpha(`alpha') lambda(`lambda_a') prestd
-storedresults compare glmnet e(), tol(1e-8)							///
-	exclude(macros: lasso2opt scalar: niter alpha lambda)
-// lambda list
-lasso2 price mpg-foreign, alpha(`glmnetalpha') lambda(`glmnetlambda_a' `glmnetlambda_b') lglmnet prestd
-storedresults save glmnet e()
-lasso2 price mpg-foreign, alpha(`alpha') lambda(`lambda_a' `lambda_b') prestd
-storedresults compare glmnet e(), tol(1e-8)							///
-	exclude(macros: lasso2opt										///
-	scalar: niter lmax lmax0 lmin lmin0 laic laicc lbic lebic alpha	///
-	matrix: lambdamat lambdamat0)
-
-
+		
 ********************************************************************************
 *** finish                                                                   ***
 ********************************************************************************
