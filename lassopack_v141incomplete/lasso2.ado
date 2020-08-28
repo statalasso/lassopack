@@ -1,5 +1,5 @@
-*! lasso2 1.0.11 29july2020
-*! lassopack package 1.4.0
+*! lasso2 1.0.12 xxaug2020
+*! lassopack package 1.4.1
 *! authors aa/ms
 
 * additional notes
@@ -7,7 +7,7 @@
 * for ridge (or elastic net), maybe report last lambda instead of just knots?
 
 * eclass wrapper for elastic net & sqrt-lasso estimation
-* all partialling, transformations, standardisation, FE, tempvars handled here
+* all partialling, transformations, standardization, FE, tempvars handled here
 * keeps lists of original and temp varlists
 * plotting supported using "plotpath" program
 * display of output handled by "DisplayPath" and "DisplayCoefs" programs
@@ -362,8 +362,9 @@ program _lasso2, eclass sortpreserve
 			NEWPloadings(string) 					///
 			Ploadings(string) 						///
 			UNITLoadings							///
+			lglmnet									/// use glmnet parameterization
 			///
-			/// standardisation
+			/// standardization
 			PREStd 									///
 			STDCoef 								/// 
 			///
@@ -386,8 +387,9 @@ program _lasso2, eclass sortpreserve
 			]
 
 	*** flags	
-	local feflag=("`fe'"~="")
-	local debugflag	=("`debug'"~="")
+	local feflag		=("`fe'"~="")
+	local debugflag		=("`debug'"~="")
+	local lglmnetflag	=("`lglmnet'"~="")
 	*
 	
 	** reset lambda, used for predict & replay
@@ -438,7 +440,9 @@ program _lasso2, eclass sortpreserve
 		local prestd prestd
 	}
 	local checkflag 	= ("`ploadings'"!="")+("`unitloadings'"!="")+("`adaptive'"!="")
-	if `checkflag'>1 {
+
+// temporarily override for lglmnet
+	if `checkflag'>1 & `lglmnetflag'==0 {
 		di as error "error: cannot combine options ploadings(.), unitloadings and/or adaptive"
 		exit 198
 	}
@@ -479,6 +483,15 @@ program _lasso2, eclass sortpreserve
 	}
 	*
 	
+	*** lglmnet
+	// glmnet treats penalty loadings and standardization separately
+	if `lglmnetflag' {
+		// requires either prestandardization or unit loadings
+		if "`unitloadings'"=="" {
+			local prestd	prestd
+		}
+	}
+
 	*** constant, partial, etc.
 	// conmodel: constant in original model
 	// consflag: constant in transformed equation to estimate
@@ -497,7 +510,8 @@ program _lasso2, eclass sortpreserve
 	local sqrtflag 		= ("`sqrt'"!="")
 	// ignore norecover if no partialled-out variables
 	local parrflag		= ("`norecover'"=="") & (`partialflag' | `prestdflag')
-
+	*
+	
 	// if partial list has factor vars, will need to be replaced with tempvars
 	cap _fv_check_depvar `partial'
 	local partialfvflag	=(_rc==198)
@@ -807,7 +821,7 @@ program _lasso2, eclass sortpreserve
 		mat `lambdamat0'=`lambdamat0'*`lfactor'
 	}
 	*
-	
+
 	************* Partialling/standardization END ***********************************************
 	
 	*** Lasso estimation with transformed/partialled-out vars
@@ -836,12 +850,13 @@ program _lasso2, eclass sortpreserve
 					alpha(`alpha')							///
 					stdy(`prestdY')							///
 					stdx(`prestdX')							///
-					stdl(`stdloadflag')						/// use standardisation loadings
+					stdl(`stdloadflag')						/// use standardization loadings
 					stdcoef(`stdcoefflag')					/// return in standard units
 					ploadings(`ploadings') 					///
 					`verbose' `vverbose'					///
 					holdout(`holdout')						///
 					`noic' 									///
+					`lglmnet'								/// use glmnet parameterization
 					`options'
 
 	************* Finish up ********************************************************

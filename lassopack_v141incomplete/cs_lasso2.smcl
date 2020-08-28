@@ -1,10 +1,10 @@
 {smcl}
 {com}{sf}{ul off}{txt}{.-}
       name:  {res}<unnamed>
-       {txt}log:  {res}C:\Users\ecomes\Documents\GitHub\lassopack\cs_lasso2.smcl
+       {txt}log:  {res}C:\Users\ecomes\Documents\GitHub\lassopack\lassopack_v141incomplete\cs_lasso2.smcl
   {txt}log type:  {res}smcl
- {txt}opened on:  {res}20 Aug 2020, 13:05:13
-{txt}r; t=0.00 13:05:13
+ {txt}opened on:  {res}27 Aug 2020, 22:27:14
+{txt}r; t=0.00 22:27:14
 
 {com}. about
 
@@ -13,48 +13,45 @@ Revision 30 Jun 2020
 Copyright 1985-2019 StataCorp LLC
 
 Total physical memory:     {res}  16.00 GB
-{txt}Available physical memory: {res}   5.15 GB
+{txt}Available physical memory: {res}   7.45 GB
 
 {txt}Stata license: {res}5-user network perpetual
 {txt}Serial number: {res}401606228165
   {txt}Licensed to: {res}Mark Schaffer
                Heriot-Watt University
-{txt}r; t=0.00 13:05:13
+{txt}r; t=0.00 22:27:14
 
 {com}. which lasso2
 {txt}.\lasso2.ado
-{res}*! lasso2 1.0.11 29july2020
-*! lassopack package 1.4.0
+{res}*! lasso2 1.0.12 xxaug2020
+*! lassopack package 1.4.1
 *! authors aa/ms
-{txt}r; t=0.00 13:05:13
+{txt}r; t=0.00 22:27:14
 
 {com}. which lasso2_p
 {txt}.\lasso2_p.ado
 {res}*! lasso2_p 1.0.06 14oct2019
 *! lassopack package 1.4
 *! authors aa/ms
-{txt}r; t=0.00 13:05:13
+{txt}r; t=0.00 22:27:14
 
 {com}. which lassoutils
 {txt}.\lassoutils.ado
 {res}*! lassoutils 1.2.03 xxxaug2020
-*! lassopack package 1.4.0
+*! lassopack package 1.4.1
 *! authors aa/cbh/ms
-{txt}r; t=0.01 13:05:13
+{txt}r; t=0.01 22:27:14
 
 {com}. 
 . * data source
 . //global prostate prostate.data
 . global prostate https://web.stanford.edu/~hastie/ElemStatLearn/datasets/prostate.data
-{txt}r; t=0.00 13:05:13
+{txt}r; t=0.00 22:27:14
 
 {com}. 
-. * cert requires elasticregress
-. //ssc install elasticregress
-. 
 . * simple ridge regression program
 . cap program drop estridge
-{txt}r; t=0.00 13:05:13
+{txt}r; t=0.00 22:27:14
 
 {com}. program define estridge, rclass
 {txt}  1{com}.         syntax varlist , Lambda(real) [NOCONStant]
@@ -73,11 +70,11 @@ Total physical memory:     {res}  16.00 GB
 {txt} 14{com}.         mat list `bhat'
 {txt} 15{com}.         return matrix bhat = `bhat'
 {txt} 16{com}. end
-{txt}r; t=0.00 13:05:13
+{txt}r; t=0.00 22:27:14
 
 {com}. 
 . cap program drop comparemat
-{txt}r; t=0.00 13:05:13
+{txt}r; t=0.00 22:27:14
 
 {com}. program define comparemat , rclass
 {txt}  1{com}.         syntax anything [, tol(real 10e-3)] 
@@ -93,12 +90,12 @@ Total physical memory:     {res}  16.00 GB
 {txt} 11{com}.         return scalar mreldif = `diff'
 {txt} 12{com}.         assert `diff'<`tol'
 {txt} 13{com}. end
-{txt}r; t=0.00 13:05:13
+{txt}r; t=0.00 22:27:14
 
 {com}. 
 . * program to compare two vectors using col names
 . cap program drop comparevec
-{txt}r; t=0.00 13:05:13
+{txt}r; t=0.00 22:27:14
 
 {com}. program define comparevec , rclass
 {txt}  1{com}.         syntax anything [, tol(real 10e-3)] 
@@ -128,472 +125,1015 @@ Total physical memory:     {res}  16.00 GB
 {txt} 23{com}.         return scalar maxdiff = `maxdiff'
 {txt} 24{com}.         assert `maxdiff'<`tol'
 {txt} 25{com}. end
-{txt}r; t=0.00 13:05:13
+{txt}r; t=0.00 22:27:14
 
 {com}. 
-. * load example data
-. insheet using "$prostate", tab clear
-{txt}(11 vars, 97 obs)
-r; t=0.76 13:05:14
-
-{com}. global model lpsa lcavol lweight age lbph svi lcp gleason pgg45
-{txt}r; t=0.00 13:05:14
-
-{com}. 
+. 
 . ********************************************************************************
 . *** replicate glmnet                                                                                                             ***
 . ********************************************************************************
 . 
-. // # the following R code was run using ‘glmnet’ version 2.0-10
-. // library("glmnet")
-. // library("ElemStatLearn")
-. // data(prostate)
-. // dta <- prostate
-. // y <- dta$lpsa
-. // X <- as.matrix(subset(dta,select=c("lcavol","lweight","age","lbph","svi","lcp","gleason","pgg45")))
-. 
+. sysuse auto, clear
+{txt}(1978 Automobile Data)
+r; t=0.00 22:27:14
+
+{com}. drop if rep78==.
+{txt}(5 observations deleted)
+r; t=0.00 22:27:14
+
+{com}. 
+. global model price mpg-foreign
+{txt}r; t=0.00 22:27:14
+
+{com}. 
+. // # the following R code was run using ‘glmnet’ version 4.0-2
 . /*
-> lasso2 $model
-> di e(lmax)
-> lasso2 $model, lglmnet
-> di e(lmax)
-> */
-. // glmnet uses the same lambda max (but not the same minimum lambda)
-. // note the 2*n adjustment required due to the different objective function.
-. // alternatively, the lglmnet option can used.
-. /*
->         > r<-glmnet(X,y)
->         > max(r$lambda*n*2)
->         [1] 163.6249
->         > max(r$lambda)
->         [1] 0.8434274
-> */
-. 
-. lasso2 $model, l(150 15 1.5)    
-{res}
-{txt}  Knot{c |}  ID     Lambda    s      L1-Norm        EBIC{col 58}R-sq   {c |} Action
-{hline 6}{c +}{hline 57}{c +}{hline 15}
-{res}     1{txt}{col 7}{c |}{res}   1{col 13} 150.00000{col 25}   1{col 31}   0.05990{col 43}   27.25410{txt} {res}{col 56} 0.0861{txt}{col 65}{c |}{res}{col 67}Added lcavol
-{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}_cons.
-     2{txt}{col 7}{c |}{res}   2{col 13}  15.00000{col 25}   5{col 31}   1.53074{col 43}  -43.25639{txt} {res}{col 56} 0.6342{txt}{col 65}{c |}{res}{col 67}Added
-{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}lweight lbph
-{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}svi pgg45.
-     3{txt}{col 7}{c |}{res}   3{col 13}   1.50000{col 25}   8{col 31}   2.07714{col 43}  -37.32950{txt} {res}{col 56} 0.6624{txt}{col 65}{c |}{res}{col 67}Added age
-{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}lcp gleason.
-{txt}Use {bf:long} option for full output.
-{p 0 6 2}Type e.g. {stata lasso2, lic(ebic)}{txt} to run the model selected by EBIC.{txt}{p_end}
-r; t=0.27 13:05:14
-
-{com}. mat L = e(betas)
-{txt}r; t=0.00 13:05:14
-
-{com}. /*
-> > # lasso estimation (w/ standardize & w/ intercept)
-> > r<-glmnet(X,y,lambda=c(150,15,1.5)/(2*n),standardize=TRUE,intercept=TRUE)
-> > t(coef(r))
-> 3 x 9 sparse Matrix of class "dgCMatrix"
->    (Intercept)     lcavol   lweight         age       lbph       svi         lcp    gleason
-> s0  2.39752500 0.05989726 .          .          .          .          .          .         
-> s1 -0.06505875 0.49069732 0.4779378  .          0.02746678 0.5334154  .          .         
-> s2  0.18294444 0.54565337 0.6055144 -0.01820379 0.08889938 0.7084565 -0.06869243 0.03817684
->          pgg45
-> s0 .          
-> s1 0.001162874
-> s2 0.003757753
-> */
-. mat G = ( 0.0598972625035856,0,0,0,0,0,0,0,2.39752500012588 \ 0.490697320533337,0.47793780034037,0,0.0274667780837606,0.533415402509892,0,0,0.00116287368561226,-0.0650587459330918 \ 0.545653366713212,0.605514389014173,-0.0182037942686934,0.0888993843088465,0.708456499779504,-0.068692431071907,0.0381768422753705,0.00375775336752149,0.18294443949415 )
-{txt}r; t=0.00 13:05:14
-
-{com}. comparemat L G
-{txt}mreldif=.0014573540488847. tolerance = .01
-{res}
-{txt}__000000[3,9]
-        lcavol     lweight         age        lbph         svi         lcp
-r1 {res}  .05989726           0           0           0           0           0
-{txt}r2 {res}   .4906822   .47800659           0   .02745819   .53343496           0
-{txt}r3 {res}  .54576394    .6054384  -.01820182   .08890567   .70843319  -.06873277
-
-{txt}       gleason       pgg45       _cons
-r1 {res}          0           0    2.397525
-{txt}r2 {res}          0   .00116294  -.06529293
-{txt}r3 {res}  .03790448   .00376237   .18466841
-{reset}{res}
-{txt}__000001[3,9]
-            c1          c2          c3          c4          c5          c6
-r1 {res}  .05989726           0           0           0           0           0
-{txt}r2 {res}  .49069732    .4779378           0   .02746678    .5334154           0
-{txt}r3 {res}  .54565337   .60551439  -.01820379   .08889938    .7084565  -.06869243
-
-{txt}            c7          c8          c9
-r1 {res}          0           0    2.397525
-{txt}r2 {res}          0   .00116287  -.06505875
-{txt}r3 {res}  .03817684   .00375775   .18294444
-{reset}r; t=0.03 13:05:14
-
-{com}. 
-. // as above but pre-standardize
-. lasso2 $model, l(150 15 1.5) prestd
-{res}
-{txt}  Knot{c |}  ID     Lambda    s      L1-Norm        EBIC{col 58}R-sq   {c |} Action
-{hline 6}{c +}{hline 57}{c +}{hline 15}
-{res}     1{txt}{col 7}{c |}{res}   1{col 13} 150.00000{col 25}   1{col 31}   0.05990{col 43}   27.25410{txt} {res}{col 56} 0.0861{txt}{col 65}{c |}{res}{col 67}Added lcavol
-{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}_cons.
-     2{txt}{col 7}{c |}{res}   2{col 13}  15.00000{col 25}   5{col 31}   1.53074{col 43}  -43.25639{txt} {res}{col 56} 0.6342{txt}{col 65}{c |}{res}{col 67}Added
-{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}lweight lbph
-{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}svi pgg45.
-     3{txt}{col 7}{c |}{res}   3{col 13}   1.50000{col 25}   8{col 31}   2.07714{col 43}  -37.32950{txt} {res}{col 56} 0.6624{txt}{col 65}{c |}{res}{col 67}Added age
-{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}lcp gleason.
-{txt}Use {bf:long} option for full output.
-{p 0 6 2}Type e.g. {stata lasso2, lic(ebic)}{txt} to run the model selected by EBIC.{txt}{p_end}
-r; t=0.91 13:05:15
-
-{com}. mat L = e(betas)
-{txt}r; t=0.00 13:05:15
-
-{com}. comparemat L G
-{txt}mreldif=.0014573540488862. tolerance = .01
-{res}
-{txt}__000000[3,9]
-        lcavol     lweight         age        lbph         svi         lcp
-r1 {res}  .05989726           0           0           0           0           0
-{txt}r2 {res}   .4906822   .47800659           0   .02745819   .53343496           0
-{txt}r3 {res}  .54576394    .6054384  -.01820182   .08890567   .70843319  -.06873277
-
-{txt}       gleason       pgg45       _cons
-r1 {res}          0           0    2.397525
-{txt}r2 {res}          0   .00116294  -.06529293
-{txt}r3 {res}  .03790448   .00376237   .18466841
-{reset}{res}
-{txt}__000001[3,9]
-            c1          c2          c3          c4          c5          c6
-r1 {res}  .05989726           0           0           0           0           0
-{txt}r2 {res}  .49069732    .4779378           0   .02746678    .5334154           0
-{txt}r3 {res}  .54565337   .60551439  -.01820379   .08889938    .7084565  -.06869243
-
-{txt}            c7          c8          c9
-r1 {res}          0           0    2.397525
-{txt}r2 {res}          0   .00116287  -.06505875
-{txt}r3 {res}  .03817684   .00375775   .18294444
-{reset}r; t=0.00 13:05:15
-
-{com}. 
-. lasso2 $model, l(150 15 1.5) unitload
-{res}
-{txt}  Knot{c |}  ID     Lambda    s      L1-Norm        EBIC{col 58}R-sq   {c |} Action
-{hline 6}{c +}{hline 57}{c +}{hline 15}
-{res}     1{txt}{col 7}{c |}{res}   1{col 13} 150.00000{col 25}   1{col 31}   0.01630{col 43}   17.00010{txt} {res}{col 56} 0.1778{txt}{col 65}{c |}{res}{col 67}Added pgg45
-{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}_cons.
-     2{txt}{col 7}{c |}{res}   2{col 13}  15.00000{col 25}   6{col 31}   0.89914{col 43}  -29.90563{txt} {res}{col 56} 0.5995{txt}{col 65}{c |}{res}{col 67}Added lcavol
-{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}lweight age
-{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}lbph svi.
-     3{txt}{col 7}{c |}{res}   3{col 13}   1.50000{col 25}   8{col 31}   1.98675{col 43}  -37.20352{txt} {res}{col 56} 0.6620{txt}{col 65}{c |}{res}{col 67}Added lcp
-{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}gleason.
-{txt}Use {bf:long} option for full output.
-{p 0 6 2}Type e.g. {stata lasso2, lic(ebic)}{txt} to run the model selected by EBIC.{txt}{p_end}
-r; t=0.01 13:05:15
-
-{com}. mat L = e(betas)
-{txt}r; t=0.00 13:05:15
-
-{com}. /* 
-> > # lasso estimation (w/o standardize & intercept)
-> > r<-glmnet(X,y,lambda=c(150, 15, 1.5)/(2*n),standardize=FALSE,intercept=TRUE)
-> > t(coef(r))
-> 3 x 9 sparse Matrix of class "dgCMatrix"
->    (Intercept)    lcavol   lweight          age       lbph        svi         lcp     gleason
-> s0   2.0809125 .         .          .           .          .           .          .          
-> s1   1.4264961 0.5789631 0.1812337 -0.008794604 0.07658667 0.04715613  .          .          
-> s2   0.5709279 0.5607932 0.5718048 -0.019339712 0.09484563 0.65884647 -0.07312879 0.003437608
->          pgg45
-> s0 0.016302332
-> s1 0.006413878
-> s2 0.005003847
-> */
-. mat G = ( 0,0,0,0,0,0,0,0.0163023319952739,2.08091249516677 \ 0.578963079723197,0.181233651933207,-0.00879460357040878,0.0765866715516214,0.0471561282079499,0,0,0.00641387754085344,1.42649606164357 \ 0.56079320119559,0.571804769257873,-0.0193397117375188,0.0948456306696097,0.658846467359134,-0.0731287924194953,0.0034376077659711,0.00500384714844935,0.570927925454684 ) 
-{txt}r; t=0.00 13:05:15
-
-{com}. comparemat L G
-{txt}mreldif=.0002181849409437. tolerance = .01
-{res}
-{txt}__000000[3,9]
-        lcavol     lweight         age        lbph         svi         lcp
-r1 {res}          0           0           0           0           0           0
-{txt}r2 {res}  .57906244   .18097592  -.00878947   .07662151   .04728233           0
-{txt}r3 {res}  .56066155   .57178817  -.01933893   .09485092   .65860403  -.07297288
-
-{txt}       gleason       pgg45       _cons
-r1 {res}          0   .01630233   2.0809125
-{txt}r2 {res}          0   .00641113   1.4270056
-{txt}r3 {res}   .0035317   .00500112   .57062686
-{reset}{res}
-{txt}__000001[3,9]
-            c1          c2          c3          c4          c5          c6
-r1 {res}          0           0           0           0           0           0
-{txt}r2 {res}  .57896308   .18123365   -.0087946   .07658667   .04715613           0
-{txt}r3 {res}   .5607932   .57180477  -.01933971   .09484563   .65884647  -.07312879
-
-{txt}            c7          c8          c9
-r1 {res}          0   .01630233   2.0809125
-{txt}r2 {res}          0   .00641388   1.4264961
-{txt}r3 {res}  .00343761   .00500385   .57092793
-{reset}r; t=0.00 13:05:15
-
-{com}. 
-. 
-. lasso2 $model, l(150 15 1.5) nocons
-{res}
-{txt}  Knot{c |}  ID     Lambda    s      L1-Norm        EBIC{col 58}R-sq   {c |} Action
-{hline 6}{c +}{hline 57}{c +}{hline 15}
-{res}     1{txt}{col 7}{c |}{res}   1{col 13} 150.00000{col 25}   3{col 31}   0.54947{col 43}   18.97700{txt} {res}{col 56} 0.8585{txt}{col 65}{c |}{res}{col 67}Added lcavol
-{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}lweight
-{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}gleason.
-     2{txt}{col 7}{c |}{res}   2{col 13}  15.00000{col 25}   5{col 31}   1.51831{col 43}  -47.72662{txt} {res}{col 56} 0.9353{txt}{col 65}{c |}{res}{col 67}Added lbph
-{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}svi pgg45.
-{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}Removed
-{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}gleason.
-     3{txt}{col 7}{c |}{res}   3{col 13}   1.50000{col 25}   8{col 31}   2.10402{col 43}  -41.88345{txt} {res}{col 56} 0.9403{txt}{col 65}{c |}{res}{col 67}Added age
-{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}lcp gleason.
-{txt}Use {bf:long} option for full output.
-{p 0 6 2}Type e.g. {stata lasso2, lic(ebic)}{txt} to run the model selected by EBIC.{txt}{p_end}
-r; t=0.02 13:05:15
-
-{com}. mat L = e(betas)
-{txt}r; t=0.00 13:05:15
-
-{com}. /* 
-> > # lasso estimation (w/ standardize & w/o intercept)
-> > r<-glmnet(X,y,lambda=c(150, 15, 1.5)/(2*n),standardize=TRUE,intercept=FALSE)
-> > t(coef(r))
-> 3 x 9 sparse Matrix of class "dgCMatrix"
->    (Intercept)     lcavol   lweight         age       lbph       svi        lcp    gleason
-> s0           . 0.03202811 0.3597488  .          .          .          .         0.15958484
-> s1           . 0.49155721 0.4598487  .          0.02987895 0.5357571  .         .         
-> s2           . 0.54272362 0.6264995 -0.01776074 0.08529663 0.7089062 -0.0691351 0.05116263
->          pgg45
-> s0 .          
-> s1 0.001132923
-> s2 0.003532953
-> */
-. mat G = ( 0.0320281112917762,0.359748772081613,0,0,0,0,0.159584841969938,0  \ 0.491557214223318,0.459848707929377,0,0.0298789475809353,0.53575707154284,0,0,0.00113292264640293 \ 0.542723617710186,0.626499540101458,-0.0177607354082528,0.0852966257132293,0.708906240969273,-0.0691351039443382,0.0511626342288098,0.00353295335701127 )
-{txt}r; t=0.00 13:05:15
-
-{com}. comparemat L G
-{txt}mreldif=.0039953753493918. tolerance = .01
-{res}
-{txt}__000000[3,8]
-        lcavol     lweight         age        lbph         svi         lcp
-r1 {res}  .03202083   .35572606           0           0           0           0
-{txt}r2 {res}  .49171441   .45985234           0   .02988374   .53573557           0
-{txt}r3 {res}  .54298206   .62000106  -.01769621   .08603945    .7103843  -.06931478
-
-{txt}       gleason       pgg45
-r1 {res}  .16172553           0
-{txt}r2 {res}          0   .00112746
-{txt}r3 {res}  .05413043   .00347303
-{reset}{res}
-{txt}__000001[3,8]
-            c1          c2          c3          c4          c5          c6
-r1 {res}  .03202811   .35974877           0           0           0           0
-{txt}r2 {res}  .49155721   .45984871           0   .02987895   .53575707           0
-{txt}r3 {res}  .54272362   .62649954  -.01776074   .08529663   .70890624   -.0691351
-
-{txt}            c7          c8
-r1 {res}  .15958484           0
-{txt}r2 {res}          0   .00113292
-{txt}r3 {res}  .05116263   .00353295
-{reset}r; t=0.00 13:05:15
-
-{com}. 
-. // as above but pre-standardize
-. lasso2 $model, l(150 15 1.5) nocons
-{res}
-{txt}  Knot{c |}  ID     Lambda    s      L1-Norm        EBIC{col 58}R-sq   {c |} Action
-{hline 6}{c +}{hline 57}{c +}{hline 15}
-{res}     1{txt}{col 7}{c |}{res}   1{col 13} 150.00000{col 25}   3{col 31}   0.54947{col 43}   18.97700{txt} {res}{col 56} 0.8585{txt}{col 65}{c |}{res}{col 67}Added lcavol
-{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}lweight
-{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}gleason.
-     2{txt}{col 7}{c |}{res}   2{col 13}  15.00000{col 25}   5{col 31}   1.51831{col 43}  -47.72662{txt} {res}{col 56} 0.9353{txt}{col 65}{c |}{res}{col 67}Added lbph
-{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}svi pgg45.
-{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}Removed
-{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}gleason.
-     3{txt}{col 7}{c |}{res}   3{col 13}   1.50000{col 25}   8{col 31}   2.10402{col 43}  -41.88345{txt} {res}{col 56} 0.9403{txt}{col 65}{c |}{res}{col 67}Added age
-{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}lcp gleason.
-{txt}Use {bf:long} option for full output.
-{p 0 6 2}Type e.g. {stata lasso2, lic(ebic)}{txt} to run the model selected by EBIC.{txt}{p_end}
-r; t=0.02 13:05:15
-
-{com}. mat L = e(betas)
-{txt}r; t=0.00 13:05:15
-
-{com}. comparemat L G
-{txt}mreldif=.0039953753493918. tolerance = .01
-{res}
-{txt}__000000[3,8]
-        lcavol     lweight         age        lbph         svi         lcp
-r1 {res}  .03202083   .35572606           0           0           0           0
-{txt}r2 {res}  .49171441   .45985234           0   .02988374   .53573557           0
-{txt}r3 {res}  .54298206   .62000106  -.01769621   .08603945    .7103843  -.06931478
-
-{txt}       gleason       pgg45
-r1 {res}  .16172553           0
-{txt}r2 {res}          0   .00112746
-{txt}r3 {res}  .05413043   .00347303
-{reset}{res}
-{txt}__000001[3,8]
-            c1          c2          c3          c4          c5          c6
-r1 {res}  .03202811   .35974877           0           0           0           0
-{txt}r2 {res}  .49155721   .45984871           0   .02987895   .53575707           0
-{txt}r3 {res}  .54272362   .62649954  -.01776074   .08529663   .70890624   -.0691351
-
-{txt}            c7          c8
-r1 {res}  .15958484           0
-{txt}r2 {res}          0   .00113292
-{txt}r3 {res}  .05116263   .00353295
-{reset}r; t=0.00 13:05:15
-
-{com}. 
-. 
-. lasso2 $model, l(150 15 1.5) nocons unitload
-{res}
-{txt}  Knot{c |}  ID     Lambda    s      L1-Norm        EBIC{col 58}R-sq   {c |} Action
-{hline 6}{c +}{hline 57}{c +}{hline 15}
-{res}     1{txt}{col 7}{c |}{res}   1{col 13} 150.00000{col 25}   2{col 31}   0.04752{col 43}   19.19090{txt} {res}{col 56} 0.8514{txt}{col 65}{c |}{res}{col 67}Added age
-{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}pgg45.
-     2{txt}{col 7}{c |}{res}   2{col 13}  15.00000{col 25}   5{col 31}   1.03932{col 43}  -40.54637{txt} {res}{col 56} 0.9303{txt}{col 65}{c |}{res}{col 67}Added lcavol
-{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}lweight lbph
-{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}svi. Removed
-{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}age.
-     3{txt}{col 7}{c |}{res}   3{col 13}   1.50000{col 25}   8{col 31}   2.06980{col 43}  -41.85280{txt} {res}{col 56} 0.9403{txt}{col 65}{c |}{res}{col 67}Added age
-{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}lcp gleason.
-{txt}Use {bf:long} option for full output.
-{p 0 6 2}Type e.g. {stata lasso2, lic(ebic)}{txt} to run the model selected by EBIC.{txt}{p_end}
-r; t=0.02 13:05:15
-
-{com}. mat L = e(betas)
-{txt}r; t=0.00 13:05:15
-
-{com}. /* 
-> > # lasso estimation (w/o standardize & w/o intercept)
-> > r<-glmnet(X,y,lambda=c(150, 15, 1.5)/(2*n),standardize=FALSE,intercept=FALSE)
-> > t(coef(r))
-> 3 x 9 sparse Matrix of class "dgCMatrix"
->    (Intercept)    lcavol   lweight         age       lbph        svi         lcp    gleason
-> s0           . .         .          0.03263871 .          .           .          .         
-> s1           . 0.5582166 0.4271199  .          0.02888257 0.01868081  .          .         
-> s2           . 0.5522462 0.6108130 -0.01745695 0.08625277 0.66545544 -0.07473151 0.05386605
->          pgg45
-> s0 0.014883525
-> s1 0.006455549
-> s2 0.004082051
-> */
-. mat G = ( 0,0,0.0326387149332038,0,0,0,0,0.0148835249197989 \ 0.558216559129859,0.427119922488729,0,0.0288825748095177,0.0186808135198926,0,0,0.00645554874090459  \ 0.552246180132136,0.610812971251225,-0.0174569524891446,0.0862527702913333,0.665455440830147,-0.0747315133696167,0.0538660488175342,0.00408205134388933   )
-{txt}r; t=0.00 13:05:15
-
-{com}. comparemat L G
-{txt}mreldif=.0037086596138329. tolerance = .01
-{res}
-{txt}__000000[3,8]
-        lcavol     lweight         age        lbph         svi         lcp
-r1 {res}          0           0    .0326408           0           0           0
-{txt}r2 {res}  .55828663   .42713236           0   .02887414    .0185711           0
-{txt}r3 {res}  .55206552   .61678693   -.0177766   .08599428   .66463298  -.07477132
-
-{txt}       gleason       pgg45
-r1 {res}          0   .01488109
-{txt}r2 {res}          0   .00645322
-{txt}r3 {res}  .05367001   .00410706
-{reset}{res}
-{txt}__000001[3,8]
-            c1          c2          c3          c4          c5          c6
-r1 {res}          0           0   .03263871           0           0           0
-{txt}r2 {res}  .55821656   .42711992           0   .02888257   .01868081           0
-{txt}r3 {res}  .55224618   .61081297  -.01745695   .08625277   .66545544  -.07473151
-
-{txt}            c7          c8
-r1 {res}          0   .01488352
-{txt}r2 {res}          0   .00645555
-{txt}r3 {res}  .05386605   .00408205
-{reset}r; t=0.00 13:05:15
-
-{com}. 
-. *** now using lglmnet option ***
-. /*
-> lasso2 $model, l(.8 .6 .2) lglmnet
-> mat L = e(betas)
-> */
-. /*
-> > # lasso estimation (standardize & intercept)
-> > r<-glmnet(X,y,lambda=c(.8,.6,.2),standardize=TRUE,intercept=TRUE)
-> > t(coef(r))
-> 3 x 9 sparse Matrix of class "dgCMatrix"
->    (Intercept)     lcavol   lweight age lbph       svi lcp gleason pgg45
-> s0   2.4283862 0.03703726 .           .    . .           .       .     .
-> s1   2.1981140 0.20760804 .           .    . .           .       .     .
-> s2   0.7154547 0.45182494 0.2966946   .    . 0.3523241   .       .     .
-> */
-. /*
-> mat G = ( 0.0370372606890949,0,0,0,0,0,0,0,2.42838622158533 \ 0.207608043458756,0,0,0,0,0,0,0,2.19811403069554 \ 0.45182494276911,0.296694633018004,0,0,0.352324077604082,0,0,0,0.715454720149449 )
-> comparemat L G
+> library("glmnet")
+> library("haven")
+> library("tidyverse")
 > 
-> lasso2 $model, l(.8 .6 .2) lglmnet unitload
-> mat L = e(betas)
-> */
-. /*
-> > # lasso estimation (w/o standardize & intercept)
-> > r<-glmnet(X,y,lambda=c(.8,.6,.2),standardize=FALSE,intercept=TRUE)
-> > t(coef(r))
-> 3 x 9 sparse Matrix of class "dgCMatrix"
->    (Intercept)    lcavol lweight age       lbph svi lcp gleason       pgg45
-> s0    2.081743 .               .   . .            .   .       . 0.016268285
-> s1    1.950896 0.1372576       .   . .            .   .       . 0.014034947
-> s2    1.618724 0.4893253       .   . 0.02387818   .   .       . 0.008066494
-> > asmat(t(coef(r)))
-> */
-. /*
-> mat G = ( 0,0,0,0,0,0,0,0.0162682849336487,2.08174261166929 \ 0.137257628322798,0,0,0,0,0,0,0.0140349465593846,1.95089551137846 \ 0.489325292943062,0,0,0.0238781766783061,0,0,0,0.00806649425516767,1.61872396370499 )
-> comparemat L G
+> auto <- read_dta("http://www.stata-press.com/data/r9/auto.dta")
 > 
-> lasso2 $model, l(.8 .6 .2) lglmnet  nocons
-> mat L = e(betas)
-> */
-. /*
-> > # lasso estimation (w/ standardize & w/o intercept)
-> > r<-glmnet(X,y,lambda=c(.8,.6,.2),standardize=TRUE,intercept=FALSE)
-> > t(coef(r))
-> 3 x 9 sparse Matrix of class "dgCMatrix"
->    (Intercept)     lcavol   lweight age lbph       svi lcp    gleason pgg45
-> s0           . 0.01001615 0.3557483   .    . .           . 0.16581999     .
-> s1           . 0.17424422 0.3773174   .    . .           . 0.12370274     .
-> s2           . 0.43879201 0.4531537   .    . 0.3434186   . 0.02362562     .
-> > asmat(t(coef(r)))
-> */
-. /*
-> mat G = ( 0.0100161543047344,0.355748298540682,0,0,0,0,0.165819987155045,0 \ 0.174244224723816,0.377317383071473,0,0,0,0,0.123702743345189,0 \ 0.438792010313506,0.453153674363568,0,0,0.343418593611708,0,0.0236256173546178,0 )
-> comparemat L G
+> auto <- auto %>% drop_na()
+> n <- nrow(auto)
 > 
-> lasso2 $model, l(.8 .6 .2) lglmnet unitload nocons
-> mat L = e(betas)
+> price <- auto$price
+> 
+> X <- auto[,c("mpg","rep78","headroom","trunk",
+>              "weight","length","turn",
+>              "displacement","gear_ratio","foreign")]
+> X <- X %>% 
+>   mutate(foreign = as.integer(foreign)) %>%
+>   as.matrix()
 > */
+. 
+. // single lambda, lasso
 . /*
-> > # lasso estimation (w/o standardize & w/o intercept)
-> > r<-glmnet(X,y,lambda=c(.8,.6,.2),standardize=FALSE,intercept=FALSE)
+> > r<-glmnet(X,price,alpha=1,lambda=1000,thresh=1e-15)
 > > t(coef(r))
-> 3 x 9 sparse Matrix of class "dgCMatrix"
->    (Intercept)    lcavol lweight        age lbph svi lcp gleason       pgg45
-> s0           . .               . 0.03264146    .   .   .       . 0.014860920
-> s1           . 0.1357669       . 0.03062938    .   .   .       . 0.012720689
-> s2           . 0.4877323       . 0.02542719    .   .   .       . 0.007070216
-> > asmat(t(coef(r)))
+> 1 x 11 sparse Matrix of class "dgCMatrix"
+>    [[ suppressing 11 column names ‘(Intercept)’, ‘mpg’, ‘rep78’ ... ]]
+>                                              
+> s0 4336.84 . . . . 0.3819041 . . 3.289185 . .
 > */
+. mat G = 0.3819041, 3.289185, 4336.84
+{txt}r; t=0.00 22:27:14
+
+{com}. lasso2 $model, lambda(1000) lglmnet
+{res}
+{txt}{hline 18}{c TT}{hline 32}
+{col 10}Selected {c |}           Lasso   Post-est OLS
+{hline 18}{c +}{hline 32}
+{space 11}weight {c |}{col 21}{res}      0.3819035      1.0396466
+{txt}{space 5}displacement {c |}{col 21}{res}      3.2891898      8.8877339
+{txt}{hline 18}{c +}{hline 32}
+{col 4}Partialled-out{help lasso2##examples_partialling:*}{c |}
+{hline 18}{c +}{hline 32}
+{space 12}_cons {c |}{col 21}{res}   4336.8413380   1234.0335107
+{txt}{hline 18}{c BT}{hline 32}
+r; t=1.88 22:27:16
+
+{com}. assert mreldif(e(b),G) <1e-5
+{txt}r; t=0.00 22:27:16
+
+{com}. 
+. // single lambda, ridge
 . /*
-> mat G = ( 0,0,0.0326414588433045,0,0,0,0,0.0148609196162634 \ 0.13576687334887,0,0.0306293800710363,0,0,0,0,0.0127206887941435 \ 0.487732337283528,0,0.0254271936782152,0,0,0,0,0.00707021639137941 )
-> comparemat L G
+> > r<-glmnet(X,price,alpha=0,lambda=1000,thresh=1e-15)
+> > t(coef(r))
+> 1 x 11 sparse Matrix of class "dgCMatrix"
+>    [[ suppressing 11 column names ‘(Intercept)’, ‘mpg’, ‘rep78’ ... ]]
+>                                                 
+> s0 3425.776 -57.0062 296.9702 -392.4219 23.70664
+>                                                  
+> s0 0.9938447 5.562674 -24.18045 8.855065 -536.018
+>            
+> s0 1726.658
 > */
+. mat G = -57.0062, 296.9702, -392.4219, 23.70664, 0.9938447, 5.562674,   ///
+>                         -24.18045, 8.855065, -536.018, 1726.65, 3425.776
+{txt}r; t=0.00 22:27:16
+
+{com}. lasso2 $model, alpha(0) lambda(1000) lglmnet
+{res}
+{txt}{hline 18}{c TT}{hline 32}
+{col 10}Selected {c |}           Ridge   Post-est OLS
+{hline 18}{c +}{hline 32}
+{space 14}mpg {c |}{col 21}{res}    -57.0062055    -21.8051782
+{txt}{space 12}rep78 {c |}{col 21}{res}    296.9701496    184.7934987
+{txt}{space 9}headroom {c |}{col 21}{res}   -392.4219414   -635.4921033
+{txt}{space 12}trunk {c |}{col 21}{res}     23.7066545     71.4992915
+{txt}{space 11}weight {c |}{col 21}{res}      0.9938448      4.5211613
+{txt}{space 11}length {c |}{col 21}{res}      5.5626725    -76.4910106
+{txt}{space 13}turn {c |}{col 21}{res}    -24.1804578   -114.2776716
+{txt}{space 5}displacement {c |}{col 21}{res}      8.8550641     11.5401247
+{txt}{space 7}gear_ratio {c |}{col 21}{res}   -536.0179206   -318.6478765
+{txt}{space 10}foreign {c |}{col 21}{res}   1726.6581594   3334.8483415
+{txt}{hline 18}{c +}{hline 32}
+{col 4}Partialled-out{help lasso2##examples_partialling:*}{c |}
+{hline 18}{c +}{hline 32}
+{space 12}_cons {c |}{col 21}{res}   3425.7767718   9789.4941906
+{txt}{hline 18}{c BT}{hline 32}
+r; t=0.04 22:27:16
+
+{com}. assert mreldif(e(b),G) <1e-5
+{txt}r; t=0.00 22:27:16
+
+{com}. 
+. // single lambda, elastic net
+. /*
+> > r<-glmnet(X,price,alpha=0.5,lambda=1000,thresh=1e-15)
+> > t(coef(r))
+> 1 x 11 sparse Matrix of class "dgCMatrix"
+>    [[ suppressing 11 column names ‘(Intercept)’, ‘mpg’, ‘rep78’ ... ]]
+>                                                    
+> s0 2883.129 -5.096381 . . . 0.692915 . . 5.942777 .
+>           
+> s0 308.225
+> */
+. mat G = -5.096381, 0.692915, 5.942777, 308.225, 2883.129
+{txt}r; t=0.00 22:27:16
+
+{com}. lasso2 $model, alpha(0.5) lambda(1000) lglmnet
+{res}
+{txt}{hline 18}{c TT}{hline 32}
+{col 10}Selected {c |}     Elastic net   Post-est OLS
+{col 10}         {c |}   (alpha=0.500)
+{hline 18}{c +}{hline 32}
+{space 14}mpg {c |}{col 21}{res}     -5.0963909     32.4482003
+{txt}{space 11}weight {c |}{col 21}{res}      0.6929148      2.1201353
+{txt}{space 5}displacement {c |}{col 21}{res}      5.9427779     14.0772143
+{txt}{space 10}foreign {c |}{col 21}{res}    308.2249767   3853.0800775
+{txt}{hline 18}{c +}{hline 32}
+{col 4}Partialled-out{help lasso2##examples_partialling:*}{c |}
+{hline 18}{c +}{hline 32}
+{space 12}_cons {c |}{col 21}{res}   2883.1295527  -4933.0507249
+{txt}{hline 18}{c BT}{hline 32}
+r; t=0.05 22:27:16
+
+{com}. assert mreldif(e(b),G) <1e-5
+{txt}r; t=0.00 22:27:16
+
+{com}. 
+. // lasso, lambda grid
+. /*
+> > r<-glmnet(X,price,alpha=1,nlambda=5,thres=1e-15)
+> > r$lambda
+> [1] 1584.1894208  158.4189421   15.8418942    1.5841894
+> [5]    0.1584189
+> > r$dev.ratio
+> [1] 0.0000000 0.5272556 0.5970093 0.5988338 0.5988521
+> */
+. mat L =  1584.1894208, 158.4189421, 15.8418942, 1.5841894, 0.1584189
+{txt}r; t=0.00 22:27:16
+
+{com}. mat L = L'
+{txt}r; t=0.00 22:27:16
+
+{com}. mat D = 0.0000000, 0.5272556, 0.5970093, 0.5988338, 0.5988521
+{txt}r; t=0.00 22:27:16
+
+{com}. mat D = D'
+{txt}r; t=0.00 22:27:16
+
+{com}. lasso2 $model, lglmnet lcount(5)
+{res}
+{txt}  Knot{c |}  ID     Lambda    s      L1-Norm        EBIC{col 58}R-sq   {c |} Action
+{hline 6}{c +}{hline 57}{c +}{hline 15}
+{res}     1{txt}{col 7}{c |}{res}   1{col 13}1584.18942{col 25}   0{col 31}   0.00000{col 43} 1104.38888{txt} {res}{col 56} 0.0000{txt}{col 65}{c |}{res}{col 67}Added _cons.
+     2{txt}{col 7}{c |}{res}   2{col 13} 158.41894{col 25}   5{col 31}3107.35517{col 43} 1075.71990{txt} {res}{col 56} 0.5273{txt}{col 65}{c |}{res}{col 67}Added rep78
+{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}headroom
+{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}weight
+{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}displacement
+{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}foreign.
+     3{txt}{col 7}{c |}{res}   3{col 13}  15.84189{col 25}  10{col 31}4584.90849{col 43} 1087.73051{txt} {res}{col 56} 0.5970{txt}{col 65}{c |}{res}{col 67}Added mpg
+{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}trunk length
+{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}turn
+{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}gear_ratio.
+{txt}Use {bf:long} option for full output.
+{p 0 6 2}Type e.g. {stata lasso2, lic(ebic)}{txt} to run the model selected by EBIC.{txt}{p_end}
+r; t=0.07 22:27:16
+
+{com}. assert mreldif(e(lambdamat0),L) < 1e-5
+{txt}r; t=0.00 22:27:16
+
+{com}. assert mreldif(e(rsq),D) < 1e-5
+{txt}r; t=0.00 22:27:16
+
+{com}. 
+. // ridge, lambda grid
+. /*
+> > r<-glmnet(X,price,alpha=0,nlambda=5,thres=1e-15)
+> > r$lambda
+> [1] 1584189.4208  158418.9421   15841.8942    1584.1894
+> [5]     158.4189
+> > r$dev.ratio
+> [1] 2.777378e-36 4.347508e-02 2.060125e-01 4.453574e-01
+> [5] 5.744210e-01
+> */
+. mat L =  1584189.4208, 158418.9421, 15841.8942, 1584.1894, 158.4189
+{txt}r; t=0.00 22:27:16
+
+{com}. mat L = L'
+{txt}r; t=0.00 22:27:16
+
+{com}. // first R-sq of glmnet appears to be wrong - see below
+. * mat D = 2.777378e-36, 4.347508e-02, 2.060125e-01, 4.453574e-01, 5.744210e-01
+. * mat D = D'
+. lasso2 $model, alpha(0) lglmnet lcount(5) long
+{res}
+{txt}  Knot{c |}  ID     Lambda    s      L1-Norm        EBIC{col 58}R-sq   {c |} Action
+{hline 6}{c +}{hline 57}{c +}{hline 15}
+{res}     1{txt}{col 7}{c |}{res}   1{col 13} 1.584e+06{col 25}  10{col 31}   6.52952{col 43} 1104.13041{txt} {res}{col 56} 0.0049{txt}{col 65}{c |}{res}{col 67}All
+{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}selected.
+{txt}{col 7}{c |}{res}   2{col 13} 1.584e+05{col 25}  10{col 31}  59.50834{col 43} 1102.09934{txt} {res}{col 56} 0.0435{txt}{col 65}{c |}
+{res}{txt}{col 7}{c |}{res}   3{col 13} 1.584e+04{col 25}  10{col 31} 470.11906{col 43} 1093.53830{txt} {res}{col 56} 0.2060{txt}{col 65}{c |}
+{res}{txt}{col 7}{c |}{res}   4{col 13}1584.18942{col 25}  10{col 31}2523.75949{col 43} 1082.05499{txt} {res}{col 56} 0.4454{txt}{col 65}{c |}
+{res}{txt}{col 7}{c |}{res}   5{col 13} 158.41894{col 25}  10{col 31}4405.02556{col 43} 1081.83852{txt}*{res}{col 56} 0.5744{txt}{col 65}{c |}
+{res}{txt}{helpb lasso2##aicbic:*}indicates minimum EBIC.
+{p 0 6 2}Type e.g. {stata lasso2, lic(ebic)}{txt} to run the model selected by EBIC.{txt}{p_end}
+r; t=0.06 22:27:16
+
+{com}. assert mreldif(e(lambdamat0),L) < 1e-5
+{txt}r; t=0.00 22:27:16
+
+{com}. * assert mreldif(e(rsq),D) < 1e-5
+. 
+. // single lambda, ridge - see above
+. /*
+> > r<-glmnet(X,price,alpha=0,lambda=1584189.4208,thresh=1e-15)
+> > r$dev.ratio
+> [1] 0.004941719
+> */
+. lasso2 $model, alpha(0) lglmnet lambda(1584189.4208)
+{res}
+{txt}{hline 18}{c TT}{hline 32}
+{col 10}Selected {c |}           Ridge   Post-est OLS
+{hline 18}{c +}{hline 32}
+{space 14}mpg {c |}{col 21}{res}     -0.4092178    -21.8051782
+{txt}{space 12}rep78 {c |}{col 21}{res}      0.0465791    184.7934987
+{txt}{space 9}headroom {c |}{col 21}{res}      0.6755847   -635.4921033
+{txt}{space 12}trunk {c |}{col 21}{res}      0.3909418     71.4992915
+{txt}{space 11}weight {c |}{col 21}{res}      0.0036401      4.5211613
+{txt}{space 11}length {c |}{col 21}{res}      0.1022667    -76.4910106
+{txt}{space 13}turn {c |}{col 21}{res}      0.3898556   -114.2776716
+{txt}{space 5}displacement {c |}{col 21}{res}      0.0309961     11.5401247
+{txt}{space 7}gear_ratio {c |}{col 21}{res}     -4.3197832   -318.6478765
+{txt}{space 10}foreign {c |}{col 21}{res}     -0.1606565   3334.8483415
+{txt}{hline 18}{c +}{hline 32}
+{col 4}Partialled-out{help lasso2##examples_partialling:*}{c |}
+{hline 18}{c +}{hline 32}
+{space 12}_cons {c |}{col 21}{res}   6108.1856291   9789.4941906
+{txt}{hline 18}{c BT}{hline 32}
+r; t=0.03 22:27:16
+
+{com}. assert reldif(e(r2),0.004941719) < 1e-5
+{txt}r; t=0.00 22:27:16
+
+{com}. 
+. // elastic net, grid of 5
+. /*
+> > r<-glmnet(X,price,alpha=0.5,nlambda=5,thresh=1e-15)
+> > r$lambda
+> [1] 3168.3788416  316.8378842   31.6837884    3.1683788
+> [5]    0.3168379
+> > r$dev.ratio
+> [1] 0.0000000 0.5088361 0.5942304 0.5987942 0.5988517
+> */
+. mat L = 3168.3788416, 316.8378842, 31.6837884, 3.1683788, 0.3168379
+{txt}r; t=0.00 22:27:16
+
+{com}. mat L = L'
+{txt}r; t=0.00 22:27:16
+
+{com}. mat D = 0.0000000, 0.5088361, 0.5942304, 0.5987942, 0.5988517
+{txt}r; t=0.00 22:27:16
+
+{com}. mat D = D'
+{txt}r; t=0.00 22:27:16
+
+{com}. lasso2 $model, alpha(0.5) lglmnet lcount(5) long
+{res}
+{txt}  Knot{c |}  ID     Lambda    s      L1-Norm        EBIC{col 58}R-sq   {c |} Action
+{hline 6}{c +}{hline 57}{c +}{hline 15}
+{res}     1{txt}{col 7}{c |}{res}   1{col 13}3168.37884{col 25}   0{col 31}   0.00000{col 43} 1104.38888{txt} {res}{col 56} 0.0000{txt}{col 65}{c |}{res}{col 67}Added _cons.
+     2{txt}{col 7}{c |}{res}   2{col 13} 316.83788{col 25}   6{col 31}2671.08935{col 43} 1078.58843{txt}*{res}{col 56} 0.5088{txt}{col 65}{c |}{res}{col 67}Added mpg
+{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}rep78
+{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}headroom
+{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}weight
+{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}displacement
+{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}foreign.
+     3{txt}{col 7}{c |}{res}   3{col 13}  31.68379{col 25}  10{col 31}4533.98792{col 43} 1086.61888{txt} {res}{col 56} 0.5942{txt}{col 65}{c |}{res}{col 67}Added trunk
+{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}length turn
+{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}gear_ratio.
+{txt}{col 7}{c |}{res}   4{col 13}   3.16838{col 25}  10{col 31}4748.97046{col 43} 1087.25116{txt} {res}{col 56} 0.5988{txt}{col 65}{c |}
+{res}{txt}{col 7}{c |}{res}   5{col 13}   0.31684{col 25}  10{col 31}4771.40958{col 43} 1087.39686{txt} {res}{col 56} 0.5989{txt}{col 65}{c |}
+{res}{txt}{helpb lasso2##aicbic:*}indicates minimum EBIC.
+{p 0 6 2}Type e.g. {stata lasso2, lic(ebic)}{txt} to run the model selected by EBIC.{txt}{p_end}
+r; t=0.07 22:27:16
+
+{com}. assert mreldif(e(lambdamat0),L) < 1e-5
+{txt}r; t=0.00 22:27:16
+
+{com}. assert mreldif(e(rsq),D) < 1e-5
+{txt}r; t=0.00 22:27:16
+
+{com}. 
+. // single lambda, lasso, nocons
+. /*
+> > r<-glmnet(X,price,alpha=1,lambda=1000,intercept=FALSE,thresh=1e-15)
+> > t(coef(r))
+> 1 x 11 sparse Matrix of class "dgCMatrix"
+>    [[ suppressing 11 column names ‘(Intercept)’, ‘mpg’, ‘rep78’ ... ]]
+>                                      
+> s0 . . . . . 0.379965 26.1441 . . . .
+> */
+. mat G = 0.379965, 26.1441
+{txt}r; t=0.00 22:27:16
+
+{com}. lasso2 $model, lambda(1000) lglmnet nocons
+{res}
+{txt}{hline 18}{c TT}{hline 32}
+{col 10}Selected {c |}           Lasso   Post-est OLS
+{hline 18}{c +}{hline 32}
+{space 11}weight {c |}{col 21}{res}      0.3799620      2.3984497
+{txt}{space 11}length {c |}{col 21}{res}     26.1441473     -6.2162671
+{txt}{hline 18}{c BT}{hline 32}
+r; t=0.02 22:27:16
+
+{com}. assert mreldif(e(b),G) <1e-5
+{txt}r; t=0.00 22:27:16
+
+{com}. 
+. // single lambda, lasso, no standardisation
+. /*
+> > r<-glmnet(X,price,alpha=1,lambda=1000,standardize=FALSE,thresh=1e-15)
+> > t(coef(r))
+> 1 x 11 sparse Matrix of class "dgCMatrix"
+>    [[ suppressing 11 column names ‘(Intercept)’, ‘mpg’, ‘rep78’ ... ]]
+>                                                 
+> s0 10119.16 . . . . 3.549222 -62.23642 -106.0307
+>                
+> s0 6.079465 . .
+> */
+. mat G = 3.549222, -62.23642, -106.0307, 6.079465, 10119.16
+{txt}r; t=0.00 22:27:16
+
+{com}. lasso2 $model, lambda(1000) lglmnet unitloadings
+
+{txt}{hline 18}{c TT}{hline 32}
+{col 10}Selected {c |}           Lasso   Post-est OLS
+{hline 18}{c +}{hline 32}
+{space 11}weight {c |}{col 21}{res}      3.5492239      4.3647870
+{txt}{space 11}length {c |}{col 21}{res}    -62.2364415    -62.6569484
+{txt}{space 13}turn {c |}{col 21}{res}   -106.0306825   -306.7713630
+{txt}{space 5}displacement {c |}{col 21}{res}      6.0794583      7.5928170
+{txt}{hline 18}{c +}{hline 32}
+{col 4}Partialled-out{help lasso2##examples_partialling:*}{c |}
+{hline 18}{c +}{hline 32}
+{space 12}_cons {c |}{col 21}{res}  10119.1652697  15414.7836815
+{txt}{hline 18}{c BT}{hline 32}
+r; t=0.02 22:27:16
+
+{com}. assert mreldif(e(b),G) <1e-5
+{txt}r; t=0.00 22:27:16
+
+{com}. 
+. // single lambda, lasso, no standardisation, noconstant
+. /*
+> > r<-glmnet(X,price,alpha=1,lambda=1000,standardize=FALSE,intercept=FALSE,thresh=1e-15)
+> > t(coef(r))
+> 1 x 11 sparse Matrix of class "dgCMatrix"
+>    [[ suppressing 11 column names ‘(Intercept)’, ‘mpg’, ‘rep78’ ... ]]
+>                                                     
+> s0 . 6.830147 . . . 1.85882 -2.334519 . 3.886964 . .
+> */
+. mat G = 6.830147, 1.85882, -2.334519, 3.886964
+{txt}r; t=0.00 22:27:16
+
+{com}. lasso2 $model, lambda(1000) lglmnet unitloadings nocons
+
+{txt}{hline 18}{c TT}{hline 32}
+{col 10}Selected {c |}           Lasso   Post-est OLS
+{hline 18}{c +}{hline 32}
+{space 14}mpg {c |}{col 21}{res}      6.8298445     67.8769863
+{txt}{space 11}weight {c |}{col 21}{res}      1.8588003      2.7733874
+{txt}{space 11}length {c |}{col 21}{res}     -2.3342602    -24.1800039
+{txt}{space 5}displacement {c |}{col 21}{res}      3.8870523      4.1129337
+{txt}{hline 18}{c BT}{hline 32}
+r; t=0.06 22:27:16
+
+{com}. // note looser tolerance
+. assert mreldif(e(b),G) <1e-4
+{txt}r; t=0.00 22:27:16
+
+{com}. 
+. // single lambda, lasso, mpg and foreign unpenalized
+. /*
+> > p.fac = rep(1, 10)
+> > p.fac[c(1, 10)] = 0
+> > r<-glmnet(X,price,alpha=1,lambda=500,penalty.factor=p.fac, thresh=1e-15)
+> > t(coef(r))
+> 1 x 11 sparse Matrix of class "dgCMatrix"
+>    [[ suppressing 11 column names ‘(Intercept)’, ‘mpg’, ‘rep78’ ... ]]
+>                                                      
+> s0 9140.732 -225.1226 . . . . . . 6.065554 . 1962.096
+> */
+. mat G = -225.1226, 6.065554, 1962.096, 9140.732
+{txt}r; t=0.00 22:27:16
+
+{com}. lasso2 $model, lambda(500) lglmnet notpen(mpg foreign)
+{res}
+{txt}{hline 18}{c TT}{hline 32}
+{col 10}Selected {c |}           Lasso   Post-est OLS
+{hline 18}{c +}{hline 32}
+{space 14}mpg {c |}{helpb rlasso##notpen:*}{col 21}{res}   -225.1226002    -41.1777218
+{txt}{space 5}displacement {c |}{col 21}{res}      6.0655534     26.3416129
+{txt}{space 10}foreign {c |}{helpb rlasso##notpen:*}{col 21}{res}   1962.0955409   3506.5154853
+{txt}{hline 18}{c +}{hline 32}
+{col 4}Partialled-out{help lasso2##examples_partialling:*}{c |}
+{hline 18}{c +}{hline 32}
+{space 12}_cons {c |}{col 21}{res}   9140.7319210    739.8714853
+{txt}{hline 18}{c BT}{hline 32}
+{help lasso2##examples_partialling:*Not penalized}
+r; t=0.03 22:27:16
+
+{com}. assert mreldif(e(b),G) <1e-5
+{txt}r; t=0.00 22:27:16
+
+{com}. 
+. // single lambda, ridge, mpg and foreign unpenalized
+. /*
+> > p.fac = rep(1, 10)
+> > p.fac[c(1, 10)] = 0
+> > r<-glmnet(X,price,alpha=0,lambda=500,penalty.factor=p.fac, thresh=1e-15)
+> > t(coef(r))
+> 1 x 11 sparse Matrix of class "dgCMatrix"
+>    [[ suppressing 11 column names ‘(Intercept)’, ‘mpg’, ‘rep78’ ... ]]
+>                                                         
+> s0 4420.934 -65.4987 167.7168 -446.8571 22.46099 1.26494
+>                                                
+> s0 2.118738 -25.1642 10.62293 -910.106 3185.862
+> */
+. mat G = -65.4987, 167.7168, -446.8571, 22.46099, 1.26494,                       ///
+>                 2.118738, -25.1642, 10.62293, -910.106, 3185.862, 4420.934
+{txt}r; t=0.00 22:27:16
+
+{com}. lasso2 $model, lambda(500) alpha(0) lglmnet notpen(mpg foreign)
+{res}
+{txt}{hline 18}{c TT}{hline 32}
+{col 10}Selected {c |}           Ridge   Post-est OLS
+{hline 18}{c +}{hline 32}
+{space 14}mpg {c |}{helpb rlasso##notpen:*}{col 21}{res}    -65.4987232    -21.8051782
+{txt}{space 12}rep78 {c |}{col 21}{res}    167.7168365    184.7934987
+{txt}{space 9}headroom {c |}{col 21}{res}   -446.8571174   -635.4921033
+{txt}{space 12}trunk {c |}{col 21}{res}     22.4609862     71.4992915
+{txt}{space 11}weight {c |}{col 21}{res}      1.2649401      4.5211613
+{txt}{space 11}length {c |}{col 21}{res}      2.1187343    -76.4910106
+{txt}{space 13}turn {c |}{col 21}{res}    -25.1641973   -114.2776716
+{txt}{space 5}displacement {c |}{col 21}{res}     10.6229336     11.5401247
+{txt}{space 7}gear_ratio {c |}{col 21}{res}   -910.1061352   -318.6478765
+{txt}{space 10}foreign {c |}{helpb rlasso##notpen:*}{col 21}{res}   3185.8620818   3334.8483415
+{txt}{hline 18}{c +}{hline 32}
+{col 4}Partialled-out{help lasso2##examples_partialling:*}{c |}
+{hline 18}{c +}{hline 32}
+{space 12}_cons {c |}{col 21}{res}   4420.9361916   9789.4941906
+{txt}{hline 18}{c BT}{hline 32}
+{help lasso2##examples_partialling:*Not penalized}
+r; t=0.04 22:27:16
+
+{com}. assert mreldif(e(b),G) <1e-5
+{txt}r; t=0.00 22:27:16
+
+{com}. 
+. // single lambda, elastic net, mpg and foreign unpenalized
+. /*
+> > p.fac = rep(1, 10)
+> > p.fac[c(1, 10)] = 0
+> > r<-glmnet(X,price,alpha=0.5,lambda=500,penalty.factor=p.fac, thresh=1e-15)
+> > t(coef(r))
+> 1 x 11 sparse Matrix of class "dgCMatrix"
+>    [[ suppressing 11 column names ‘(Intercept)’, ‘mpg’, ‘rep78’ ... ]]
+>                                                              
+> s0 4089.962 -132.7721 . . . 0.7644731 . . 8.896648 . 2639.545
+> */
+. mat G = -132.7721, 0.7644731, 8.896648, 2639.545, 4089.962
+{txt}r; t=0.00 22:27:16
+
+{com}. lasso2 $model, lambda(500) alpha(0.5) lglmnet notpen(mpg foreign)
+{res}
+{txt}{hline 18}{c TT}{hline 32}
+{col 10}Selected {c |}     Elastic net   Post-est OLS
+{col 10}         {c |}   (alpha=0.500)
+{hline 18}{c +}{hline 32}
+{space 14}mpg {c |}{helpb rlasso##notpen:*}{col 21}{res}   -132.7721093     32.4482003
+{txt}{space 11}weight {c |}{col 21}{res}      0.7644727      2.1201353
+{txt}{space 5}displacement {c |}{col 21}{res}      8.8966496     14.0772143
+{txt}{space 10}foreign {c |}{helpb rlasso##notpen:*}{col 21}{res}   2639.5446506   3853.0800775
+{txt}{hline 18}{c +}{hline 32}
+{col 4}Partialled-out{help lasso2##examples_partialling:*}{c |}
+{hline 18}{c +}{hline 32}
+{space 12}_cons {c |}{col 21}{res}   4089.9626321  -4933.0507249
+{txt}{hline 18}{c BT}{hline 32}
+{help lasso2##examples_partialling:*Not penalized}
+r; t=0.03 22:27:16
+
+{com}. assert mreldif(e(b),G) <1e-5
+{txt}r; t=0.00 22:27:16
+
+{com}. 
+. // single lambda, lasso, misc penalty loadings
+. /*
+> > p.fac = rep(1, 10)
+> > p.fac[c(1, 10)] = 4
+> > p.fac[c(2,9)] = 3
+> > p.fac[c(3,8)] = 2
+> > r<-glmnet(X,price,alpha=1,lambda=400,penalty.factor=p.fac, thresh=1e-15)
+> > t(coef(r))
+> 1 x 11 sparse Matrix of class "dgCMatrix"
+>    [[ suppressing 11 column names ‘(Intercept)’, ‘mpg’, ‘rep78’ ... ]]
+>                                                      
+> s0 1254.559 . . . . 2.136852 . -42.89822 . . 393.3358
+> */
+. mat G =  2.136852, -42.89822, 393.3358, 1254.559
+{txt}r; t=0.00 22:27:16
+
+{com}. mat psi = 4, 3, 2, 1, 1, 1, 1, 2, 3, 4
+{txt}r; t=0.00 22:27:16
+
+{com}. lasso2 $model, lambda(400) lglmnet ploadings(psi)
+{res}
+{txt}{hline 18}{c TT}{hline 32}
+{col 10}Selected {c |}           Lasso   Post-est OLS
+{hline 18}{c +}{hline 32}
+{space 11}weight {c |}{col 21}{res}      2.1368521      4.2041749
+{txt}{space 13}turn {c |}{col 21}{res}    -42.8982000   -201.6040429
+{txt}{space 10}foreign {c |}{col 21}{res}    393.3357681   3229.0798707
+{txt}{hline 18}{c +}{hline 32}
+{col 4}Partialled-out{help lasso2##examples_partialling:*}{c |}
+{hline 18}{c +}{hline 32}
+{space 12}_cons {c |}{col 21}{res}   1254.5591614    439.3565194
+{txt}{hline 18}{c BT}{hline 32}
+r; t=0.03 22:27:16
+
+{com}. assert mreldif(e(b),G) <1e-5
+{txt}r; t=0.00 22:27:16
+
+{com}. 
+. // Elastic net, single lambda, misc penalty loadings
+. /*
+> > p.fac = rep(1, 10)
+> > p.fac[c(1, 10)] = 4
+> > p.fac[c(2,9)] = 3
+> > p.fac[c(3,8)] = 2
+> > r<-glmnet(X,price,alpha=0.5,lambda=400,penalty.factor=p.fac,thresh=1e-15)
+> > t(coef(r))
+> 1 x 11 sparse Matrix of class "dgCMatrix"
+>    [[ suppressing 11 column names ‘(Intercept)’, ‘mpg’, ‘rep78’ ... ]]
+>                                                                 
+> s0 1232.917 . 91.49722 -256.4055 . 2.29446 . -78.49864 5.61806 .
+>            
+> s0 1398.059
+> */
+. mat G = 91.49722, -256.4055, 2.29446, -78.49864, 5.61806, 1398.059, 1232.917
+{txt}r; t=0.00 22:27:16
+
+{com}. mat psi = 4, 3, 2, 1, 1, 1, 1, 2, 3, 4
+{txt}r; t=0.00 22:27:16
+
+{com}. lasso2 $model, lambda(400) alpha(0.5) lglmnet ploadings(psi)
+{res}
+{txt}{hline 18}{c TT}{hline 32}
+{col 10}Selected {c |}     Elastic net   Post-est OLS
+{col 10}         {c |}   (alpha=0.500)
+{hline 18}{c +}{hline 32}
+{space 12}rep78 {c |}{col 21}{res}     91.4972524    137.6395144
+{txt}{space 9}headroom {c |}{col 21}{res}   -256.4054750   -662.3143019
+{txt}{space 11}weight {c |}{col 21}{res}      2.2944593      2.8095110
+{txt}{space 13}turn {c |}{col 21}{res}    -78.4986102   -185.4958291
+{txt}{space 5}displacement {c |}{col 21}{res}      5.6180622     15.8198864
+{txt}{space 10}foreign {c |}{col 21}{res}   1398.0594268   3239.6807619
+{txt}{hline 18}{c +}{hline 32}
+{col 4}Partialled-out{help lasso2##examples_partialling:*}{c |}
+{hline 18}{c +}{hline 32}
+{space 12}_cons {c |}{col 21}{res}   1232.9161107   2409.5642531
+{txt}{hline 18}{c BT}{hline 32}
+r; t=0.03 22:27:16
+
+{com}. assert mreldif(e(b),G) <1e-5
+{txt}r; t=0.00 22:27:16
+
+{com}. 
+. // Elastic net, single lambda, misc penalty loadings, no standardization
+. /*
+> > p.fac = rep(1, 10)
+> > p.fac[c(1, 10)] = 4
+> > p.fac[c(2,9)] = 3
+> > p.fac[c(3,8)] = 2
+> > r<-glmnet(X,price,alpha=0.5,lambda=400,penalty.factor=p.fac,standardize=FALSE,thresh=1e-15)
+> > t(coef(r))
+> 1 x 11 sparse Matrix of class "dgCMatrix"
+>    [[ suppressing 11 column names ‘(Intercept)’, ‘mpg’, ‘rep78’ ... ]]
+>                                                                    
+> s0 16039.13 -58.51055 322.0282 -218.2771 21.3079 4.093964 -72.31631
+>                          
+> s0 -247.7182 8.463531 . .
+> */
+. mat G = -58.51055, 322.0282, -218.2771, 21.3079, 4.093964, -72.31631,   ///
+>                 -247.7182, 8.463531, 16039.13 
+{txt}r; t=0.00 22:27:16
+
+{com}. mat psi = 4, 3, 2, 1, 1, 1, 1, 2, 3, 4
+{txt}r; t=0.00 22:27:16
+
+{com}. lasso2 $model, lambda(400) alpha(0.5) lglmnet ploadings(psi) unitloadings
+
+{txt}{hline 18}{c TT}{hline 32}
+{col 10}Selected {c |}     Elastic net   Post-est OLS
+{col 10}         {c |}   (alpha=0.500)
+{hline 18}{c +}{hline 32}
+{space 14}mpg {c |}{col 21}{res}    -58.5107795   -105.8894153
+{txt}{space 12}rep78 {c |}{col 21}{res}    322.0321459    759.3265317
+{txt}{space 9}headroom {c |}{col 21}{res}   -218.2801371   -713.0017251
+{txt}{space 12}trunk {c |}{col 21}{res}     21.3080854     70.8032750
+{txt}{space 11}weight {c |}{col 21}{res}      4.0939622      3.9135872
+{txt}{space 11}length {c |}{col 21}{res}    -72.3163363    -80.4499647
+{txt}{space 13}turn {c |}{col 21}{res}   -247.7178737   -211.3076497
+{txt}{space 5}displacement {c |}{col 21}{res}      8.4635526     10.6210554
+{txt}{hline 18}{c +}{hline 32}
+{col 4}Partialled-out{help lasso2##examples_partialling:*}{c |}
+{hline 18}{c +}{hline 32}
+{space 12}_cons {c |}{col 21}{res}  16039.1150621  16555.4570151
+{txt}{hline 18}{c BT}{hline 32}
+r; t=0.02 22:27:16
+
+{com}. // note looser tolerance
+. assert mreldif(e(b),G) <1e-4
+{txt}r; t=0.00 22:27:16
+
+{com}. 
+. ********************************************************************************
+. *** lglmnet option - consistency  with lasso2 default parameterization       ***
+. ********************************************************************************
+. 
+. * uses auto dataset
+. * can change sd(y) and lambdas to suit
+. * note lglmnet implies prestd
+. 
+. // any lambda, any alpha
+. sysuse auto, clear
+{txt}(1978 Automobile Data)
+r; t=0.00 22:27:16
+
+{com}. gen double y = price/10
+{txt}r; t=0.00 22:27:16
+
+{com}. local glmnetlambda_a = 100
+{txt}r; t=0.00 22:27:16
+
+{com}. local glmnetlambda_b = 10
+{txt}r; t=0.00 22:27:16
+
+{com}. drop if rep78==.
+{txt}(5 observations deleted)
+r; t=0.00 22:27:16
+
+{com}. qui sum y
+{txt}r; t=0.00 22:27:16
+
+{com}. local sd = r(sd) * 1/sqrt( r(N)/(r(N)-1)   )
+{txt}r; t=0.00 22:27:16
+
+{com}. local glmnetalpha = 0.5
+{txt}r; t=0.00 22:27:16
+
+{com}. local L1lambda_a = `glmnetlambda_a' * 2 * 69
+{txt}r; t=0.00 22:27:16
+
+{com}. local L2lambda_a = `L1lambda_a' / `sd'
+{txt}r; t=0.00 22:27:16
+
+{com}. local L1lambda_b = `glmnetlambda_b' * 2 * 69
+{txt}r; t=0.00 22:27:16
+
+{com}. local L2lambda_b = `L1lambda_b' / `sd'
+{txt}r; t=0.00 22:27:16
+
+{com}. di "glmnetlambda_a=`glmnetlambda_a' L1lambda_a=`L1lambda_a' L2lambda_a=`L2lambda_a'"
+{res}glmnetlambda_a=100 L1lambda_a=13800 L2lambda_a=47.73007873873659
+{txt}r; t=0.00 22:27:16
+
+{com}. di "glmnetlambda_b=`glmnetlambda_b' L1lambda_b=`L1lambda_b' L2lambda_b=`L2lambda_b'"
+{res}glmnetlambda_b=10 L1lambda_b=1380 L2lambda_b=4.773007873873659
+{txt}r; t=0.00 22:27:16
+
+{com}. // Lasso / alpha=1
+. lasso2 y mpg-foreign, lambda(`glmnetlambda_a') lglmnet
+{res}
+{txt}{hline 18}{c TT}{hline 32}
+{col 10}Selected {c |}           Lasso   Post-est OLS
+{hline 18}{c +}{hline 32}
+{space 11}weight {c |}{col 21}{res}      0.0381904      0.1039647
+{txt}{space 5}displacement {c |}{col 21}{res}      0.3289190      0.8887734
+{txt}{hline 18}{c +}{hline 32}
+{col 4}Partialled-out{help lasso2##examples_partialling:*}{c |}
+{hline 18}{c +}{hline 32}
+{space 12}_cons {c |}{col 21}{res}    433.6841338    123.4033511
+{txt}{hline 18}{c BT}{hline 32}
+r; t=0.03 22:27:16
+
+{com}. local pmse = e(pmse)
+{txt}r; t=0.00 22:27:16
+
+{com}. storedresults save glmnet e()
+{txt}r; t=0.00 22:27:16
+
+{com}. lasso2 y mpg-foreign, lambda(`L1lambda_a') prestd
+{res}
+{txt}{hline 18}{c TT}{hline 32}
+{col 10}Selected {c |}           Lasso   Post-est OLS
+{hline 18}{c +}{hline 32}
+{space 11}weight {c |}{col 21}{res}      0.0381904      0.1039647
+{txt}{space 5}displacement {c |}{col 21}{res}      0.3289190      0.8887734
+{txt}{hline 18}{c +}{hline 32}
+{col 4}Partialled-out{help lasso2##examples_partialling:*}{c |}
+{hline 18}{c +}{hline 32}
+{space 12}_cons {c |}{col 21}{res}    433.6841335    123.4033511
+{txt}{hline 18}{c BT}{hline 32}
+r; t=0.04 22:27:16
+
+{com}. storedresults compare glmnet e(), tol(1e-8)                                                     ///
+>         exclude(macros: lasso2opt scalar: niter lambda pmse)
+{txt}r; t=0.00 22:27:16
+
+{com}. assert reldif(2*`pmse',e(pmse))<1e-8
+{txt}r; t=0.00 22:27:16
+
+{com}. // lambda list
+. lasso2 y mpg-foreign, lambda(`glmnetlambda_a' `glmnetlambda_b') lglmnet
+{res}
+{txt}  Knot{c |}  ID     Lambda    s      L1-Norm        EBIC{col 58}R-sq   {c |} Action
+{hline 6}{c +}{hline 57}{c +}{hline 15}
+{res}     1{txt}{col 7}{c |}{res}   1{col 13} 100.00000{col 25}   2{col 31}   0.36711{col 43}  781.56294{txt} {res}{col 56} 0.1869{txt}{col 65}{c |}{res}{col 67}Added weight
+{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}displacement
+{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}_cons.
+     2{txt}{col 7}{c |}{res}   2{col 13}  10.00000{col 25}   7{col 31} 357.08640{col 43}  763.62958{txt} {res}{col 56} 0.5509{txt}{col 65}{c |}{res}{col 67}Added rep78
+{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}headroom turn
+{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}gear_ratio
+{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}foreign.
+{txt}Use {bf:long} option for full output.
+{p 0 6 2}Type e.g. {stata lasso2, lic(ebic)}{txt} to run the model selected by EBIC.{txt}{p_end}
+r; t=0.03 22:27:16
+
+{com}. storedresults save glmnet e()
+{txt}r; t=0.00 22:27:16
+
+{com}. lasso2 y mpg-foreign, lambda(`L1lambda_a' `L1lambda_b') prestd
+{res}
+{txt}  Knot{c |}  ID     Lambda    s      L1-Norm        EBIC{col 58}R-sq   {c |} Action
+{hline 6}{c +}{hline 57}{c +}{hline 15}
+{res}     1{txt}{col 7}{c |}{res}   1{col 13} 1.380e+04{col 25}   2{col 31}   0.36711{col 43}  781.56294{txt} {res}{col 56} 0.1869{txt}{col 65}{c |}{res}{col 67}Added weight
+{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}displacement
+{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}_cons.
+     2{txt}{col 7}{c |}{res}   2{col 13}1380.00000{col 25}   7{col 31} 357.08640{col 43}  763.62958{txt} {res}{col 56} 0.5509{txt}{col 65}{c |}{res}{col 67}Added rep78
+{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}headroom turn
+{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}gear_ratio
+{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}foreign.
+{txt}Use {bf:long} option for full output.
+{p 0 6 2}Type e.g. {stata lasso2, lic(ebic)}{txt} to run the model selected by EBIC.{txt}{p_end}
+r; t=0.04 22:27:16
+
+{com}. storedresults compare glmnet e(), tol(1e-8)                                                     ///
+>         exclude(macros: lasso2opt                                                                               ///
+>         scalar: niter lmax lmax0 lmin lmin0 laic laicc lbic lebic               ///
+>         matrix: lambdamat lambdamat0)
+{txt}r; t=0.00 22:27:16
+
+{com}. // Enet
+. local alpha=(`glmnetalpha'*`sd')/( (1-`glmnetalpha') + `glmnetalpha'*`sd' )
+{txt}r; t=0.00 22:27:16
+
+{com}. local lambda_a=(1-`glmnetalpha')*`L2lambda_a' + `glmnetalpha'*`L1lambda_a'
+{txt}r; t=0.00 22:27:16
+
+{com}. local lambda_b=(1-`glmnetalpha')*`L2lambda_b' + `glmnetalpha'*`L1lambda_b'
+{txt}r; t=0.00 22:27:16
+
+{com}. di "alpha=`alpha' lambda_a=`lambda_a' lambda_b=`lambda_b'"
+{res}alpha=.9965532200247014 lambda_a=6923.865039369368 lambda_b=692.3865039369368
+{txt}r; t=0.00 22:27:16
+
+{com}. lasso2 y mpg-foreign, alpha(`glmnetalpha') lambda(`glmnetlambda_a') lglmnet
+{res}
+{txt}{hline 18}{c TT}{hline 32}
+{col 10}Selected {c |}     Elastic net   Post-est OLS
+{col 10}         {c |}   (alpha=0.500)
+{hline 18}{c +}{hline 32}
+{space 14}mpg {c |}{col 21}{res}     -0.5096391      3.2448200
+{txt}{space 11}weight {c |}{col 21}{res}      0.0692915      0.2120135
+{txt}{space 5}displacement {c |}{col 21}{res}      0.5942778      1.4077214
+{txt}{space 10}foreign {c |}{col 21}{res}     30.8224977    385.3080078
+{txt}{hline 18}{c +}{hline 32}
+{col 4}Partialled-out{help lasso2##examples_partialling:*}{c |}
+{hline 18}{c +}{hline 32}
+{space 12}_cons {c |}{col 21}{res}    288.3129553   -493.3050725
+{txt}{hline 18}{c BT}{hline 32}
+r; t=0.03 22:27:16
+
+{com}. local pmse = e(pmse)
+{txt}r; t=0.00 22:27:16
+
+{com}. storedresults save glmnet e()
+{txt}r; t=0.01 22:27:16
+
+{com}. lasso2 y mpg-foreign, alpha(`alpha') lambda(`lambda_a') prestd
+{res}
+{txt}{hline 18}{c TT}{hline 32}
+{col 10}Selected {c |}     Elastic net   Post-est OLS
+{col 10}         {c |}   (alpha=0.997)
+{hline 18}{c +}{hline 32}
+{space 14}mpg {c |}{col 21}{res}     -0.5096391      3.2448200
+{txt}{space 11}weight {c |}{col 21}{res}      0.0692915      0.2120135
+{txt}{space 5}displacement {c |}{col 21}{res}      0.5942778      1.4077214
+{txt}{space 10}foreign {c |}{col 21}{res}     30.8224976    385.3080078
+{txt}{hline 18}{c +}{hline 32}
+{col 4}Partialled-out{help lasso2##examples_partialling:*}{c |}
+{hline 18}{c +}{hline 32}
+{space 12}_cons {c |}{col 21}{res}    288.3129554   -493.3050725
+{txt}{hline 18}{c BT}{hline 32}
+r; t=0.03 22:27:16
+
+{com}. storedresults compare glmnet e(), tol(1e-8)                                                     ///
+>         exclude(macros: lasso2opt scalar: niter alpha lambda pmse)
+{txt}r; t=0.00 22:27:16
+
+{com}. di 2*`pmse'
+{res}73334.531
+{txt}r; t=0.00 22:27:16
+
+{com}. di e(pmse)
+{res}73334.531
+{txt}r; t=0.00 22:27:16
+
+{com}. assert reldif(2*`pmse',e(pmse))<1e-8
+{txt}r; t=0.00 22:27:16
+
+{com}. // lambda list
+. lasso2 y mpg-foreign, alpha(`glmnetalpha') lambda(`glmnetlambda_a' `glmnetlambda_b') lglmnet
+{res}
+{txt}  Knot{c |}  ID     Lambda    s      L1-Norm        EBIC{col 58}R-sq   {c |} Action
+{hline 6}{c +}{hline 57}{c +}{hline 15}
+{res}     1{txt}{col 7}{c |}{res}   1{col 13} 100.00000{col 25}   4{col 31}  31.99571{col 43}  773.80040{txt} {res}{col 56} 0.2999{txt}{col 65}{c |}{res}{col 67}Added mpg
+{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}weight
+{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}displacement
+{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}foreign
+{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}_cons.
+     2{txt}{col 7}{c |}{res}   2{col 13}  10.00000{col 25}   9{col 31} 406.69452{col 43}  766.12681{txt} {res}{col 56} 0.5687{txt}{col 65}{c |}{res}{col 67}Added rep78
+{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}headroom
+{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}length turn
+{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}gear_ratio.
+{txt}Use {bf:long} option for full output.
+{p 0 6 2}Type e.g. {stata lasso2, lic(ebic)}{txt} to run the model selected by EBIC.{txt}{p_end}
+r; t=0.04 22:27:16
+
+{com}. storedresults save glmnet e()
+{txt}r; t=0.00 22:27:16
+
+{com}. lasso2 y mpg-foreign, alpha(`alpha') lambda(`lambda_a' `lambda_b') prestd
+{res}
+{txt}  Knot{c |}  ID     Lambda    s      L1-Norm        EBIC{col 58}R-sq   {c |} Action
+{hline 6}{c +}{hline 57}{c +}{hline 15}
+{res}     1{txt}{col 7}{c |}{res}   1{col 13}6923.86504{col 25}   4{col 31}  31.99571{col 43}  773.80040{txt} {res}{col 56} 0.2999{txt}{col 65}{c |}{res}{col 67}Added mpg
+{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}weight
+{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}displacement
+{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}foreign
+{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}_cons.
+     2{txt}{col 7}{c |}{res}   2{col 13} 692.38650{col 25}   9{col 31} 406.69452{col 43}  766.12681{txt} {res}{col 56} 0.5687{txt}{col 65}{c |}{res}{col 67}Added rep78
+{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}headroom
+{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}length turn
+{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}gear_ratio.
+{txt}Use {bf:long} option for full output.
+{p 0 6 2}Type e.g. {stata lasso2, lic(ebic)}{txt} to run the model selected by EBIC.{txt}{p_end}
+r; t=0.04 22:27:16
+
+{com}. storedresults compare glmnet e(), tol(1e-8)                                                     ///
+>         exclude(macros: lasso2opt                                                                               ///
+>         scalar: niter lmax lmax0 lmin lmin0 laic laicc lbic lebic alpha ///
+>         matrix: lambdamat lambdamat0)
+{txt}r; t=0.00 22:27:16
+
+{com}. // Ridge / alpha=0
+. lasso2 y mpg-foreign, alpha(0) lambda(`glmnetlambda_a') lglmnet
+{res}
+{txt}{hline 18}{c TT}{hline 32}
+{col 10}Selected {c |}           Ridge   Post-est OLS
+{hline 18}{c +}{hline 32}
+{space 14}mpg {c |}{col 21}{res}     -5.7006206     -2.1805178
+{txt}{space 12}rep78 {c |}{col 21}{res}     29.6970150     18.4793499
+{txt}{space 9}headroom {c |}{col 21}{res}    -39.2421941    -63.5492103
+{txt}{space 12}trunk {c |}{col 21}{res}      2.3706654      7.1499291
+{txt}{space 11}weight {c |}{col 21}{res}      0.0993845      0.4521161
+{txt}{space 11}length {c |}{col 21}{res}      0.5562672     -7.6491011
+{txt}{space 13}turn {c |}{col 21}{res}     -2.4180458    -11.4277672
+{txt}{space 5}displacement {c |}{col 21}{res}      0.8855064      1.1540125
+{txt}{space 7}gear_ratio {c |}{col 21}{res}    -53.6017921    -31.8647876
+{txt}{space 10}foreign {c |}{col 21}{res}    172.6658159    333.4848341
+{txt}{hline 18}{c +}{hline 32}
+{col 4}Partialled-out{help lasso2##examples_partialling:*}{c |}
+{hline 18}{c +}{hline 32}
+{space 12}_cons {c |}{col 21}{res}    342.5776772    978.9494191
+{txt}{hline 18}{c BT}{hline 32}
+r; t=0.03 22:27:16
+
+{com}. local pmse = e(pmse)
+{txt}r; t=0.00 22:27:16
+
+{com}. storedresults save glmnet e()
+{txt}r; t=0.00 22:27:16
+
+{com}. lasso2 y mpg-foreign, alpha(0) lambda(`L2lambda_a') prestd
+{res}
+{txt}{hline 18}{c TT}{hline 32}
+{col 10}Selected {c |}           Ridge   Post-est OLS
+{hline 18}{c +}{hline 32}
+{space 14}mpg {c |}{col 21}{res}     -5.7006206     -2.1805178
+{txt}{space 12}rep78 {c |}{col 21}{res}     29.6970150     18.4793499
+{txt}{space 9}headroom {c |}{col 21}{res}    -39.2421941    -63.5492103
+{txt}{space 12}trunk {c |}{col 21}{res}      2.3706654      7.1499291
+{txt}{space 11}weight {c |}{col 21}{res}      0.0993845      0.4521161
+{txt}{space 11}length {c |}{col 21}{res}      0.5562672     -7.6491011
+{txt}{space 13}turn {c |}{col 21}{res}     -2.4180458    -11.4277672
+{txt}{space 5}displacement {c |}{col 21}{res}      0.8855064      1.1540125
+{txt}{space 7}gear_ratio {c |}{col 21}{res}    -53.6017921    -31.8647876
+{txt}{space 10}foreign {c |}{col 21}{res}    172.6658159    333.4848341
+{txt}{hline 18}{c +}{hline 32}
+{col 4}Partialled-out{help lasso2##examples_partialling:*}{c |}
+{hline 18}{c +}{hline 32}
+{space 12}_cons {c |}{col 21}{res}    342.5776772    978.9494191
+{txt}{hline 18}{c BT}{hline 32}
+r; t=0.04 22:27:17
+
+{com}. storedresults compare glmnet e(), tol(1e-8)                                                     ///
+>         exclude(macros: lasso2opt scalar: niter lambda pmse)
+{txt}r; t=0.00 22:27:17
+
+{com}. di 2*`pmse'
+{res}59032.879
+{txt}r; t=0.00 22:27:17
+
+{com}. di e(pmse)
+{res}59032.879
+{txt}r; t=0.00 22:27:17
+
+{com}. assert reldif(2*`pmse',e(pmse))<1e-8
+{txt}r; t=0.00 22:27:17
+
+{com}. // lambda list
+. lasso2 y mpg-foreign, alpha(0) lambda(`glmnetlambda_a' `glmnetlambda_b') lglmnet
+{res}
+{txt}  Knot{c |}  ID     Lambda    s      L1-Norm        EBIC{col 58}R-sq   {c |} Action
+{hline 6}{c +}{hline 57}{c +}{hline 15}
+{res}     1{txt}{col 7}{c |}{res}   1{col 13} 100.00000{col 25}  10{col 31} 307.23731{col 43}  762.92238{txt} {res}{col 56} 0.4856{txt}{col 65}{c |}{res}{col 67}All
+{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}selected.
+{txt}Use {bf:long} option for full output.
+{p 0 6 2}Type e.g. {stata lasso2, lic(ebic)}{txt} to run the model selected by EBIC.{txt}{p_end}
+r; t=0.03 22:27:17
+
+{com}. storedresults save glmnet e()
+{txt}r; t=0.00 22:27:17
+
+{com}. lasso2 y mpg-foreign, alpha(0) lambda(`L2lambda_a' `L2lambda_b') prestd
+{res}
+{txt}  Knot{c |}  ID     Lambda    s      L1-Norm        EBIC{col 58}R-sq   {c |} Action
+{hline 6}{c +}{hline 57}{c +}{hline 15}
+{res}     1{txt}{col 7}{c |}{res}   1{col 13}  47.73008{col 25}  10{col 31} 307.23731{col 43}  762.92238{txt} {res}{col 56} 0.4856{txt}{col 65}{c |}{res}{col 67}All
+{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}selected.
+{txt}Use {bf:long} option for full output.
+{p 0 6 2}Type e.g. {stata lasso2, lic(ebic)}{txt} to run the model selected by EBIC.{txt}{p_end}
+r; t=0.04 22:27:17
+
+{com}. storedresults compare glmnet e(), tol(1e-8)                                                     ///
+>         exclude(macros: lasso2opt                                                                               ///
+>         scalar: niter lmax lmax0 lmin lmin0 laic laicc lbic lebic               ///
+>         matrix: lambdamat lambdamat0)
+{txt}r; t=0.00 22:27:17
+
+{com}. 
+. 
 . 
 . ********************************************************************************
 . *** replicate sqrt-lasso Matlab program                                                                          ***
 . ********************************************************************************
 . 
+. * load example data
+. insheet using "$prostate", tab clear
+{txt}(11 vars, 97 obs)
+r; t=0.77 22:27:17
+
+{com}. global model lpsa lcavol lweight age lbph svi lcp gleason pgg45
+{txt}r; t=0.00 22:27:17
+
+{com}. 
 . // uses the Matlab code "SqrtLassoIterative.m" (available on request)
 . 
 . lasso2 $model, sqrt l(40) unitload
@@ -608,10 +1148,10 @@ r1 {res}          0   .01488352
 {hline 18}{c +}{hline 32}
 {space 12}_cons {c |}{col 21}{res}      1.7375806      1.4530193
 {txt}{hline 18}{c BT}{hline 32}
-r; t=0.01 13:05:15
+r; t=0.01 22:27:17
 
 {com}. mat a=e(betaAll)
-{txt}r; t=0.00 13:05:15
+{txt}r; t=0.00 22:27:17
 
 {com}. /*
 > ans =
@@ -627,7 +1167,7 @@ r; t=0.01 13:05:15
 >     1.7383
 > */
 . mat b = (0.3627,0,0,0,0,0,0,0.0103,1.7383)
-{txt}r; t=0.00 13:05:15
+{txt}r; t=0.00 22:27:17
 
 {com}. comparemat a b
 {txt}mreldif=.0004960154300146. tolerance = .01
@@ -644,7 +1184,7 @@ lpsa {res}         0  .01026376  1.7375806
 {txt}__000001[1,9]
         c1      c2      c3      c4      c5      c6      c7      c8      c9
 r1 {res}  .3627       0       0       0       0       0       0   .0103  1.7383
-{reset}r; t=0.00 13:05:15
+{reset}r; t=0.04 22:27:17
 
 {com}. 
 . lasso2 $model, sqrt l(10) unitload
@@ -663,10 +1203,10 @@ r1 {res}  .3627       0       0       0       0       0       0   .0103  1.7383
 {hline 18}{c +}{hline 32}
 {space 12}_cons {c |}{col 21}{res}      1.3943635      0.5214696
 {txt}{hline 18}{c BT}{hline 32}
-r; t=0.01 13:05:15
+r; t=0.01 22:27:17
 
 {com}. mat a=e(betaAll)
-{txt}r; t=0.00 13:05:15
+{txt}r; t=0.00 22:27:17
 
 {com}. /*
 > ans =
@@ -682,7 +1222,7 @@ r; t=0.01 13:05:15
 >     1.3946
 > */
 . mat b = (0.5771,0.1965,-0.0092,0.0773,0.0685,0,0,0.0063,1.3946)
-{txt}r; t=0.00 13:05:15
+{txt}r; t=0.00 22:27:17
 
 {com}. comparemat a b
 {txt}mreldif=.0001084546926302. tolerance = .01
@@ -699,7 +1239,7 @@ lpsa {res}          0   .00630709   1.3943635
 {txt}__000001[1,9]
         c1      c2      c3      c4      c5      c6      c7      c8      c9
 r1 {res}  .5771   .1965  -.0092   .0773   .0685       0       0   .0063  1.3946
-{reset}r; t=0.00 13:05:15
+{reset}r; t=0.00 22:27:17
 
 {com}. 
 . lasso2 $model, sqrt l(1) unitload
@@ -720,10 +1260,10 @@ r1 {res}  .5771   .1965  -.0092   .0773   .0685       0       0   .0063  1.3946
 {hline 18}{c +}{hline 32}
 {space 12}_cons {c |}{col 21}{res}      0.5277550      0.1815609
 {txt}{hline 18}{c BT}{hline 32}
-r; t=0.01 13:05:15
+r; t=0.02 22:27:17
 
 {com}. mat a=e(betaAll)
-{txt}r; t=0.00 13:05:15
+{txt}r; t=0.00 22:27:17
 
 {com}. /*
 > ans =
@@ -739,7 +1279,7 @@ r; t=0.01 13:05:15
 >     0.5259
 > */
 . mat b = (0.5610, 0.5774,-0.0196,0.0950,0.6700,-0.0766,0.0088,0.0049,0.5259)
-{txt}r; t=0.00 13:05:15
+{txt}r; t=0.00 22:27:17
 
 {com}. comparemat a b
 {txt}mreldif=.0012156660543233. tolerance = .01
@@ -754,30 +1294,9 @@ lpsa {res}  .00856705   .00494122   .52775498
 {txt}__000001[1,9]
         c1      c2      c3      c4      c5      c6      c7      c8      c9
 r1 {res}   .561   .5774  -.0196    .095     .67  -.0766   .0088   .0049   .5259
-{reset}r; t=0.00 13:05:15
+{reset}r; t=0.00 22:27:17
 
 {com}. 
-. ********************************************************************************
-. *** validation using elasticregress                                                                                      ***
-. ********************************************************************************
-. 
-. // NB: check allows for for a 2.5% deviation
-. // Note that lambda=50 and alpha=0.25 yields a 3.5% deviation.
-. /*
-> foreach li of numlist 0.1 1 3 5 10 50 100 {c -(}
->  foreach ai of numlist  0 0.01 /* 0.25 */ 0.5 0.75 0.9 0.99 1 {c -(}
->         di
->         di as text "lambda=`li'  alpha=`ai'"
->         qui lasso2 $model, l(`li') alpha(`ai') prestd
->         mat A = e(betaAll)
->         local lam = `li'/97/2 // uses different objective function
->         elasticregress $model, lambda(`lam') alpha(`ai') tol(10e-10)
->         mat B = e(b)
->         comparemat A B , tol(0.025)
->  {c )-}
-> {c )-}
-> */
-. 
 . ********************************************************************************
 . *** validation using Stata's elasticnet                                                                          ***
 . ********************************************************************************
@@ -812,15 +1331,15 @@ Elastic net linear {txt}model{txt}{col 50}No. of obs{col 68}={res}         97
 {col 1}alpha{col 6}       ID{col 16}{c |}     Description{col 34}     lambda{col 45}    coef.{col 54}    R-squared{col 67}        error
 {hline 5}{hline 10}{c +}{hline 17}{hline 11}{hline 9}{hline 13}{hline 13}
 {col 1}{res}0.000{col 16}{txt}{c |}
-{col 6}        1{col 16}{c |}    first lambda{col 34}{res}{space 2} 843.4274{col 45}        8{col 54}{space 6} 0.0368{col 67}{space 4} 1.367314
-{col 6}{txt}      * 2{col 16}{c |} selected lambda{col 34}{res}{space 2}      .25{col 45}        8{col 54}{space 6} 0.5624{col 67}{space 4} .5771014
+{col 6}        1{col 16}{c |}    first lambda{col 34}{res}{space 2} 843.4274{col 45}        8{col 54}{space 6} 0.0120{col 67}{space 4} 1.334542
+{col 6}{txt}      * 2{col 16}{c |} selected lambda{col 34}{res}{space 2}      .25{col 45}        8{col 54}{space 6} 0.5770{col 67}{space 4} .5577916
 {txt}{hline 5}{hline 10}{c BT}{hline 17}{hline 11}{hline 9}{hline 13}{hline 13}
 * alpha and lambda selected by cross-validation.
-r; t=0.84 13:05:16
+r; t=1.37 22:27:19
 
 {com}. lassoselect alpha = 0 lambda = 0.25
 {res}{txt}{bf:ID} = {res}2  {txt}alpha = {res}0.000  {txt}lambda = {res}.25      {txt}selected
-r; t=0.12 13:05:16
+r; t=0.20 22:27:19
 
 {com}. lassocoef, display(coef, penalized)
 {res}
@@ -841,14 +1360,14 @@ Legend:
   b - base level
   e - empty cell
   o - omitted
-r; t=0.51 13:05:17
+r; t=0.83 22:27:20
 
 {com}. mat b=e(b)
-{txt}r; t=0.00 13:05:17
+{txt}r; t=0.00 22:27:20
 
 {com}. // Stata lambda = 2N*lambda
 . global L=2*e(N)*0.25
-{txt}r; t=0.00 13:05:17
+{txt}r; t=0.00 22:27:20
 
 {com}. lasso2 $model, lambda($L) alpha(0)
 
@@ -868,10 +1387,10 @@ r; t=0.51 13:05:17
 {hline 18}{c +}{hline 32}
 {space 12}_cons {c |}{col 21}{res}     -0.0941823      0.1815609
 {txt}{hline 18}{c BT}{hline 32}
-r; t=0.01 13:05:17
+r; t=0.01 22:27:20
 
 {com}. assert mreldif(b,e(b))<1e-7
-{txt}r; t=0.00 13:05:17
+{txt}r; t=0.00 22:27:20
 
 {com}. 
 . // lasso
@@ -879,8 +1398,8 @@ r; t=0.01 13:05:17
 {res}
 {res}10{txt}-fold cross-validation with {res}2 {txt}lambdas ...
 {txt}Grid value {res}1{txt}:{col 19}{txt}lambda ={res} .8434274{txt}{space 3}no. of nonzero coef. = {res}      0
-{p 0 7 0 66}{txt}Folds: 1{txt}.{txt}.{txt}.{txt}5{txt}.{txt}.{txt}.{txt}.{txt}10{space 3}CVF ={res} 1.328319{p_end}{txt}Grid value {res}2{txt}:{col 19}{txt}lambda ={res}      .25{txt}{space 3}no. of nonzero coef. = {res}      3
-{p 0 7 0 66}{txt}Folds: 1{txt}.{txt}.{txt}.{txt}5{txt}.{txt}.{txt}.{txt}.{txt}10{space 3}CVF ={res} .6492185{p_end}{err}lambda not selected
+{p 0 7 0 66}{txt}Folds: 1{txt}.{txt}.{txt}.{txt}5{txt}.{txt}.{txt}.{txt}.{txt}10{space 3}CVF ={res} 1.365122{p_end}{txt}Grid value {res}2{txt}:{col 19}{txt}lambda ={res}      .25{txt}{space 3}no. of nonzero coef. = {res}      3
+{p 0 7 0 66}{txt}Folds: 1{txt}.{txt}.{txt}.{txt}5{txt}.{txt}.{txt}.{txt}.{txt}10{space 3}CVF ={res} .6445678{p_end}{err}lambda not selected
 {p 4 4 2}No minimum of cross-validation function found.{err} Change in deviance stopping tolerance not reached{err}{p_end}{res}{txt}
 Elastic net linear {txt}model{txt}{col 50}No. of obs{col 68}={res}         97
 {txt}{col 50}No. of covariates{col 68}={res}          8
@@ -892,15 +1411,15 @@ Elastic net linear {txt}model{txt}{col 50}No. of obs{col 68}={res}         97
 {col 1}alpha{col 6}       ID{col 16}{c |}     Description{col 34}     lambda{col 45}    coef.{col 54}    R-squared{col 67}        error
 {hline 5}{hline 10}{c +}{hline 17}{hline 11}{hline 9}{hline 13}{hline 13}
 {col 1}{res}1.000{col 16}{txt}{c |}
-{col 6}        1{col 16}{c |}    first lambda{col 34}{res}{space 2} .8434274{col 45}        0{col 54}{space 6} 0.0073{col 67}{space 4} 1.328319
-{col 6}{txt}        2{col 16}{c |}     last lambda{col 34}{res}{space 2}      .25{col 45}        3{col 54}{space 6} 0.5077{col 67}{space 4} .6492185
+{col 6}        1{col 16}{c |}    first lambda{col 34}{res}{space 2} .8434274{col 45}        0{col 54}{space 6} 0.0352{col 67}{space 4} 1.365122
+{col 6}{txt}        2{col 16}{c |}     last lambda{col 34}{res}{space 2}      .25{col 45}        3{col 54}{space 6} 0.5112{col 67}{space 4} .6445678
 {txt}{hline 5}{hline 10}{c BT}{hline 17}{hline 11}{hline 9}{hline 13}{hline 13}
 {err}Note: No lambda selected. {bf:lassoselect} can be used to select lambda.
-{txt}r; t=0.28 13:05:17
+{txt}r; t=0.47 22:27:20
 
 {com}. lassoselect alpha = 1 lambda = 0.25
 {res}{txt}{bf:ID} = {res}2  {txt}alpha = {res}1.000  {txt}lambda = {res}.25      {txt}selected
-r; t=0.04 13:05:17
+r; t=0.07 22:27:20
 
 {com}. lassocoef, display(coef, penalized)
 {res}
@@ -916,14 +1435,14 @@ Legend:
   b - base level
   e - empty cell
   o - omitted
-r; t=0.01 13:05:17
+r; t=0.01 22:27:20
 
 {com}. mat b=e(b)
-{txt}r; t=0.00 13:05:17
+{txt}r; t=0.00 22:27:20
 
 {com}. // Stata lambda = 2N*lambda
 . global L=2*e(N)*0.25
-{txt}r; t=0.00 13:05:17
+{txt}r; t=0.00 22:27:20
 
 {com}. lasso2 $model, lambda($L)
 
@@ -938,10 +1457,10 @@ r; t=0.01 13:05:17
 {hline 18}{c +}{hline 32}
 {space 12}_cons {c |}{col 21}{res}      1.0886320     -0.7771568
 {txt}{hline 18}{c BT}{hline 32}
-r; t=0.01 13:05:17
+r; t=0.01 22:27:20
 
 {com}. assert mreldif(b,e(b))<1e-7
-{txt}r; t=0.00 13:05:17
+{txt}r; t=0.00 22:27:20
 
 {com}. 
 . // elastic net
@@ -949,8 +1468,8 @@ r; t=0.01 13:05:17
 {res}
 {res}10{txt}-fold cross-validation with {res}2 {txt}lambdas ...
 {txt}Grid value {res}1{txt}:{col 19}{txt}lambda ={res} 1.686855{txt}{space 3}no. of nonzero coef. = {res}      0
-{p 0 7 0 66}{txt}Folds: 1{txt}.{txt}.{txt}.{txt}5{txt}.{txt}.{txt}.{txt}.{txt}10{space 3}CVF ={res} 1.330898{p_end}{txt}Grid value {res}2{txt}:{col 19}{txt}lambda ={res}      .25{txt}{space 3}no. of nonzero coef. = {res}      5
-{p 0 7 0 66}{txt}Folds: 1{txt}.{txt}.{txt}.{txt}5{txt}.{txt}.{txt}.{txt}.{txt}10{space 3}CVF ={res} .5980894{p_end}{err}lambda not selected
+{p 0 7 0 66}{txt}Folds: 1{txt}.{txt}.{txt}.{txt}5{txt}.{txt}.{txt}.{txt}.{txt}10{space 3}CVF ={res} 1.337913{p_end}{txt}Grid value {res}2{txt}:{col 19}{txt}lambda ={res}      .25{txt}{space 3}no. of nonzero coef. = {res}      5
+{p 0 7 0 66}{txt}Folds: 1{txt}.{txt}.{txt}.{txt}5{txt}.{txt}.{txt}.{txt}.{txt}10{space 3}CVF ={res} .5822664{p_end}{err}lambda not selected
 {p 4 4 2}No minimum of cross-validation function found.{err} Change in deviance stopping tolerance not reached{err}{p_end}{res}{txt}
 Elastic net linear {txt}model{txt}{col 50}No. of obs{col 68}={res}         97
 {txt}{col 50}No. of covariates{col 68}={res}          8
@@ -962,15 +1481,15 @@ Elastic net linear {txt}model{txt}{col 50}No. of obs{col 68}={res}         97
 {col 1}alpha{col 6}       ID{col 16}{c |}     Description{col 34}     lambda{col 45}    coef.{col 54}    R-squared{col 67}        error
 {hline 5}{hline 10}{c +}{hline 17}{hline 11}{hline 9}{hline 13}{hline 13}
 {col 1}{res}0.500{col 16}{txt}{c |}
-{col 6}        1{col 16}{c |}    first lambda{col 34}{res}{space 2} 1.686855{col 45}        0{col 54}{space 6} 0.0092{col 67}{space 4} 1.330898
-{col 6}{txt}        2{col 16}{c |}     last lambda{col 34}{res}{space 2}      .25{col 45}        5{col 54}{space 6} 0.5465{col 67}{space 4} .5980894
+{col 6}        1{col 16}{c |}    first lambda{col 34}{res}{space 2} 1.686855{col 45}        0{col 54}{space 6} 0.0145{col 67}{space 4} 1.337913
+{col 6}{txt}        2{col 16}{c |}     last lambda{col 34}{res}{space 2}      .25{col 45}        5{col 54}{space 6} 0.5585{col 67}{space 4} .5822664
 {txt}{hline 5}{hline 10}{c BT}{hline 17}{hline 11}{hline 9}{hline 13}{hline 13}
 {err}Note: No lambda selected. {bf:lassoselect} can be used to select lambda.
-{txt}r; t=0.20 13:05:17
+{txt}r; t=0.34 22:27:21
 
 {com}. lassoselect alpha = 0.5 lambda = 0.25
 {res}{txt}{bf:ID} = {res}2  {txt}alpha = {res}0.500  {txt}lambda = {res}.25      {txt}selected
-r; t=0.04 13:05:17
+r; t=0.07 22:27:21
 
 {com}. lassocoef, display(coef, penalized)
 {res}
@@ -988,14 +1507,14 @@ Legend:
   b - base level
   e - empty cell
   o - omitted
-r; t=0.01 13:05:17
+r; t=0.01 22:27:21
 
 {com}. mat b=e(b)
-{txt}r; t=0.00 13:05:17
+{txt}r; t=0.00 22:27:21
 
 {com}. // Stata lambda = 2N*lambda
 . global L=2*e(N)*0.25
-{txt}r; t=0.00 13:05:17
+{txt}r; t=0.00 22:27:21
 
 {com}. lasso2 $model, lambda($L) alpha(0.5)
 
@@ -1013,10 +1532,10 @@ r; t=0.01 13:05:17
 {hline 18}{c +}{hline 32}
 {space 12}_cons {c |}{col 21}{res}      0.2653354     -0.4136749
 {txt}{hline 18}{c BT}{hline 32}
-r; t=0.01 13:05:17
+r; t=0.01 22:27:21
 
 {com}. assert mreldif(b,e(b))<1e-7
-{txt}r; t=0.00 13:05:17
+{txt}r; t=0.00 22:27:21
 
 {com}. 
 . 
@@ -1036,13 +1555,13 @@ r; t=0.01 13:05:17
 {txt}{col 7}{c |}{col 65}{c |}{res}{col 67}pgg45.
 {txt}Use {bf:long} option for full output.
 {p 0 6 2}Type e.g. {stata lasso2, lic(ebic)}{txt} to run the model selected by EBIC.{txt}{p_end}
-r; t=0.02 13:05:17
+r; t=0.04 22:27:21
 
 {com}. mat A = e(betas)
-{txt}r; t=0.00 13:05:17
+{txt}r; t=0.00 22:27:21
 
 {com}. mat A = A[2,1..9]
-{txt}r; t=0.00 13:05:17
+{txt}r; t=0.00 22:27:21
 
 {com}. lasso2 $model, l(20) partial(age) postall
 {res}
@@ -1060,10 +1579,10 @@ r; t=0.02 13:05:17
 {space 14}age {c |}{col 21}{res}     -0.0070139     -0.0190343
 {txt}{space 12}_cons {c |}{col 21}{res}      0.3556899      0.5214696
 {txt}{hline 18}{c BT}{hline 32}
-r; t=0.02 13:05:17
+r; t=0.03 22:27:21
 
 {com}. mat B = e(b)
-{txt}r; t=0.00 13:05:17
+{txt}r; t=0.00 22:27:21
 
 {com}. comparemat A B
 {txt}mreldif=0. tolerance = .01
@@ -1083,7 +1602,7 @@ y1 {res} .48790885  .48872051    .024067  .48576053          0          0
 {txt}                                    
         pgg45        age      _cons
 y1 {res} .00126516  -.0070139   .3556899
-{reset}r; t=0.01 13:05:17
+{reset}r; t=0.00 22:27:21
 
 {com}. 
 . lasso2 $model, partial(age) l(50 20 10) nor 
@@ -1096,13 +1615,13 @@ y1 {res} .00126516  -.0070139   .3556899
 {txt}{col 7}{c |}{col 65}{c |}{res}{col 67}pgg45.
 {txt}Use {bf:long} option for full output.
 {p 0 6 2}Type e.g. {stata lasso2, lic(ebic)}{txt} to run the model selected by EBIC.{txt}{p_end}
-r; t=0.01 13:05:17
+r; t=0.02 22:27:21
 
 {com}. mat A = e(betas)
-{txt}r; t=0.00 13:05:17
+{txt}r; t=0.00 22:27:21
 
 {com}. mat A = A[2,1..7]
-{txt}r; t=0.00 13:05:17
+{txt}r; t=0.00 22:27:21
 
 {com}. lasso2 $model, l(20) partial(age) nor postall
 {res}
@@ -1115,10 +1634,10 @@ r; t=0.01 13:05:17
 {txt}{space 14}svi {c |}{col 21}{res}      0.4857605      0.6358643
 {txt}{space 12}pgg45 {c |}{col 21}{res}      0.0012652      0.0035248
 {txt}{hline 18}{c BT}{hline 32}
-r; t=0.01 13:05:17
+r; t=0.01 22:27:21
 
 {com}. mat B = e(b)
-{txt}r; t=0.00 13:05:17
+{txt}r; t=0.00 22:27:21
 
 {com}. comparemat A B
 {txt}mreldif=0. tolerance = .01
@@ -1138,7 +1657,7 @@ y1 {res} .48790885  .48872051    .024067  .48576053          0          0
 {txt}              
         pgg45
 y1 {res} .00126516
-{reset}r; t=0.00 13:05:17
+{reset}r; t=0.00 22:27:21
 
 {com}. 
 . // partial() with constant, unitloadings
@@ -1154,13 +1673,13 @@ y1 {res} .00126516
      3{txt}{col 7}{c |}{res}   3{col 13}  10.00000{col 25}   5{col 31}   1.22372{col 43}  -42.78188{txt} {res}{col 56} 0.6215{txt}{col 65}{c |}{res}{col 67}Added svi.
 {txt}Use {bf:long} option for full output.
 {p 0 6 2}Type e.g. {stata lasso2, lic(ebic)}{txt} to run the model selected by EBIC.{txt}{p_end}
-r; t=0.02 13:05:17
+r; t=0.04 22:27:21
 
 {com}. mat A = e(betas)
-{txt}r; t=0.00 13:05:17
+{txt}r; t=0.00 22:27:21
 
 {com}. mat A = A[2,1..9]
-{txt}r; t=0.00 13:05:17
+{txt}r; t=0.00 22:27:21
 
 {com}. lasso2 $model, l(20) partial(age) postall unitl
 {res}
@@ -1177,10 +1696,10 @@ r; t=0.02 13:05:17
 {space 14}age {c |}{col 21}{res}     -0.0075357     -0.0201907
 {txt}{space 12}_cons {c |}{col 21}{res}      1.8891378      0.3499401
 {txt}{hline 18}{c BT}{hline 32}
-r; t=0.02 13:05:18
+r; t=0.03 22:27:21
 
 {com}. mat B = e(b)
-{txt}r; t=0.00 13:05:18
+{txt}r; t=0.00 22:27:21
 
 {com}. comparemat A B
 {txt}mreldif=0. tolerance = .01
@@ -1200,7 +1719,7 @@ y1 {res}   .5779927   .03171671   .07967742           0           0           0
 {txt}                                       
          pgg45         age       _cons
 y1 {res}  .00685509  -.00753574   1.8891378
-{reset}r; t=0.00 13:05:18
+{reset}r; t=0.00 22:27:21
 
 {com}. 
 . lasso2 $model, partial(age) l(50 20 10) nor  unitl
@@ -1214,13 +1733,13 @@ y1 {res}  .00685509  -.00753574   1.8891378
      3{txt}{col 7}{c |}{res}   3{col 13}  10.00000{col 25}   5{col 31}   1.22372{col 43}  -42.78188{txt} {res}{col 56} 0.6215{txt}{col 65}{c |}{res}{col 67}Added svi.
 {txt}Use {bf:long} option for full output.
 {p 0 6 2}Type e.g. {stata lasso2, lic(ebic)}{txt} to run the model selected by EBIC.{txt}{p_end}
-r; t=0.01 13:05:18
+r; t=0.02 22:27:21
 
 {com}. mat A = e(betas)
-{txt}r; t=0.00 13:05:18
+{txt}r; t=0.00 22:27:21
 
 {com}. mat A = A[2,1..7]
-{txt}r; t=0.00 13:05:18
+{txt}r; t=0.00 22:27:21
 
 {com}. lasso2 $model, l(20) partial(age) nor postall unitl
 {res}
@@ -1232,10 +1751,10 @@ r; t=0.01 13:05:18
 {txt}{space 13}lbph {c |}{col 21}{res}      0.0796774      0.0686520
 {txt}{space 12}pgg45 {c |}{col 21}{res}      0.0068551      0.0062945
 {txt}{hline 18}{c BT}{hline 32}
-r; t=0.01 13:05:18
+r; t=0.01 22:27:21
 
 {com}. mat B = e(b)
-{txt}r; t=0.00 13:05:18
+{txt}r; t=0.00 22:27:21
 
 {com}. comparemat A B
 {txt}mreldif=0. tolerance = .01
@@ -1255,7 +1774,7 @@ y1 {res}  .5779927  .03171671  .07967742          0          0          0
 {txt}              
         pgg45
 y1 {res} .00685509
-{reset}r; t=0.00 13:05:18
+{reset}r; t=0.00 22:27:21
 
 {com}. 
 . // no partial() w/ constant, unitloadings
@@ -1271,13 +1790,13 @@ y1 {res} .00685509
      3{txt}{col 7}{c |}{res}   3{col 13}  10.00000{col 25}   6{col 31}   1.23031{col 43}  -38.07893{txt} {res}{col 56} 0.6319{txt}{col 65}{c |}{res}{col 67}Added svi.
 {txt}Use {bf:long} option for full output.
 {p 0 6 2}Type e.g. {stata lasso2, lic(ebic)}{txt} to run the model selected by EBIC.{txt}{p_end}
-r; t=0.01 13:05:18
+r; t=0.01 22:27:21
 
 {com}. mat A = e(betas)
-{txt}r; t=0.00 13:05:18
+{txt}r; t=0.00 22:27:21
 
 {com}. mat A = A[2,1..9]
-{txt}r; t=0.00 13:05:18
+{txt}r; t=0.00 22:27:21
 
 {com}. lasso2 $model, l(20) postall unitl
 
@@ -1294,10 +1813,10 @@ r; t=0.01 13:05:18
 {hline 18}{c +}{hline 32}
 {space 12}_cons {c |}{col 21}{res}      1.7690211      0.3499401
 {txt}{hline 18}{c BT}{hline 32}
-r; t=0.01 13:05:18
+r; t=0.01 22:27:21
 
 {com}. mat B = e(b)
-{txt}r; t=0.00 13:05:18
+{txt}r; t=0.00 22:27:21
 
 {com}. comparemat A B
 {txt}mreldif=0. tolerance = .01
@@ -1317,7 +1836,7 @@ y1 {res} .57684069  .02340457  -.0051037  .07661707          0          0
 {txt}            o.                      
       gleason      pgg45      _cons
 y1 {res}         0  .00672461  1.7690211
-{reset}r; t=0.00 13:05:18
+{reset}r; t=0.01 22:27:21
 
 {com}. 
 . lasso2 $model, l(50 20 10) nor  unitl
@@ -1332,13 +1851,13 @@ y1 {res}         0  .00672461  1.7690211
      3{txt}{col 7}{c |}{res}   3{col 13}  10.00000{col 25}   6{col 31}   1.23031{col 43}  -38.07893{txt} {res}{col 56} 0.6319{txt}{col 65}{c |}{res}{col 67}Added svi.
 {txt}Use {bf:long} option for full output.
 {p 0 6 2}Type e.g. {stata lasso2, lic(ebic)}{txt} to run the model selected by EBIC.{txt}{p_end}
-r; t=0.01 13:05:18
+r; t=0.01 22:27:21
 
 {com}. mat A = e(betas)
-{txt}r; t=0.00 13:05:18
+{txt}r; t=0.00 22:27:21
 
 {com}. mat A = A[2,1..9]
-{txt}r; t=0.00 13:05:18
+{txt}r; t=0.00 22:27:21
 
 {com}. lasso2 $model, l(20) nor postall unitl
 
@@ -1355,10 +1874,10 @@ r; t=0.01 13:05:18
 {hline 18}{c +}{hline 32}
 {space 12}_cons {c |}{col 21}{res}      1.7690211      0.3499401
 {txt}{hline 18}{c BT}{hline 32}
-r; t=0.01 13:05:18
+r; t=0.01 22:27:21
 
 {com}. mat B = e(b)
-{txt}r; t=0.00 13:05:18
+{txt}r; t=0.00 22:27:21
 
 {com}. comparemat A B
 {txt}mreldif=0. tolerance = .01
@@ -1378,7 +1897,7 @@ y1 {res} .57684069  .02340457  -.0051037  .07661707          0          0
 {txt}            o.                      
       gleason      pgg45      _cons
 y1 {res}         0  .00672461  1.7690211
-{reset}r; t=0.00 13:05:18
+{reset}r; t=0.00 22:27:21
 
 {com}. 
 . // no partial() w/o constant, unit loadings
@@ -1393,13 +1912,13 @@ y1 {res}         0  .00672461  1.7690211
      3{txt}{col 7}{c |}{res}   3{col 13}  10.00000{col 25}   6{col 31}   1.31660{col 43}  -42.77476{txt} {res}{col 56} 0.9350{txt}{col 65}{c |}{res}{col 67}Added svi.
 {txt}Use {bf:long} option for full output.
 {p 0 6 2}Type e.g. {stata lasso2, lic(ebic)}{txt} to run the model selected by EBIC.{txt}{p_end}
-r; t=0.03 13:05:18
+r; t=0.04 22:27:21
 
 {com}. mat A = e(betas)
-{txt}r; t=0.00 13:05:18
+{txt}r; t=0.00 22:27:21
 
 {com}. mat A = A[2,1..8]
-{txt}r; t=0.00 13:05:18
+{txt}r; t=0.00 22:27:21
 
 {com}. lasso2 $model, l(20) postall unitl nocons
 
@@ -1412,10 +1931,10 @@ r; t=0.03 13:05:18
 {txt}{space 13}lbph {c |}{col 21}{res}      0.0183596      0.0574396
 {txt}{space 12}pgg45 {c |}{col 21}{res}      0.0066569      0.0062373
 {txt}{hline 18}{c BT}{hline 32}
-r; t=0.01 13:05:18
+r; t=0.02 22:27:21
 
 {com}. mat B = e(b)
-{txt}r; t=0.00 13:05:18
+{txt}r; t=0.00 22:27:21
 
 {com}. comparemat A B
 {txt}mreldif=0. tolerance = .01
@@ -1435,7 +1954,7 @@ y1 {res} .54568677  .33550677  .00543024   .0183596          0          0
 {txt}            o.           
       gleason      pgg45
 y1 {res}         0  .00665687
-{reset}r; t=0.00 13:05:18
+{reset}r; t=0.00 22:27:21
 
 {com}. 
 . lasso2 $model, l(50 20 10) nor unitl nocons
@@ -1449,13 +1968,13 @@ y1 {res}         0  .00665687
      3{txt}{col 7}{c |}{res}   3{col 13}  10.00000{col 25}   6{col 31}   1.31660{col 43}  -42.77476{txt} {res}{col 56} 0.9350{txt}{col 65}{c |}{res}{col 67}Added svi.
 {txt}Use {bf:long} option for full output.
 {p 0 6 2}Type e.g. {stata lasso2, lic(ebic)}{txt} to run the model selected by EBIC.{txt}{p_end}
-r; t=0.02 13:05:18
+r; t=0.04 22:27:21
 
 {com}. mat A = e(betas)
-{txt}r; t=0.00 13:05:18
+{txt}r; t=0.00 22:27:21
 
 {com}. mat A = A[2,1..8]
-{txt}r; t=0.00 13:05:18
+{txt}r; t=0.00 22:27:21
 
 {com}. lasso2 $model, l(20) nor postall unitl nocons
 
@@ -1468,10 +1987,10 @@ r; t=0.02 13:05:18
 {txt}{space 13}lbph {c |}{col 21}{res}      0.0183596      0.0574396
 {txt}{space 12}pgg45 {c |}{col 21}{res}      0.0066569      0.0062373
 {txt}{hline 18}{c BT}{hline 32}
-r; t=0.02 13:05:18
+r; t=0.02 22:27:21
 
 {com}. mat B = e(b)
-{txt}r; t=0.00 13:05:18
+{txt}r; t=0.00 22:27:21
 
 {com}. comparemat A B
 {txt}mreldif=0. tolerance = .01
@@ -1491,7 +2010,7 @@ y1 {res} .54568677  .33550677  .00543024   .0183596          0          0
 {txt}            o.           
       gleason      pgg45
 y1 {res}         0  .00665687
-{reset}r; t=0.00 13:05:18
+{reset}r; t=0.00 22:27:21
 
 {com}. 
 . 
@@ -1500,13 +2019,13 @@ y1 {res}         0  .00665687
 . ********************************************************************************
 . 
 . cap lasso2 $model, alpha(0) sqrt
-{txt}r; t=0.00 13:05:18
+{txt}r; t=0.00 22:27:21
 
 {com}. if _rc != 198 {c -(}
 .         exit 1
-{txt}r; t=0.00 13:05:18
+{txt}r; t=0.00 22:27:21
 {com}. {c )-} 
-{txt}r; t=0.00 13:05:18
+{txt}r; t=0.00 22:27:21
 
 {com}. *
 . // should say that lcount/lmax/lminr are being ignored
@@ -1526,7 +2045,7 @@ y1 {res}         0  .00665687
 {hline 18}{c +}{hline 32}
 {space 12}_cons {c |}{col 21}{res}     -0.0014767      0.5214696
 {txt}{hline 18}{c BT}{hline 32}
-r; t=0.01 13:05:18
+r; t=0.01 22:27:21
 
 {com}. lasso2 $model, lambda(10) lmax(100)
 
@@ -1544,7 +2063,7 @@ r; t=0.01 13:05:18
 {hline 18}{c +}{hline 32}
 {space 12}_cons {c |}{col 21}{res}     -0.0014767      0.5214696
 {txt}{hline 18}{c BT}{hline 32}
-r; t=0.01 13:05:18
+r; t=0.02 22:27:21
 
 {com}. lasso2 $model, lambda(10) lminr(0.01)
 
@@ -1562,7 +2081,7 @@ r; t=0.01 13:05:18
 {hline 18}{c +}{hline 32}
 {space 12}_cons {c |}{col 21}{res}     -0.0014767      0.5214696
 {txt}{hline 18}{c BT}{hline 32}
-r; t=0.01 13:05:18
+r; t=0.01 22:27:21
 
 {com}. 
 . // plotting only supported for lambda list
@@ -1584,59 +2103,59 @@ r; t=0.01 13:05:18
 {txt}{hline 18}{c BT}{hline 32}
 {err}Plotting only supported for list of lambda values.
 Plotting options ignored.
-{txt}r; t=0.01 13:05:18
+{txt}r; t=0.01 22:27:21
 
 {com}. 
 . // incompatible options wrt penalty loadings
 . cap lasso2 $model, ploadings(abc) adaptive
-{txt}r; t=0.00 13:05:18
+{txt}r; t=0.00 22:27:21
 
 {com}. if _rc != 198 {c -(}
 .         exit 1
-{txt}r; t=0.00 13:05:18
+{txt}r; t=0.00 22:27:21
 {com}. {c )-} 
-{txt}r; t=0.00 13:05:18
+{txt}r; t=0.00 22:27:21
 
 {com}. *
 . cap lasso2 $model, ploadings(abc) unitload
-{txt}r; t=0.00 13:05:18
+{txt}r; t=0.00 22:27:21
 
 {com}. if _rc != 198 {c -(}
 .         exit 1
-{txt}r; t=0.00 13:05:18
+{txt}r; t=0.00 22:27:21
 {com}. {c )-} 
-{txt}r; t=0.00 13:05:18
+{txt}r; t=0.00 22:27:21
 
 {com}. cap lasso2 $model, ploadings(abc) adatheta(3)
-{txt}r; t=0.00 13:05:18
+{txt}r; t=0.00 22:27:21
 
 {com}. if _rc != 198 {c -(}
 .         exit 1
-{txt}r; t=0.00 13:05:18
+{txt}r; t=0.00 22:27:21
 {com}. {c )-} 
-{txt}r; t=0.00 13:05:18
+{txt}r; t=0.00 22:27:21
 
 {com}. *
 . cap lasso2 $model, adaptive unitload
-{txt}r; t=0.00 13:05:18
+{txt}r; t=0.00 22:27:21
 
 {com}. if _rc != 198 {c -(}
 .         exit 1
-{txt}r; t=0.00 13:05:18
+{txt}r; t=0.00 22:27:21
 {com}. {c )-} 
-{txt}r; t=0.00 13:05:18
+{txt}r; t=0.00 22:27:21
 
 {com}. *
 . 
 . // var may not appear in partial() and notpen()
 . cap lasso2 $model, partial(age svi lcp) notpen(age svi)
-{txt}r; t=0.00 13:05:18
+{txt}r; t=0.00 22:27:21
 
 {com}. if _rc != 198 {c -(}
 .         exit 1
-{txt}r; t=0.00 13:05:18
+{txt}r; t=0.00 22:27:21
 {com}. {c )-} 
-{txt}r; t=0.00 13:05:18
+{txt}r; t=0.00 22:27:21
 
 {com}. *
 . 
@@ -1659,7 +2178,7 @@ Plotting options ignored.
 {hline 18}{c +}{hline 32}
 {space 12}_cons {c |}{col 21}{res}      0.0508344     -0.4136749
 {txt}{hline 18}{c BT}{hline 32}
-r; t=0.01 13:05:18
+r; t=0.02 22:27:21
 
 {com}. lasso2 $model, l(20) postall
 
@@ -1676,7 +2195,7 @@ r; t=0.01 13:05:18
 {hline 18}{c +}{hline 32}
 {space 12}_cons {c |}{col 21}{res}      0.0508344     -0.4136749
 {txt}{hline 18}{c BT}{hline 32}
-r; t=0.01 13:05:18
+r; t=0.01 22:27:21
 
 {com}. mat list e(b)
 {res}
@@ -1688,7 +2207,7 @@ y1 {res} .48338398  .45431515          0  .01256049  .49470493          0
 {txt}            o.                      
       gleason      pgg45      _cons
 y1 {res}         0  .00073557  .05083441
-{reset}r; t=0.00 13:05:18
+{reset}r; t=0.00 22:27:21
 
 {com}. 
 . lasso2 $model, l(20) displayall postall
@@ -1709,7 +2228,7 @@ y1 {res}         0  .00073557  .05083441
 {hline 18}{c +}{hline 32}
 {space 12}_cons {c |}{col 21}{res}      0.0508344     -0.4136749
 {txt}{hline 18}{c BT}{hline 32}
-r; t=0.01 13:05:18
+r; t=0.01 22:27:21
 
 {com}. mat list e(b)
 {res}
@@ -1721,7 +2240,7 @@ y1 {res} .48338398  .45431515          0  .01256049  .49470493          0
 {txt}            o.                      
       gleason      pgg45      _cons
 y1 {res}         0  .00073557  .05083441
-{reset}r; t=0.00 13:05:18
+{reset}r; t=0.00 22:27:21
 
 {com}. 
 . ********************************************************************************
@@ -1729,7 +2248,7 @@ y1 {res}         0  .00073557  .05083441
 . ********************************************************************************
 . 
 . global lambdalist 150 130 100 80 60 30 10 5 3 1
-{txt}r; t=0.00 13:05:18
+{txt}r; t=0.00 22:27:21
 
 {com}. 
 . * lasso
@@ -1749,13 +2268,13 @@ y1 {res}         0  .00073557  .05083441
      6{txt}{col 7}{c |}{res}   9{col 13}   3.00000{col 25}   8{col 31}   1.92855{col 43}  -36.50334{txt} {res}{col 56} 0.6595{txt}{col 65}{c |}{res}{col 67}Added lcp.
 {txt}Use {bf:long} option for full output.
 {p 0 6 2}Type e.g. {stata lasso2, lic(ebic)}{txt} to run the model selected by EBIC.{txt}{p_end}
-r; t=0.01 13:05:18
+r; t=0.02 22:27:21
 
 {com}. mat A = e(betas)
-{txt}r; t=0.00 13:05:18
+{txt}r; t=0.00 22:27:21
 
 {com}. local j=1
-{txt}r; t=0.00 13:05:18
+{txt}r; t=0.00 22:27:21
 
 {com}. foreach i of numlist $lambdalist {c -(}
 {txt}  2{com}.         mat a = A[`j',1..9]
@@ -2060,7 +2579,7 @@ lpsa {res}  .55195639   .61096553  -.01921727   .09150795   .72617991  -.0811721
 
 {txt}         gleason       pgg45       _cons
 lpsa {res}  .04167896   .00399408   .18363256
-{reset}r; t=0.07 13:05:18
+{reset}r; t=0.12 22:27:21
 
 {com}. *
 . 
@@ -2082,13 +2601,13 @@ lpsa {res}  .04167896   .00399408   .18363256
      5{txt}{col 7}{c |}{res}   9{col 13}   3.00000{col 25}   8{col 31}   1.95588{col 43}  -41.05748{txt} {res}{col 56} 0.9398{txt}{col 65}{c |}{res}{col 67}Added lcp.
 {txt}Use {bf:long} option for full output.
 {p 0 6 2}Type e.g. {stata lasso2, lic(ebic)}{txt} to run the model selected by EBIC.{txt}{p_end}
-r; t=0.08 13:05:18
+r; t=0.13 22:27:22
 
 {com}. mat A = e(betas)
-{txt}r; t=0.00 13:05:18
+{txt}r; t=0.00 22:27:22
 
 {com}. local j=1
-{txt}r; t=0.00 13:05:18
+{txt}r; t=0.00 22:27:22
 
 {com}. foreach i of numlist $lambdalist {c -(}
 {txt}  2{com}.         mat a = A[`j',1..8]
@@ -2362,7 +2881,7 @@ lpsa {res}  .54919011   .62544652   -.0187145   .08865781   .72812008  -.0817509
 
 {txt}         gleason       pgg45
 lpsa {res}  .05781389   .00370637
-{reset}r; t=0.14 13:05:18
+{reset}r; t=0.23 22:27:22
 
 {com}. *
 . 
@@ -2383,13 +2902,13 @@ lpsa {res}  .05781389   .00370637
      6{txt}{col 7}{c |}{res}   9{col 13}   3.00000{col 25}   8{col 31}   2.22573{col 43}  -37.60646{txt} {res}{col 56} 0.6634{txt}{col 65}{c |}{res}{col 67}Added lcp.
 {txt}Use {bf:long} option for full output.
 {p 0 6 2}Type e.g. {stata lasso2, lic(ebic)}{txt} to run the model selected by EBIC.{txt}{p_end}
-r; t=0.01 13:05:18
+r; t=0.02 22:27:22
 
 {com}. mat A = e(betas)
-{txt}r; t=0.00 13:05:18
+{txt}r; t=0.00 22:27:22
 
 {com}. local j=1
-{txt}r; t=0.00 13:05:18
+{txt}r; t=0.00 22:27:22
 
 {com}. foreach i of numlist $lambdalist {c -(}
 {txt}  2{com}.         mat a = A[`j',1..9]
@@ -2694,7 +3213,7 @@ lpsa {res}  .56434129   .62201981  -.02124818   .09671252   .76167335  -.1060509
 
 {txt}         gleason       pgg45       _cons
 lpsa {res}  .04922792   .00445751   .18156087
-{reset}r; t=0.07 13:05:18
+{reset}r; t=0.11 22:27:22
 
 {com}. *
 . 
@@ -2702,7 +3221,7 @@ lpsa {res}  .04922792   .00445751   .18156087
 . // lambda=40 in path used beta=zeros from lambda=100
 . // as initial beta; would end up at poor solution
 . global sqrtlambdalist 100 60 20 10 5 1
-{txt}r; t=0.00 13:05:18
+{txt}r; t=0.00 22:27:22
 
 {com}. * sqrt-lasso
 . lasso2 $model, l($sqrtlambdalist) sqrt   
@@ -2721,13 +3240,13 @@ lpsa {res}  .04922792   .00445751   .18156087
      6{txt}{col 7}{c |}{res}   6{col 13}   1.00000{col 25}   8{col 31}   2.09358{col 43}  -37.38734{txt} {res}{col 56} 0.6626{txt}{col 65}{c |}{res}{col 67}Added lcp.
 {txt}Use {bf:long} option for full output.
 {p 0 6 2}Type e.g. {stata lasso2, lic(ebic)}{txt} to run the model selected by EBIC.{txt}{p_end}
-r; t=0.02 13:05:18
+r; t=0.03 22:27:22
 
 {com}. mat A = e(betas)
-{txt}r; t=0.00 13:05:18
+{txt}r; t=0.00 22:27:22
 
 {com}. local j=1
-{txt}r; t=0.00 13:05:18
+{txt}r; t=0.00 22:27:22
 
 {com}. foreach i of numlist $sqrtlambdalist {c -(}
 {txt}  2{com}.         mat a = A[`j',1..8]
@@ -2915,7 +3434,7 @@ lpsa {res}  .54781953   .60727314   -.0185389    .0897695   .71432424  -.0728620
 
 {txt}         gleason       pgg45
 lpsa {res}  .03915742   .00383928
-{reset}r; t=0.05 13:05:18
+{reset}r; t=0.09 22:27:22
 
 {com}. *
 . 
@@ -2936,13 +3455,13 @@ lpsa {res}  .03915742   .00383928
      6{txt}{col 7}{c |}{res}   6{col 13}   1.00000{col 25}   8{col 31}   2.22573{col 43}  -37.60646{txt} {res}{col 56} 0.6634{txt}{col 65}{c |}{res}{col 67}Added lcp.
 {txt}Use {bf:long} option for full output.
 {p 0 6 2}Type e.g. {stata lasso2, lic(ebic)}{txt} to run the model selected by EBIC.{txt}{p_end}
-r; t=0.02 13:05:18
+r; t=0.04 22:27:22
 
 {com}. mat A = e(betas)
-{txt}r; t=0.00 13:05:18
+{txt}r; t=0.00 22:27:22
 
 {com}. local j=1
-{txt}r; t=0.00 13:05:18
+{txt}r; t=0.00 22:27:22
 
 {com}. foreach i of numlist $sqrtlambdalist {c -(}
 {txt}  2{com}.         di "this lambda: `i'"
@@ -3136,7 +3655,7 @@ lpsa {res}  .56434129   .62201981  -.02124818   .09671252   .76167335  -.1060509
 
 {txt}         gleason       pgg45       _cons
 lpsa {res}  .04922792   .00445751   .18156087
-{reset}r; t=0.05 13:05:18
+{reset}r; t=0.08 22:27:22
 
 {com}. *
 . 
@@ -3149,13 +3668,13 @@ lpsa {res}  .04922792   .00445751   .18156087
 {txt}{col 7}{c |}{col 65}{c |}{res}{col 67}selected.
 {txt}Use {bf:long} option for full output.
 {p 0 6 2}Type e.g. {stata lasso2, lic(ebic)}{txt} to run the model selected by EBIC.{txt}{p_end}
-r; t=0.01 13:05:18
+r; t=0.02 22:27:22
 
 {com}. mat A = e(betas)
-{txt}r; t=0.00 13:05:18
+{txt}r; t=0.00 22:27:22
 
 {com}. local j=1
-{txt}r; t=0.00 13:05:18
+{txt}r; t=0.00 22:27:22
 
 {com}. foreach i of numlist $lambdalist {c -(}
 {txt}  2{com}.         mat a = A[`j',1..9]
@@ -3484,7 +4003,7 @@ lpsa {res}  .55810677   .62103077  -.02086484   .09578159   .75493366   -.099873
 
 {txt}         gleason       pgg45       _cons
 lpsa {res}   .0508098   .00434693   .16375927
-{reset}r; t=0.08 13:05:18
+{reset}r; t=0.14 22:27:22
 
 {com}. *
 . 
@@ -3497,13 +4016,13 @@ lpsa {res}   .0508098   .00434693   .16375927
 {txt}{col 7}{c |}{col 65}{c |}{res}{col 67}selected.
 {txt}Use {bf:long} option for full output.
 {p 0 6 2}Type e.g. {stata lasso2, lic(ebic)}{txt} to run the model selected by EBIC.{txt}{p_end}
-r; t=0.01 13:05:18
+r; t=0.02 22:27:22
 
 {com}. mat A = e(betas)
-{txt}r; t=0.00 13:05:18
+{txt}r; t=0.00 22:27:22
 
 {com}. local j=1
-{txt}r; t=0.00 13:05:18
+{txt}r; t=0.00 22:27:22
 
 {com}. foreach i of numlist $lambdalist {c -(}
 {txt}  2{com}.         mat a = A[`j',1..9]
@@ -3832,7 +4351,7 @@ lpsa {res}  .56434129   .62201981  -.02124818   .09671252   .76167335  -.1060509
 
 {txt}         gleason       pgg45       _cons
 lpsa {res}  .04922792   .00445751   .18156087
-{reset}r; t=0.09 13:05:18
+{reset}r; t=0.14 22:27:23
 
 {com}. *
 .         
@@ -6864,7 +7383,7 @@ lpsa {res}  .55258846   .61197606   -.0193841   .09193991   .72910953  -.0830807
 
 {txt}         gleason       pgg45       _cons
 lpsa {res}  .04259523   .00403012   .18168101
-{reset}r; t=0.83 13:05:19
+{reset}r; t=1.38 22:27:24
 
 {com}. *
 . 
@@ -9896,7 +10415,7 @@ lpsa {res}  .56434129   .62201981  -.02124818   .09671252   .76167335  -.1060509
 
 {txt}         gleason       pgg45       _cons
 lpsa {res}  .04922792   .00445751   .18156087
-{reset}r; t=0.83 13:05:20
+{reset}r; t=1.38 22:27:25
 
 {com}. *
 . 
@@ -9920,10 +10439,10 @@ lpsa {res}  .04922792   .00445751   .18156087
 {hline 18}{c +}{hline 32}
 {space 12}_cons {c |}{col 21}{res}      1.0620178     -0.7771568
 {txt}{hline 18}{c BT}{hline 32}
-r; t=0.01 13:05:20
+r; t=0.02 22:27:25
 
 {com}. mat A = e(b)
-{txt}r; t=0.00 13:05:20
+{txt}r; t=0.00 22:27:25
 
 {com}. lasso2 $model, lambda(10) adaptive prestd
 {res}
@@ -9938,10 +10457,10 @@ r; t=0.01 13:05:20
 {hline 18}{c +}{hline 32}
 {space 12}_cons {c |}{col 21}{res}      1.0620178     -0.7771568
 {txt}{hline 18}{c BT}{hline 32}
-r; t=0.02 13:05:20
+r; t=0.04 22:27:25
 
 {com}. mat B = e(b)
-{txt}r; t=0.00 13:05:20
+{txt}r; t=0.00 22:27:25
 
 {com}. comparemat A B
 {txt}mreldif=2.00912465917e-15. tolerance = .01
@@ -9953,7 +10472,7 @@ y1 {res} .59120427  .15914321  .18806939  1.0620178
 {txt}__000001[1,4]
        lcavol    lweight        svi      _cons
 y1 {res} .59120427  .15914321  .18806939  1.0620178
-{reset}r; t=0.00 13:05:20
+{reset}r; t=0.00 22:27:25
 
 {com}. ** ada theta = 2
 . lasso2 $model, lambda(1) adaptive adatheta(2)
@@ -9969,10 +10488,10 @@ y1 {res} .59120427  .15914321  .18806939  1.0620178
 {hline 18}{c +}{hline 32}
 {space 12}_cons {c |}{col 21}{res}      0.0507519     -0.7771568
 {txt}{hline 18}{c BT}{hline 32}
-r; t=0.02 13:05:20
+r; t=0.02 22:27:25
 
 {com}. mat A = e(b)
-{txt}r; t=0.00 13:05:20
+{txt}r; t=0.00 22:27:25
 
 {com}. lasso2 $model, lambda(1) adaptive adatheta(2) prestd
 {res}
@@ -9987,10 +10506,10 @@ r; t=0.02 13:05:20
 {hline 18}{c +}{hline 32}
 {space 12}_cons {c |}{col 21}{res}      0.0507519     -0.7771568
 {txt}{hline 18}{c BT}{hline 32}
-r; t=0.02 13:05:20
+r; t=0.04 22:27:25
 
 {com}. mat B = e(b)
-{txt}r; t=0.00 13:05:20
+{txt}r; t=0.00 22:27:25
 
 {com}. comparemat A B
 {txt}mreldif=1.02700552150e-15. tolerance = .01
@@ -10002,7 +10521,7 @@ y1 {res} .57554637  .42744858  .45938951  .05075194
 {txt}__000001[1,4]
        lcavol    lweight        svi      _cons
 y1 {res} .57554637  .42744858  .45938951  .05075194
-{reset}r; t=0.00 13:05:20
+{reset}r; t=0.00 22:27:25
 
 {com}. 
 . ** lasso with ada theta = 1
@@ -10025,10 +10544,10 @@ y1 {res} .57554637  .42744858  .45938951  .05075194
 {txt}{col 7}{c |}{col 65}{c |}{res}{col 67}gleason.
 {txt}Use {bf:long} option for full output.
 {p 0 6 2}Type e.g. {stata lasso2, lic(ebic)}{txt} to run the model selected by EBIC.{txt}{p_end}
-r; t=0.06 13:05:20
+r; t=0.11 22:27:25
 
 {com}. mat psi = e(Psi)
-{txt}r; t=0.00 13:05:20
+{txt}r; t=0.00 22:27:25
 
 {com}. 
 . reg $model
@@ -10053,26 +10572,26 @@ r; t=0.06 13:05:20
 {txt}{space 7}pgg45 {c |}{col 14}{res}{space 2} .0044575{col 26}{space 2} .0043653{col 37}{space 1}    1.02{col 46}{space 3}0.310{col 54}{space 4}-.0042177{col 67}{space 3} .0131327
 {txt}{space 7}_cons {c |}{col 14}{res}{space 2} .1815609{col 26}{space 2} 1.320568{col 37}{space 1}    0.14{col 46}{space 3}0.891{col 54}{space 4}-2.442791{col 67}{space 3} 2.805913
 {txt}{hline 13}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-{res}{txt}r; t=0.17 13:05:20
+{res}{txt}r; t=0.28 22:27:26
 
 {com}. mat bols = e(b)
-{txt}r; t=0.00 13:05:20
+{txt}r; t=0.00 22:27:26
 
 {com}. // need to remove depvar from scaling of weights
 . qui sum `e(depvar)'
-{txt}r; t=0.00 13:05:20
+{txt}r; t=0.00 22:27:26
 
 {com}. mat bols = bols * 1/r(sd) * sqrt(r(N)/(r(N)-1))
-{txt}r; t=0.00 13:05:20
+{txt}r; t=0.00 22:27:26
 
 {com}. 
 . mat checkpsi = J(1,8,.)
-{txt}r; t=0.00 13:05:20
+{txt}r; t=0.00 22:27:26
 
 {com}. forvalues i=1(1)8 {c -(}
 {txt}  2{com}.         mat checkpsi[1,`i'] = abs(1/bols[1,`i'])
 {txt}  3{com}. {c )-}
-{txt}r; t=0.00 13:05:20
+{txt}r; t=0.00 22:27:26
 
 {com}. comparemat psi checkpsi
 {txt}mreldif=0. tolerance = .01
@@ -10090,7 +10609,7 @@ r1 {res} 2.0348742  1.8461848  54.045253   11.87399   1.507685  10.828414
 
 {txt}           c7         c8
 r1 {res} 23.327485  257.62433
-{reset}r; t=0.00 13:05:20
+{reset}r; t=0.00 22:27:26
 
 {com}. 
 . 
@@ -10112,10 +10631,10 @@ r1 {res} 23.327485  257.62433
      8{txt}{col 7}{c |}{res}  70{col 13}   0.08854{col 25}   7{col 31}   1.86461{col 43}  -39.60438{txt} {res}{col 56} 0.6543{txt}{col 65}{c |}{res}{col 67}Added lcp.
 {txt}Use {bf:long} option for full output.
 {p 0 6 2}Type e.g. {stata lasso2, lic(ebic)}{txt} to run the model selected by EBIC.{txt}{p_end}
-r; t=0.08 13:05:20
+r; t=0.14 22:27:26
 
 {com}. mat psi = e(Psi)
-{txt}r; t=0.00 13:05:20
+{txt}r; t=0.00 22:27:26
 
 {com}. 
 . reg $model
@@ -10140,26 +10659,26 @@ r; t=0.08 13:05:20
 {txt}{space 7}pgg45 {c |}{col 14}{res}{space 2} .0044575{col 26}{space 2} .0043653{col 37}{space 1}    1.02{col 46}{space 3}0.310{col 54}{space 4}-.0042177{col 67}{space 3} .0131327
 {txt}{space 7}_cons {c |}{col 14}{res}{space 2} .1815609{col 26}{space 2} 1.320568{col 37}{space 1}    0.14{col 46}{space 3}0.891{col 54}{space 4}-2.442791{col 67}{space 3} 2.805913
 {txt}{hline 13}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
-{res}{txt}r; t=0.01 13:05:20
+{res}{txt}r; t=0.01 22:27:26
 
 {com}. mat bols = e(b)
-{txt}r; t=0.00 13:05:20
+{txt}r; t=0.00 22:27:26
 
 {com}. // need to remove depvar from scaling of weights
 . qui sum `e(depvar)'
-{txt}r; t=0.00 13:05:20
+{txt}r; t=0.00 22:27:26
 
 {com}. mat bols = bols * 1/r(sd) * sqrt(r(N)/(r(N)-1))
-{txt}r; t=0.00 13:05:20
+{txt}r; t=0.00 22:27:26
 
 {com}. global depvar `e(depvar)'
-{txt}r; t=0.00 13:05:20
+{txt}r; t=0.00 22:27:26
 
 {com}. global indepvars        : list global(model) - global(depvar)
-{txt}r; t=0.00 13:05:20
+{txt}r; t=0.00 22:27:26
 
 {com}. mat checkpsi = J(1,8,.)
-{txt}r; t=0.00 13:05:20
+{txt}r; t=0.00 22:27:26
 
 {com}. // need to remove theta from scaling of weights
 . forvalues i=1(1)8 {c -(}
@@ -10168,7 +10687,7 @@ r; t=0.08 13:05:20
 {txt}  4{com}.         qui sum `v'
 {txt}  5{com}.         mat checkpsi[1,`i'] = checkpsi[1,`i'] * (1/r(sd) * sqrt(r(N)/(r(N)-1)))
 {txt}  6{com}. {c )-}
-{txt}r; t=0.00 13:05:20
+{txt}r; t=0.00 22:27:26
 
 {com}. comparemat psi checkpsi
 {txt}mreldif=0. tolerance = .01
@@ -10186,7 +10705,7 @@ r1 {res} 3.5314231  7.9972333  394.36088  97.686392  5.5192052  84.293733
 
 {txt}           c7         c8
 r1 {res} 757.47488  2365.4444
-{reset}r; t=0.00 13:05:20
+{reset}r; t=0.00 22:27:26
 
 {com}. 
 . // use of adaloadings option
@@ -10211,10 +10730,10 @@ r1 {res} 757.47488  2365.4444
 {hline 18}{c +}{hline 32}
 {space 12}_cons {c |}{col 21}{res}      0.0477573      0.1815609
 {txt}{hline 18}{c BT}{hline 32}
-r; t=0.01 13:05:20
+r; t=0.01 22:27:26
 
 {com}. mat b = e(betaAll)
-{txt}r; t=0.00 13:05:20
+{txt}r; t=0.00 22:27:26
 
 {com}. lasso2 $model, lambda(10) adaloadings(b) adaptive
 
@@ -10229,10 +10748,10 @@ r; t=0.01 13:05:20
 {hline 18}{c +}{hline 32}
 {space 12}_cons {c |}{col 21}{res}      0.8456464     -0.7771568
 {txt}{hline 18}{c BT}{hline 32}
-r; t=0.01 13:05:20
+r; t=0.01 22:27:26
 
 {com}. mat A = e(b)
-{txt}r; t=0.00 13:05:20
+{txt}r; t=0.00 22:27:26
 
 {com}. lasso2 $model, lambda(10) adaloadings(b) adaptive prestd
 {res}
@@ -10247,10 +10766,10 @@ r; t=0.01 13:05:20
 {hline 18}{c +}{hline 32}
 {space 12}_cons {c |}{col 21}{res}      0.8456464     -0.7771568
 {txt}{hline 18}{c BT}{hline 32}
-r; t=0.02 13:05:20
+r; t=0.04 22:27:26
 
 {com}. mat B = e(b)
-{txt}r; t=0.00 13:05:20
+{txt}r; t=0.00 22:27:26
 
 {com}. comparemat A B
 {txt}mreldif=4.81228916177e-16. tolerance = .01
@@ -10262,7 +10781,7 @@ y1 {res} .58188894  .22036335  .21939953  .84564641
 {txt}__000001[1,4]
        lcavol    lweight        svi      _cons
 y1 {res} .58188894  .22036335  .21939953  .84564641
-{reset}r; t=0.00 13:05:20
+{reset}r; t=0.00 22:27:26
 
 {com}. ** ada theta = 2
 . lasso2 $model , l(10) alph(0)
@@ -10283,10 +10802,10 @@ y1 {res} .58188894  .22036335  .21939953  .84564641
 {hline 18}{c +}{hline 32}
 {space 12}_cons {c |}{col 21}{res}      0.0477573      0.1815609
 {txt}{hline 18}{c BT}{hline 32}
-r; t=0.01 13:05:21
+r; t=0.01 22:27:26
 
 {com}. mat b = e(betaAll)
-{txt}r; t=0.00 13:05:21
+{txt}r; t=0.00 22:27:26
 
 {com}. lasso2 $model, lambda(1) adaloadings(b) adaptive adatheta(2)
 
@@ -10301,10 +10820,10 @@ r; t=0.01 13:05:21
 {hline 18}{c +}{hline 32}
 {space 12}_cons {c |}{col 21}{res}     -0.1284017     -0.7771568
 {txt}{hline 18}{c BT}{hline 32}
-r; t=0.01 13:05:21
+r; t=0.01 22:27:26
 
 {com}. mat A = e(b)
-{txt}r; t=0.00 13:05:21
+{txt}r; t=0.00 22:27:26
 
 {com}. lasso2 $model, lambda(1) adaloadings(b) adaptive adatheta(2) prestd
 {res}
@@ -10319,10 +10838,10 @@ r; t=0.01 13:05:21
 {hline 18}{c +}{hline 32}
 {space 12}_cons {c |}{col 21}{res}     -0.1284017     -0.7771568
 {txt}{hline 18}{c BT}{hline 32}
-r; t=0.02 13:05:21
+r; t=0.04 22:27:26
 
 {com}. mat B = e(b)
-{txt}r; t=0.00 13:05:21
+{txt}r; t=0.00 22:27:26
 
 {com}. comparemat A B
 {txt}mreldif=1.42664036098e-15. tolerance = .01
@@ -10334,7 +10853,7 @@ y1 {res}  .56665982   .47866067   .48389265  -.12840168
 {txt}__000001[1,4]
         lcavol     lweight         svi       _cons
 y1 {res}  .56665982   .47866067   .48389265  -.12840168
-{reset}r; t=0.00 13:05:21
+{reset}r; t=0.00 22:27:26
 
 {com}. 
 . // adaloadings with theta=1
@@ -10356,10 +10875,10 @@ y1 {res}  .56665982   .47866067   .48389265  -.12840168
 {hline 18}{c +}{hline 32}
 {space 12}_cons {c |}{col 21}{res}      0.0477573      0.1815609
 {txt}{hline 18}{c BT}{hline 32}
-r; t=0.01 13:05:21
+r; t=0.01 22:27:26
 
 {com}. mat b = e(betaAll)
-{txt}r; t=0.00 13:05:21
+{txt}r; t=0.00 22:27:26
 
 {com}. lasso2 $model, adaptive adal(b) adat(1)
 {res}
@@ -10378,18 +10897,18 @@ r; t=0.01 13:05:21
 {txt}{col 7}{c |}{col 65}{c |}{res}{col 67}gleason.
 {txt}Use {bf:long} option for full output.
 {p 0 6 2}Type e.g. {stata lasso2, lic(ebic)}{txt} to run the model selected by EBIC.{txt}{p_end}
-r; t=0.06 13:05:21
+r; t=0.11 22:27:26
 
 {com}. mat psi = e(Psi)
-{txt}r; t=0.00 13:05:21
+{txt}r; t=0.00 22:27:26
 
 {com}. mat checkpsi = J(1,8,.)
-{txt}r; t=0.00 13:05:21
+{txt}r; t=0.00 22:27:26
 
 {com}. forvalues i=1(1)8 {c -(}
 {txt}  2{com}.         mat checkpsi[1,`i'] = abs(1/b[1,`i'])
 {txt}  3{com}. {c )-}
-{txt}r; t=0.00 13:05:21
+{txt}r; t=0.00 22:27:26
 
 {com}. comparemat psi checkpsi
 {txt}mreldif=0. tolerance = .01
@@ -10407,7 +10926,7 @@ r1 {res} 1.9586766  1.6392075  55.884274  11.282505  1.4192182   18.02921
 
 {txt}           c7         c8
 r1 {res} 16.450453   275.4919
-{reset}r; t=0.00 13:05:21
+{reset}r; t=0.00 22:27:26
 
 {com}. 
 . // adaloadings with theta=2
@@ -10429,10 +10948,10 @@ r1 {res} 16.450453   275.4919
 {hline 18}{c +}{hline 32}
 {space 12}_cons {c |}{col 21}{res}      0.0477573      0.1815609
 {txt}{hline 18}{c BT}{hline 32}
-r; t=0.01 13:05:21
+r; t=0.01 22:27:26
 
 {com}. mat b = e(betaAll)
-{txt}r; t=0.00 13:05:21
+{txt}r; t=0.00 22:27:26
 
 {com}. lasso2 $model, adaptive adal(b) adat(2)
 {res}
@@ -10451,19 +10970,19 @@ r; t=0.01 13:05:21
 {txt}{col 7}{c |}{col 65}{c |}{res}{col 67}gleason.
 {txt}Use {bf:long} option for full output.
 {p 0 6 2}Type e.g. {stata lasso2, lic(ebic)}{txt} to run the model selected by EBIC.{txt}{p_end}
-r; t=0.07 13:05:21
+r; t=0.13 22:27:26
 
 {com}. mat psi = e(Psi)
-{txt}r; t=0.00 13:05:21
+{txt}r; t=0.00 22:27:26
 
 {com}. global depvar `e(depvar)'
-{txt}r; t=0.00 13:05:21
+{txt}r; t=0.00 22:27:26
 
 {com}. global indepvars        : list global(model) - global(depvar)
-{txt}r; t=0.00 13:05:21
+{txt}r; t=0.00 22:27:26
 
 {com}. mat checkpsi = J(1,8,.)
-{txt}r; t=0.00 13:05:21
+{txt}r; t=0.00 22:27:26
 
 {com}. // need to remove theta from scaling of weights
 . forvalues i=1(1)8 {c -(}
@@ -10472,7 +10991,7 @@ r; t=0.07 13:05:21
 {txt}  4{com}.         qui sum `v'
 {txt}  5{com}.         mat checkpsi[1,`i'] = checkpsi[1,`i'] * (1/r(sd) * sqrt(r(N)/(r(N)-1)))
 {txt}  6{com}. {c )-}
-{txt}r; t=0.00 13:05:21
+{txt}r; t=0.00 22:27:26
 
 {com}. comparemat psi checkpsi
 {txt}mreldif=0. tolerance = .01
@@ -10490,7 +11009,7 @@ r1 {res} 3.2719007  6.3045965  421.65566  88.196595  4.8905038  233.67859
 
 {txt}           c7         c8
 r1 {res}  376.6935  2704.9341
-{reset}r; t=0.00 13:05:21
+{reset}r; t=0.00 22:27:26
 
 {com}. 
 . ********************************************************************************
@@ -10515,10 +11034,10 @@ r1 {res}  376.6935  2704.9341
 {hline 18}{c +}{hline 32}
 {space 12}_cons {c |}{col 21}{res}     -0.0014767      0.5214696
 {txt}{hline 18}{c BT}{hline 32}
-r; t=0.01 13:05:21
+r; t=0.01 22:27:26
 
 {com}. mat A = e(beta)
-{txt}r; t=0.00 13:05:21
+{txt}r; t=0.00 22:27:26
 
 {com}. // pre-estimation standardisation of data
 . lasso2 $model, l(10) prestd  
@@ -10537,10 +11056,10 @@ r; t=0.01 13:05:21
 {hline 18}{c +}{hline 32}
 {space 12}_cons {c |}{col 21}{res}     -0.0014767      0.5214696
 {txt}{hline 18}{c BT}{hline 32}
-r; t=0.02 13:05:21
+r; t=0.04 22:27:26
 
 {com}. mat B = e(beta)
-{txt}r; t=0.00 13:05:21
+{txt}r; t=0.00 22:27:26
 
 {com}. comparemat A B , tol(10e-6)
 {txt}mreldif=2.18252874506e-16. tolerance = .00001
@@ -10558,7 +11077,7 @@ lpsa {res}  .50008192    .5144276  -.00366265   .04684694   .56951709   .0017980
 
 {txt}           _cons
 lpsa {res} -.00147665
-{reset}r; t=0.00 13:05:21
+{reset}r; t=0.00 22:27:26
 
 {com}. 
 . // lasso [nocons]
@@ -10575,10 +11094,10 @@ lpsa {res} -.00147665
 {txt}{space 14}svi {c |}{col 21}{res}      0.5695416      0.6272147
 {txt}{space 12}pgg45 {c |}{col 21}{res}      0.0017982      0.0034776
 {txt}{hline 18}{c BT}{hline 32}
-r; t=0.01 13:05:21
+r; t=0.02 22:27:26
 
 {com}. mat A = e(beta)
-{txt}r; t=0.00 13:05:21
+{txt}r; t=0.00 22:27:26
 
 {com}. // pre-estimation standardisation of data
 . lasso2 $model, l(10) prestd nocons 
@@ -10593,10 +11112,10 @@ r; t=0.01 13:05:21
 {txt}{space 14}svi {c |}{col 21}{res}      0.5695416      0.6272147
 {txt}{space 12}pgg45 {c |}{col 21}{res}      0.0017982      0.0034776
 {txt}{hline 18}{c BT}{hline 32}
-r; t=0.02 13:05:21
+r; t=0.03 22:27:26
 
 {com}. mat B = e(beta)
-{txt}r; t=0.00 13:05:21
+{txt}r; t=0.00 22:27:26
 
 {com}. comparemat A B , tol(10e-6)
 {txt}mreldif=1.06103244263e-15. tolerance = .00001
@@ -10608,7 +11127,7 @@ lpsa {res}  .50010299   .51420931  -.00367387   .04689508   .56954158   .0017982
 {txt}__000001[1,6]
           lcavol     lweight         age        lbph         svi       pgg45
 lpsa {res}  .50010299   .51420931  -.00367387   .04689508   .56954158   .00179822
-{reset}r; t=0.00 13:05:21
+{reset}r; t=0.00 22:27:26
 
 {com}. 
 . // sqrt lasso
@@ -10628,10 +11147,10 @@ lpsa {res}  .50010299   .51420931  -.00367387   .04689508   .56954158   .0017982
 {hline 18}{c +}{hline 32}
 {space 12}_cons {c |}{col 21}{res}     -0.0918135     -0.4136749
 {txt}{hline 18}{c BT}{hline 32}
-r; t=0.01 13:05:21
+r; t=0.01 22:27:26
 
 {com}. mat A = e(beta)
-{txt}r; t=0.00 13:05:21
+{txt}r; t=0.00 22:27:26
 
 {com}. // pre-estimation standardisation of data
 . lasso2 $model, l(10) sqrt prestd
@@ -10649,10 +11168,10 @@ r; t=0.01 13:05:21
 {hline 18}{c +}{hline 32}
 {space 12}_cons {c |}{col 21}{res}     -0.0918135     -0.4136749
 {txt}{hline 18}{c BT}{hline 32}
-r; t=0.03 13:05:21
+r; t=0.04 22:27:26
 
 {com}. mat B = e(beta)
-{txt}r; t=0.00 13:05:21
+{txt}r; t=0.00 22:27:26
 
 {com}. comparemat A B , tol(10e-6)
 {txt}mreldif=3.37594188305e-12. tolerance = .00001
@@ -10664,7 +11183,7 @@ lpsa {res}  .49234893   .48341712   .03086044   .54227991   .00126054  -.0918134
 {txt}__000001[1,6]
           lcavol     lweight        lbph         svi       pgg45       _cons
 lpsa {res}  .49234893   .48341712   .03086044   .54227991   .00126054  -.09181347
-{reset}r; t=0.00 13:05:21
+{reset}r; t=0.00 22:27:26
 
 {com}. 
 . // sqrt lasso [nocons]
@@ -10680,10 +11199,10 @@ lpsa {res}  .49234893   .48341712   .03086044   .54227991   .00126054  -.0918134
 {txt}{space 14}svi {c |}{col 21}{res}      0.5454255      0.6642009
 {txt}{space 12}pgg45 {c |}{col 21}{res}      0.0012099      0.0022203
 {txt}{hline 18}{c BT}{hline 32}
-r; t=0.03 13:05:21
+r; t=0.06 22:27:27
 
 {com}. mat A = e(beta)
-{txt}r; t=0.00 13:05:21
+{txt}r; t=0.00 22:27:27
 
 {com}. // pre-estimation standardisation of data
 . lasso2 $model, l(10) sqrt prestd nocons
@@ -10697,10 +11216,10 @@ r; t=0.03 13:05:21
 {txt}{space 14}svi {c |}{col 21}{res}      0.5454255      0.6642009
 {txt}{space 12}pgg45 {c |}{col 21}{res}      0.0012099      0.0022203
 {txt}{hline 18}{c BT}{hline 32}
-r; t=0.03 13:05:21
+r; t=0.06 22:27:27
 
 {com}. mat B = e(beta)
-{txt}r; t=0.00 13:05:21
+{txt}r; t=0.00 22:27:27
 
 {com}. comparemat A B , tol(10e-6)
 {txt}mreldif=1.93614128357e-12. tolerance = .00001
@@ -10712,7 +11231,7 @@ lpsa {res}  .4937813  .45790698  .03423105  .54542548  .00120989
 {txt}__000001[1,5]
          lcavol    lweight       lbph        svi      pgg45
 lpsa {res}  .4937813  .45790698  .03423105  .54542548  .00120989
-{reset}r; t=0.00 13:05:21
+{reset}r; t=0.00 22:27:27
 
 {com}. 
 . // elastic net
@@ -11839,7 +12358,7 @@ lpsa {res} .19845687
 {txt}{hline 18}{c +}{hline 32}
 {col 4}Partialled-out{help lasso2##examples_partialling:*}{c |}
 {hline 18}{c +}{hline 32}
-{space 12}_cons {c |}{col 21}{res}      0.2864286     -0.8221054
+{space 12}_cons {c |}{col 21}{res}      0.2864229     -0.8221054
 {txt}{hline 18}{c BT}{hline 32}
 {res}
 {txt}{hline 18}{c TT}{hline 32}
@@ -11855,11 +12374,11 @@ lpsa {res} .19845687
 {hline 18}{c +}{hline 32}
 {space 12}_cons {c |}{col 21}{res}      0.2864286     -0.8221054
 {txt}{hline 18}{c BT}{hline 32}
-mreldif=6.47270499064e-16. tolerance = .00001
+mreldif=4.44221616811e-06. tolerance = .00001
 {res}
 {txt}__000000[1,5]
          lcavol    lweight        svi      pgg45      _cons
-lpsa {res} .41268384  .41429785   .4673642  .00123808  .28642858
+lpsa {res} .41268384  .41429785   .4673642  .00123808  .28642286
 {reset}{res}
 {txt}__000001[1,5]
          lcavol    lweight        svi      pgg45      _cons
@@ -12670,7 +13189,7 @@ lpsa {res} .07970092  2.3707899
 {txt}__000001[1,2]
          lcavol      _cons
 lpsa {res} .07970092  2.3707899
-{reset}r; t=1.29 13:05:22
+{reset}r; t=2.12 22:27:29
 
 {com}. *
 . 
@@ -14311,7 +14830,7 @@ lpsa {res} .05364565  .35469056  .15816625
 {txt}__000001[1,3]
          lcavol    lweight    gleason
 lpsa {res} .05364565  .35469056  .15816625
-{reset}r; t=2.49 13:05:25
+{reset}r; t=2.50 22:27:31
 
 {com}. *
 . 
@@ -14337,13 +14856,13 @@ lpsa {res} .05364565  .35469056  .15816625
 {hline 18}{c +}{hline 32}
 {space 12}_cons {c |}{col 21}{res}      1.6157065      0.1815609
 {txt}{hline 18}{c BT}{hline 32}
-r; t=0.01 13:05:25
+r; t=0.01 22:27:31
 
 {com}. mat A = e(beta)
-{txt}r; t=0.00 13:05:25
+{txt}r; t=0.00 22:27:31
 
 {com}. mat A = A[1,1..8] // excl intercept
-{txt}r; t=0.00 13:05:25
+{txt}r; t=0.00 22:27:31
 
 {com}. 
 . estridge $model, l(150)
@@ -14354,10 +14873,10 @@ r1 {res}  .34138756   .12957082  -.00483404   .08761725   .11148709   .10460204
 
 {txt}            c7          c8
 r1 {res}  .00939524   .00667394
-{reset}r; t=0.01 13:05:25
+{reset}r; t=0.02 22:27:31
 
 {com}. mat B = r(bhat)
-{txt}r; t=0.00 13:05:25
+{txt}r; t=0.00 22:27:31
 
 {com}. 
 . comparemat A B , tol(10e-6)
@@ -14376,7 +14895,7 @@ r1 {res}  .34138756   .12957082  -.00483404   .08761725   .11148709   .10460204
 
 {txt}            c7          c8
 r1 {res}  .00939524   .00667394
-{reset}r; t=0.00 13:05:25
+{reset}r; t=0.00 22:27:31
 
 {com}. 
 . 
@@ -14711,7 +15230,7 @@ y1 {res} .71932039  1.5072975
 {txt}__000001[1,2]
        lcavol      _cons
 y1 {res} .71932039  1.5072975
-{reset}r; t=0.11 13:05:25
+{reset}r; t=0.17 22:27:31
 
 {com}. *
 . 
@@ -15007,7 +15526,7 @@ y1 {res}  .66697918   .47004758  -.01756143
 {txt}__000001[1,3]
         lcavol     lweight     gleason
 y1 {res}  .66697918   .47004758  -.01756143
-{reset}r; t=0.15 13:05:25
+{reset}r; t=0.27 22:27:32
 
 {com}. *
 . 
@@ -15322,7 +15841,7 @@ y1 {res} 2.4783869
 {txt}symmetric __000001[1,1]
         _cons
 y1 {res} 2.4783869
-{reset}r; t=0.14 13:05:25
+{reset}r; t=0.20 22:27:32
 
 {com}. *
 . 
@@ -15612,7 +16131,7 @@ y1 {res}  .00276558   .25373297
 {txt}{hline 18}{c +}{hline 32}
 {col 4}Partialled-out{help lasso2##examples_partialling:*}{c |}
 {hline 18}{c +}{hline 32}
-{space 12}_cons {c |}{col 21}{res}      0.2864286     -0.8221054
+{space 12}_cons {c |}{col 21}{res}      0.2864229     -0.8221054
 {txt}{hline 18}{c BT}{hline 32}
 
       Source {c |}       SS           df       MS      Number of obs   ={res}        97
@@ -15678,7 +16197,7 @@ y1 {res}   .5258519   .66176995    .6656665  -.77715676
 {txt}__000001[1,4]
         lcavol     lweight         svi       _cons
 y1 {res}   .5258519   .66176995    .6656665  -.77715676
-{reset}r; t=0.12 13:05:25
+{reset}r; t=0.17 22:27:32
 
 {com}. *
 . 
@@ -16061,7 +16580,7 @@ y1 {res}  .56434129   .62201981  -.02124818   .09671252   .76167335  -.10605094
 
 {txt}       gleason       pgg45       _cons
 y1 {res}  .04922792   .00445751   .18156087
-{reset}r; t=0.11 13:05:25
+{reset}r; t=0.19 22:27:32
 
 {com}. *
 . 
@@ -16082,10 +16601,10 @@ y1 {res}  .04922792   .00445751   .18156087
 {space 14}lcp {c |}{col 21}{res}      0.2522809      0.0896053
 {txt}{space 12}_cons {c |}{col 21}{res}      1.4320758     -0.7280498
 {txt}{hline 18}{c BT}{hline 32}
-r; t=0.02 13:05:25
+r; t=0.03 22:27:32
 
 {com}. mat A = e(b) 
-{txt}r; t=0.00 13:05:25
+{txt}r; t=0.00 22:27:32
 
 {com}. lasso2 $model, notpen(lcp) l(50)
 
@@ -16101,10 +16620,10 @@ r; t=0.02 13:05:25
 {space 12}_cons {c |}{col 21}{res}      1.4305989     -0.7280498
 {txt}{hline 18}{c BT}{hline 32}
 {help lasso2##examples_partialling:*Not penalized}
-r; t=0.01 13:05:25
+r; t=0.01 22:27:32
 
 {com}. mat B = e(b)
-{txt}r; t=0.00 13:05:25
+{txt}r; t=0.00 22:27:32
 
 {com}. comparevec A B  
 {txt}Max rel dif = 0. tolerance = .01
@@ -16116,7 +16635,7 @@ y1 {res} .33721135  .17534668  .25228088  1.4320758
 {txt}__000001[1,4]
        lcavol    lweight        lcp      _cons
 y1 {res} .22608373  .22010953   .3132824  1.4305989
-{reset}r; t=0.00 13:05:25
+{reset}r; t=0.00 22:27:32
 
 {com}. 
 . lasso2 $model, partial(lcp) l(50) sqrt
@@ -16131,10 +16650,10 @@ y1 {res} .22608373  .22010953   .3132824  1.4305989
 {space 14}lcp {c |}{col 21}{res}      0.3870332      0.0801708
 {txt}{space 12}_cons {c |}{col 21}{res}      2.3911838      1.6083866
 {txt}{hline 18}{c BT}{hline 32}
-r; t=0.02 13:05:25
+r; t=0.03 22:27:32
 
 {com}. mat A = e(b) 
-{txt}r; t=0.00 13:05:25
+{txt}r; t=0.00 22:27:32
 
 {com}. lasso2 $model, notpen(lcp) l(50) sqrt
 
@@ -16148,10 +16667,10 @@ r; t=0.02 13:05:25
 {space 12}_cons {c |}{col 21}{res}      2.5596528      2.5596528
 {txt}{hline 18}{c BT}{hline 32}
 {help lasso2##examples_partialling:*Not penalized}
-r; t=0.01 13:05:25
+r; t=0.01 22:27:32
 
 {com}. mat B = e(b)
-{txt}r; t=0.00 13:05:25
+{txt}r; t=0.00 22:27:32
 
 {com}. comparevec A B  
 {txt}Max rel dif = 0. tolerance = .01
@@ -16163,7 +16682,7 @@ y1 {res} .11601656  .38703321  2.3911838
 {txt}__000001[1,2]
           lcp      _cons
 y1 {res} .45307432  2.5596528
-{reset}r; t=0.00 13:05:25
+{reset}r; t=0.00 22:27:32
 
 {com}. 
 . lasso2 $model, partial(lcp) l(50) alpha(0.5)
@@ -16182,10 +16701,10 @@ y1 {res} .45307432  2.5596528
 {space 14}lcp {c |}{col 21}{res}      0.1432224     -0.0363802
 {txt}{space 12}_cons {c |}{col 21}{res}      0.5023728     -0.3649561
 {txt}{hline 18}{c BT}{hline 32}
-r; t=0.02 13:05:25
+r; t=0.03 22:27:32
 
 {com}. mat A = e(b) 
-{txt}r; t=0.00 13:05:25
+{txt}r; t=0.00 22:27:32
 
 {com}. lasso2 $model, notpen(lcp) l(50) alpha(0.5)
 
@@ -16203,10 +16722,10 @@ r; t=0.02 13:05:25
 {space 12}_cons {c |}{col 21}{res}      0.5111770     -0.8034092
 {txt}{hline 18}{c BT}{hline 32}
 {help lasso2##examples_partialling:*Not penalized}
-r; t=0.01 13:05:25
+r; t=0.01 22:27:32
 
 {com}. mat B = e(b)
-{txt}r; t=0.00 13:05:25
+{txt}r; t=0.00 22:27:32
 
 {com}. comparevec A B  
 {txt}Max rel dif = 0. tolerance = .01
@@ -16218,7 +16737,7 @@ y1 {res} .39335379  .38524757   .0034326   .3338927  .14322245   .5023728
 {txt}__000001[1,5]
        lcavol    lweight        svi        lcp      _cons
 y1 {res} .31858078  .42155968  .20707649  .20920449  .51117695
-{reset}r; t=0.00 13:05:25
+{reset}r; t=0.00 22:27:32
 
 {com}. 
 . lasso2 $model, partial(lcp) l(50) alpha(0)
@@ -16239,10 +16758,10 @@ y1 {res} .31858078  .42155968  .20707649  .20920449  .51117695
 {space 14}lcp {c |}{col 21}{res}     -0.0030316     -0.1060509
 {txt}{space 12}_cons {c |}{col 21}{res}      0.0586496      0.1815609
 {txt}{hline 18}{c BT}{hline 32}
-r; t=0.02 13:05:25
+r; t=0.03 22:27:32
 
 {com}. mat A = e(b) 
-{txt}r; t=0.00 13:05:25
+{txt}r; t=0.00 22:27:32
 
 {com}. lasso2 $model, notpen(lcp) l(50) alpha(0)
 
@@ -16263,10 +16782,10 @@ r; t=0.02 13:05:25
 {space 12}_cons {c |}{col 21}{res}     -0.0555722      0.1815609
 {txt}{hline 18}{c BT}{hline 32}
 {help lasso2##examples_partialling:*Not penalized}
-r; t=0.01 13:05:25
+r; t=0.02 22:27:32
 
 {com}. mat B = e(b)
-{txt}r; t=0.00 13:05:25
+{txt}r; t=0.00 22:27:32
 
 {com}. comparevec A B  
 {txt}Max rel dif = 0. tolerance = .01
@@ -16284,7 +16803,7 @@ y1 {res}  .38377815   .54824728  -.00995585    .0703588   .56520769   .05120492
 
 {txt}       gleason       pgg45       _cons
 y1 {res}  .07133961   .00246784   -.0555722
-{reset}r; t=0.00 13:05:25
+{reset}r; t=0.00 22:27:32
 
 {com}. 
 . lasso2 $model, lambda(10) partial(age) notpen(svi)
@@ -16305,10 +16824,10 @@ y1 {res}  .07133961   .00246784   -.0555722
 {txt}{space 12}_cons {c |}{col 21}{res}      0.4093655      0.2537330
 {txt}{hline 18}{c BT}{hline 32}
 {help lasso2##examples_partialling:*Not penalized}
-r; t=0.02 13:05:25
+r; t=0.03 22:27:32
 
 {com}. mat A = e(b) 
-{txt}r; t=0.00 13:05:25
+{txt}r; t=0.00 22:27:32
 
 {com}. lasso2 $model, lambda(10) partial(svi) notpen(age)
 {res}
@@ -16328,10 +16847,10 @@ r; t=0.02 13:05:25
 {txt}{space 12}_cons {c |}{col 21}{res}      0.5012872      0.2537330
 {txt}{hline 18}{c BT}{hline 32}
 {help lasso2##examples_partialling:*Not penalized}
-r; t=0.02 13:05:25
+r; t=0.04 22:27:32
 
 {com}. mat B = e(b)
-{txt}r; t=0.00 13:05:25
+{txt}r; t=0.00 22:27:32
 
 {com}. comparevec A B  
 {txt}Max rel dif = 0. tolerance = .01
@@ -16349,7 +16868,7 @@ y1 {res}  .48653241   .52682822  -.01270493   .06639838   .00195464   .00160054
 
 {txt}           svi       _cons
 y1 {res}  .74354647   .50128721
-{reset}r; t=0.00 13:05:25
+{reset}r; t=0.00 22:27:32
 
 {com}. 
 . ********************************************************************************
@@ -16373,14 +16892,14 @@ y1 {res}  .74354647   .50128721
 {space 12}_cons {c |}{col 21}{res}      1.2374708      0.5214696
 {txt}{hline 18}{c BT}{hline 32}
 {help lasso2##examples_partialling:*Not penalized}
-r; t=0.01 13:05:25
+r; t=0.01 22:27:32
 
 {com}. mat A = e(b)
-{txt}r; t=0.00 13:05:25
+{txt}r; t=0.00 22:27:32
 
 {com}. 
 . mat myloadings = (0,1,1,1,1,1,1,1)
-{txt}r; t=0.00 13:05:25
+{txt}r; t=0.00 22:27:32
 
 {com}. lasso2 $model, l(10) ploadings(myloadings)
 
@@ -16398,10 +16917,10 @@ r; t=0.01 13:05:25
 {hline 18}{c +}{hline 32}
 {space 12}_cons {c |}{col 21}{res}      1.2374708      0.5214696
 {txt}{hline 18}{c BT}{hline 32}
-r; t=0.01 13:05:25
+r; t=0.01 22:27:32
 
 {com}. mat B = e(b)
-{txt}r; t=0.00 13:05:25
+{txt}r; t=0.00 22:27:32
 
 {com}. 
 . comparemat A B
@@ -16420,7 +16939,7 @@ y1 {res}  .62075729   .29227485  -.01290306   .08638021   .17605041   .00490221
 
 {txt}         _cons
 y1 {res}  1.2374708
-{reset}r; t=0.00 13:05:25
+{reset}r; t=0.00 22:27:32
 
 {com}. 
 . 
@@ -16430,7 +16949,7 @@ y1 {res}  1.2374708
 . 
 . di as red "should display EBIC (the default):"
 {res}{err}should display EBIC (the default):
-{txt}r; t=0.00 13:05:25
+{txt}r; t=0.00 22:27:32
 
 {com}. lasso2 $model  
 {res}
@@ -16450,14 +16969,14 @@ y1 {res}  1.2374708
      9{txt}{col 7}{c |}{res}  41{col 13}   3.95993{col 25}   8{col 31}   1.83346{col 43}  -35.69248{txt} {res}{col 56} 0.6567{txt}{col 65}{c |}{res}{col 67}Added lcp.
 {txt}Use {bf:long} option for full output.
 {p 0 6 2}Type e.g. {stata lasso2, lic(ebic)}{txt} to run the model selected by EBIC.{txt}{p_end}
-r; t=0.06 13:05:25
+r; t=0.09 22:27:33
 
 {com}. sleep 1000
-{txt}r; t=1.00 13:05:26
+{txt}r; t=1.00 22:27:34
 
 {com}. di as red "should display AIC:"
 {res}{err}should display AIC:
-{txt}r; t=0.00 13:05:26
+{txt}r; t=0.00 22:27:34
 
 {com}. lasso2 $model , ic(aic)
 {res}
@@ -16477,14 +16996,14 @@ r; t=0.06 13:05:25
      9{txt}{col 7}{c |}{res}  41{col 13}   3.95993{col 25}   8{col 31}   1.83346{col 43}  -58.86488{txt} {res}{col 56} 0.6567{txt}{col 65}{c |}{res}{col 67}Added lcp.
 {txt}Use {bf:long} option for full output.
 {p 0 6 2}Type e.g. {stata lasso2, lic(aic)}{txt} to run the model selected by AIC.{txt}{p_end}
-r; t=0.07 13:05:27
+r; t=0.09 22:27:34
 
 {com}. sleep 1000
-{txt}r; t=1.01 13:05:28
+{txt}r; t=1.00 22:27:35
 
 {com}. di as red "should display AICc:"
 {res}{err}should display AICc:
-{txt}r; t=0.00 13:05:28
+{txt}r; t=0.00 22:27:35
 
 {com}. lasso2 $model , ic(aicc)
 {res}
@@ -16504,14 +17023,14 @@ r; t=0.07 13:05:27
      9{txt}{col 7}{c |}{res}  41{col 13}   3.95993{col 25}   8{col 31}   1.83346{col 43}  -57.02397{txt} {res}{col 56} 0.6567{txt}{col 65}{c |}{res}{col 67}Added lcp.
 {txt}Use {bf:long} option for full output.
 {p 0 6 2}Type e.g. {stata lasso2, lic(aicc)}{txt} to run the model selected by AICc.{txt}{p_end}
-r; t=0.07 13:05:28
+r; t=0.09 22:27:35
 
 {com}. sleep 1000
-{txt}r; t=1.00 13:05:29
+{txt}r; t=0.99 22:27:36
 
 {com}. di as red "should display BIC:"
 {res}{err}should display BIC:
-{txt}r; t=0.00 13:05:29
+{txt}r; t=0.00 22:27:36
 
 {com}. lasso2 $model , ic(bic)
 {res}
@@ -16531,14 +17050,14 @@ r; t=0.07 13:05:28
      9{txt}{col 7}{c |}{res}  41{col 13}   3.95993{col 25}   8{col 31}   1.83346{col 43}  -35.69248{txt} {res}{col 56} 0.6567{txt}{col 65}{c |}{res}{col 67}Added lcp.
 {txt}Use {bf:long} option for full output.
 {p 0 6 2}Type e.g. {stata lasso2, lic(bic)}{txt} to run the model selected by BIC.{txt}{p_end}
-r; t=0.06 13:05:29
+r; t=0.10 22:27:36
 
 {com}. sleep 1000
-{txt}r; t=0.99 13:05:30
+{txt}r; t=0.99 22:27:37
 
 {com}. di as red "should display EBIC:"
 {res}{err}should display EBIC:
-{txt}r; t=0.00 13:05:30
+{txt}r; t=0.00 22:27:37
 
 {com}. lasso2 $model , ic(ebic)
 {res}
@@ -16558,7 +17077,7 @@ r; t=0.06 13:05:29
      9{txt}{col 7}{c |}{res}  41{col 13}   3.95993{col 25}   8{col 31}   1.83346{col 43}  -35.69248{txt} {res}{col 56} 0.6567{txt}{col 65}{c |}{res}{col 67}Added lcp.
 {txt}Use {bf:long} option for full output.
 {p 0 6 2}Type e.g. {stata lasso2, lic(ebic)}{txt} to run the model selected by EBIC.{txt}{p_end}
-r; t=0.05 13:05:30
+r; t=0.14 22:27:37
 
 {com}. 
 . 
@@ -16568,10 +17087,10 @@ r; t=0.05 13:05:30
 . 
 . // replicate dof w/o constant and no standardisation [OK]
 . lasso2 $model ,  alpha(0) l(20 .1)  long unitload    nocons nopath
-{txt}r; t=0.01 13:05:30
+{txt}r; t=0.01 22:27:37
 
 {com}. mat D= e(dof)
-{txt}r; t=0.00 13:05:30
+{txt}r; t=0.00 22:27:37
 
 {com}. mat list e(dof)
 {res}
@@ -16579,34 +17098,34 @@ r; t=0.05 13:05:30
            Df
 r1 {res} 6.6327827
 {txt}r2 {res} 7.9881372
-{reset}r; t=0.00 13:05:30
+{reset}r; t=0.00 22:27:37
 
 {com}. 
 . putmata y=(lpsa) X=(lcavol lweight  age lbph  svi  lcp gleason pgg45  ), replace
 {res}{txt}(1 vector, 1 matrix posted)
-r; t=0.00 13:05:30
+r; t=0.00 22:27:37
 
 {com}. mata: df=trace(X*invsym((X'X):+20/2*I(8))*X') 
-{res}{txt}r; t=0.00 13:05:30
+{res}{txt}r; t=0.00 22:27:37
 
 {com}. mata: df
 {res}  6.632782744
-{txt}r; t=0.00 13:05:30
+{txt}r; t=0.00 22:27:37
 
 {com}. 
 . mata: st_local("df",strofreal(df))
-{res}{txt}r; t=0.00 13:05:30
+{res}{txt}r; t=0.00 22:27:37
 
 {com}. assert reldif(el(D,1,1),`df')<10^-6
-{txt}r; t=0.00 13:05:30
+{txt}r; t=0.00 22:27:37
 
 {com}. 
 . // standardisation w/o constant [OK]
 . lasso2 $model ,  alpha(0)   l(20 .1)  long      nocons nopath
-{txt}r; t=0.00 13:05:30
+{txt}r; t=0.01 22:27:37
 
 {com}. mat D1 = e(dof)
-{txt}r; t=0.00 13:05:30
+{txt}r; t=0.00 22:27:37
 
 {com}. mat list e(dof)
 {res}
@@ -16614,13 +17133,13 @@ r; t=0.00 13:05:30
            Df
 r1 {res} 6.8825536
 {txt}r2 {res} 7.9928451
-{reset}r; t=0.00 13:05:30
+{reset}r; t=0.00 22:27:37
 
 {com}. lasso2 $model ,  alpha(0)   l(20 .1)  long prestd   nocons nopath
-{res}{txt}r; t=0.00 13:05:30
+{res}{txt}r; t=0.01 22:27:37
 
 {com}. mat D2 = e(dof)
-{txt}r; t=0.00 13:05:30
+{txt}r; t=0.00 22:27:37
 
 {com}. mat list e(dof)
 {res}
@@ -16628,7 +17147,7 @@ r1 {res} 6.8825536
            Df
 r1 {res} 6.8825536
 {txt}r2 {res} 7.9928451
-{reset}r; t=0.00 13:05:30
+{reset}r; t=0.00 22:27:37
 
 {com}. comparemat D1 D2
 {txt}mreldif=2.86418523492e-15. tolerance = .01
@@ -16642,54 +17161,54 @@ r1 {res} 6.8825536
            Df
 r1 {res} 6.8825536
 {txt}r2 {res} 7.9928451
-{reset}r; t=0.00 13:05:30
+{reset}r; t=0.00 22:27:37
 
 {com}. 
 . putmata y=(lpsa) X=(lcavol lweight  age lbph  svi  lcp gleason pgg45  ), replace
 {res}{txt}(1 vector, 1 matrix posted)
-r; t=0.00 13:05:30
+r; t=0.00 22:27:37
 
 {com}. mata: s = sqrt(mean((X:-mean(X)):^2))
-{res}{txt}r; t=0.00 13:05:30
+{res}{txt}r; t=0.00 22:27:37
 
 {com}. mata: ssq = s:^2
-{res}{txt}r; t=0.00 13:05:30
+{res}{txt}r; t=0.00 22:27:37
 
 {com}. mata: Xs=X:/s 
-{res}{txt}r; t=0.00 13:05:30
+{res}{txt}r; t=0.00 22:27:37
 
 {com}. mata: df1=trace(X*invsym((X'X):+20/2*diag(ssq))*X')  // "on the fly" standardisation
-{res}{txt}r; t=0.00 13:05:30
+{res}{txt}r; t=0.00 22:27:37
 
 {com}. mata: df2=trace(Xs*invsym((Xs'Xs):+20/2*I(8))*Xs')   // pre-standardisation
-{res}{txt}r; t=0.00 13:05:30
+{res}{txt}r; t=0.00 22:27:37
 
 {com}. mata: df1,df2
 {res}       {txt}          1             2
     {c TLC}{hline 29}{c TRC}
   1 {c |}  {res}6.882553589   6.882553589{txt}  {c |}
     {c BLC}{hline 29}{c BRC}
-r; t=0.00 13:05:30
+r; t=0.00 22:27:37
 
 {com}. mata: st_local("df1",strofreal(df1))
-{res}{txt}r; t=0.00 13:05:30
+{res}{txt}r; t=0.00 22:27:37
 
 {com}. mata: st_local("df2",strofreal(df2))
-{res}{txt}r; t=0.00 13:05:30
+{res}{txt}r; t=0.00 22:27:37
 
 {com}. assert reldif(el(D1,1,1),`df1')<10^-6
-{txt}r; t=0.00 13:05:30
+{txt}r; t=0.00 22:27:37
 
 {com}. assert reldif(el(D1,1,1),`df2')<10^-6
-{txt}r; t=0.00 13:05:30
+{txt}r; t=0.00 22:27:37
 
 {com}. assert reldif(`df1',`df2')<10^-6
-{txt}r; t=0.00 13:05:30
+{txt}r; t=0.00 22:27:37
 
 {com}. 
 . // dof with constant and no standardisation [OK]
 . lasso2 $model ,  alpha(0) l(20 .1)  long unitload  nopath   
-{txt}r; t=0.00 13:05:30
+{txt}r; t=0.01 22:27:37
 
 {com}. mat list e(dof)
 {res}
@@ -16697,72 +17216,72 @@ r; t=0.00 13:05:30
            Df
 r1 {res} 7.3789734
 {txt}r2 {res}  8.985559
-{reset}r; t=0.00 13:05:30
+{reset}r; t=0.00 22:27:37
 
 {com}. mat D = e(dof)
-{txt}r; t=0.00 13:05:30
+{txt}r; t=0.00 22:27:37
 
 {com}. 
 . putmata y=(lpsa) X=(lcavol lweight  age lbph  svi  lcp gleason pgg45  ), replace
 {res}{txt}(1 vector, 1 matrix posted)
-r; t=0.01 13:05:30
+r; t=0.00 22:27:37
 
 {com}. mata: Xone=(X,J(97,1,1))
-{res}{txt}r; t=0.00 13:05:30
+{res}{txt}r; t=0.00 22:27:37
 
 {com}. mata: Psicons = I(9)
-{res}{txt}r; t=0.00 13:05:30
+{res}{txt}r; t=0.00 22:27:37
 
 {com}. mata: Psicons[9,9]=0
-{res}{txt}r; t=0.00 13:05:30
+{res}{txt}r; t=0.00 22:27:37
 
 {com}. mata: Xdm = X :- mean(X)
-{res}{txt}r; t=0.00 13:05:30
+{res}{txt}r; t=0.00 22:27:37
 
 {com}. mata: trace(X*invsym((X'X):+20/2*I(8))*X')                      // this is wrong (ignores constant)
 {res}  6.632782744
-{txt}r; t=0.00 13:05:30
+{txt}r; t=0.00 22:27:37
 
 {com}. mata: trace(Xdm*invsym((Xdm'Xdm):+20/2*I(8))*Xdm')   // this is correct but missing the constant
 {res}  6.378973447
-{txt}r; t=0.00 13:05:30
+{txt}r; t=0.00 22:27:37
 
 {com}. mata: trace(Xone*invsym((Xone'Xone):+20/2*Psicons)*Xone')  // this is correct (incl constant)
 {res}  7.378973447
-{txt}r; t=0.00 13:05:30
+{txt}r; t=0.00 22:27:37
 
 {com}. mata: df1=trace(Xone*invsym((Xone'Xone):+20/2*Psicons)*Xone')  // this should be correct
-{res}{txt}r; t=0.00 13:05:30
+{res}{txt}r; t=0.00 22:27:37
 
 {com}. mata: df2=trace(Xdm*invsym((Xdm'Xdm):+20/2*I(8))*Xdm')+1  // this is correct after +1 for constant
-{res}{txt}r; t=0.00 13:05:30
+{res}{txt}r; t=0.00 22:27:37
 
 {com}. mata: df1,df2
 {res}       {txt}          1             2
     {c TLC}{hline 29}{c TRC}
   1 {c |}  {res}7.378973447   7.378973447{txt}  {c |}
     {c BLC}{hline 29}{c BRC}
-r; t=0.00 13:05:30
+r; t=0.00 22:27:37
 
 {com}. mata: st_local("df1",strofreal(df1))
-{res}{txt}r; t=0.00 13:05:30
+{res}{txt}r; t=0.00 22:27:37
 
 {com}. mata: st_local("df2",strofreal(df2))
-{res}{txt}r; t=0.00 13:05:30
+{res}{txt}r; t=0.00 22:27:37
 
 {com}. assert reldif(el(D,1,1),`df1')<10^-6
-{txt}r; t=0.00 13:05:30
+{txt}r; t=0.00 22:27:37
 
 {com}. assert reldif(el(D,1,1),`df2')<10^-6
-{txt}r; t=0.00 13:05:30
+{txt}r; t=0.00 22:27:37
 
 {com}. assert reldif(`df1',`df2')<10^-6
-{txt}r; t=0.00 13:05:30
+{txt}r; t=0.00 22:27:37
 
 {com}. 
 . // standardisation w/  constant [OK]
 . lasso2 $model ,  alpha(0) l(20 10 1 .1)  long nopath
-{txt}r; t=0.00 13:05:30
+{txt}r; t=0.01 22:27:37
 
 {com}. mat list e(dof)
 {res}
@@ -16772,13 +17291,13 @@ r1 {res} 7.6831377
 {txt}r2 {res} 8.2551869
 {txt}r3 {res} 8.9149466
 {txt}r4 {res}  8.991368
-{reset}r; t=0.00 13:05:30
+{reset}r; t=0.00 22:27:37
 
 {com}. mat D1 = e(dof)
-{txt}r; t=0.00 13:05:30
+{txt}r; t=0.00 22:27:37
 
 {com}. lasso2 $model ,  alpha(0) l(20 10 1 .1)  long prestd nopath  
-{res}{txt}r; t=0.03 13:05:30
+{res}{txt}r; t=0.05 22:27:37
 
 {com}. mat list e(dof)
 {res}
@@ -16788,10 +17307,10 @@ r1 {res} 7.6831377
 {txt}r2 {res} 8.2551869
 {txt}r3 {res} 8.9149466
 {txt}r4 {res}  8.991368
-{reset}r; t=0.00 13:05:30
+{reset}r; t=0.00 22:27:37
 
 {com}. mat D2 = e(dof)
-{txt}r; t=0.00 13:05:30
+{txt}r; t=0.00 22:27:37
 
 {com}. comparemat D1 D2
 {txt}mreldif=1.02287727160e-16. tolerance = .01
@@ -16809,52 +17328,52 @@ r1 {res} 7.6831377
 {txt}r2 {res} 8.2551869
 {txt}r3 {res} 8.9149466
 {txt}r4 {res}  8.991368
-{reset}r; t=0.00 13:05:30
+{reset}r; t=0.00 22:27:37
 
 {com}. 
 . putmata y=(lpsa) X=(lcavol lweight  age lbph  svi  lcp gleason pgg45), replace
 {res}{txt}(1 vector, 1 matrix posted)
-r; t=0.00 13:05:30
+r; t=0.00 22:27:37
 
 {com}. mata: s = sqrt(mean((X:-mean(X)):^2))
-{res}{txt}r; t=0.00 13:05:30
+{res}{txt}r; t=0.00 22:27:37
 
 {com}. mata: ssq = s:^2
-{res}{txt}r; t=0.00 13:05:30
+{res}{txt}r; t=0.00 22:27:37
 
 {com}. mata: Xs=(X:-mean(X)):/s 
-{res}{txt}r; t=0.00 13:05:30
+{res}{txt}r; t=0.00 22:27:37
 
 {com}. mata: Xone=(X,J(97,1,1))
-{res}{txt}r; t=0.00 13:05:30
+{res}{txt}r; t=0.00 22:27:37
 
 {com}. mata: df1=trace(Xdm*invsym((Xdm'Xdm):+20/2*diag(ssq))*Xdm') +1
-{res}{txt}r; t=0.00 13:05:30
+{res}{txt}r; t=0.00 22:27:37
 
 {com}. mata: df2=trace(Xs*invsym((Xs'Xs):+20/2*I(8))*Xs') +1
-{res}{txt}r; t=0.00 13:05:30
+{res}{txt}r; t=0.00 22:27:37
 
 {com}. mata: df1,df2
 {res}       {txt}          1             2
     {c TLC}{hline 29}{c TRC}
   1 {c |}  {res}7.683137698   7.683137698{txt}  {c |}
     {c BLC}{hline 29}{c BRC}
-r; t=0.00 13:05:30
+r; t=0.00 22:27:37
 
 {com}. mata: st_local("df1",strofreal(df1))
-{res}{txt}r; t=0.00 13:05:30
+{res}{txt}r; t=0.00 22:27:37
 
 {com}. mata: st_local("df2",strofreal(df2))
-{res}{txt}r; t=0.00 13:05:30
+{res}{txt}r; t=0.00 22:27:37
 
 {com}. assert reldif(el(D1,1,1),`df1')<10^-6
-{txt}r; t=0.00 13:05:30
+{txt}r; t=0.00 22:27:37
 
 {com}. assert reldif(el(D1,1,1),`df2')<10^-6
-{txt}r; t=0.00 13:05:30
+{txt}r; t=0.00 22:27:37
 
 {com}. assert reldif(`df1',`df2')<10^-6
-{txt}r; t=0.00 13:05:30
+{txt}r; t=0.00 22:27:37
 
 {com}. 
 . ********************************************************************************
@@ -16999,7 +17518,7 @@ Use lambda=27.93654463358689 (selected by BIC).
 {hline 18}{c +}{hline 32}
 {space 12}_cons {c |}{col 21}{res}      0.2975585     -0.7771568
 {txt}{hline 18}{c BT}{hline 32}
-r; t=0.25 13:05:30
+r; t=0.41 22:27:38
 
 {com}. *
 . 
@@ -17016,10 +17535,10 @@ r; t=0.25 13:05:30
 . * load example data
 . insheet using "$prostate", tab clear
 {txt}(11 vars, 97 obs)
-r; t=1.07 13:05:31
+r; t=0.53 22:27:38
 
 {com}. global model lpsa lcavol lweight age lbph svi lcp gleason pgg45
-{txt}r; t=0.00 13:05:31
+{txt}r; t=0.00 22:27:38
 
 {com}. 
 . lasso2 $model
@@ -17040,10 +17559,10 @@ r; t=1.07 13:05:31
      9{txt}{col 7}{c |}{res}  41{col 13}   3.95993{col 25}   8{col 31}   1.83346{col 43}  -35.69248{txt} {res}{col 56} 0.6567{txt}{col 65}{c |}{res}{col 67}Added lcp.
 {txt}Use {bf:long} option for full output.
 {p 0 6 2}Type e.g. {stata lasso2, lic(ebic)}{txt} to run the model selected by EBIC.{txt}{p_end}
-r; t=0.06 13:05:31
+r; t=0.09 22:27:38
 
 {com}. cap drop xbhat1
-{txt}r; t=0.00 13:05:31
+{txt}r; t=0.00 22:27:38
 
 {com}. predict double xbhat1, xb l(10) noisily
 {txt}Re-estimate model with lambda=10.
@@ -17069,14 +17588,14 @@ y1 {res}  .50008192    .5144276  -.00366265   .04684694   .56951709   .00179809
 
 {txt}         _cons
 y1 {res} -.00147665
-{reset}r; t=0.02 13:05:31
+{reset}r; t=0.08 22:27:38
 
 {com}. cap drop xbhat2
-{txt}r; t=0.00 13:05:31
+{txt}r; t=0.00 22:27:38
 
 {com}. predict double xbhat2, xb l(10) approx
 {txt}Use linear approximation based on two closest lambda values.
-r; t=0.00 13:05:31
+r; t=0.01 22:27:38
 
 {com}. 
 . //    The model is estimated explicitly using lambda=100.  If lasso2 is 
@@ -17098,21 +17617,21 @@ r; t=0.00 13:05:31
 {hline 18}{c +}{hline 32}
 {space 12}_cons {c |}{col 21}{res}     -0.0014767      0.5214696
 {txt}{hline 18}{c BT}{hline 32}
-r; t=0.01 13:05:31
+r; t=0.02 22:27:38
 
 {com}. cap drop xbhat3
-{txt}r; t=0.00 13:05:31
+{txt}r; t=0.00 22:27:38
 
 {com}. predict double xbhat3, xb
 {txt}Use e(b) from previous lasso2 estimation (lambda=10).
-r; t=0.00 13:05:31
+r; t=0.00 22:27:38
 
 {com}. 
 . //    All three methods yield the same results.  However note that the linear 
 . // approximation is only exact for the lasso
 . //   which is piecewise linear.
 . assert (xbhat1-xbhat2<10e-8) & (xbhat3-xbhat2<10e-8) 
-{txt}r; t=0.00 13:05:31
+{txt}r; t=0.00 22:27:38
 
 {com}. 
 . //It is also possible to obtain predicted values by referencing a specific
@@ -17135,17 +17654,17 @@ r; t=0.00 13:05:31
      9{txt}{col 7}{c |}{res}  41{col 13}   3.95993{col 25}   8{col 31}   1.83346{col 43}  -35.69248{txt} {res}{col 56} 0.6567{txt}{col 65}{c |}{res}{col 67}Added lcp.
 {txt}Use {bf:long} option for full output.
 {p 0 6 2}Type e.g. {stata lasso2, lic(ebic)}{txt} to run the model selected by EBIC.{txt}{p_end}
-r; t=0.05 13:05:31
+r; t=0.09 22:27:38
 
 {com}. cap drop xbhat4
-{txt}r; t=0.00 13:05:31
+{txt}r; t=0.00 22:27:38
 
 {com}. predict double xbhat4, xb lid(21)
 {txt}Use lambda with id=21. lambda=25.45473900468241.
-r; t=0.00 13:05:31
+r; t=0.01 22:27:38
 
 {com}. cap drop xbhat5
-{txt}r; t=0.00 13:05:31
+{txt}r; t=0.00 22:27:38
 
 {com}. predict double xbhat5, xb l(25.45473900468241)
 {txt}Re-estimate model with lambda=25.45473900468.
@@ -17163,10 +17682,10 @@ r; t=0.00 13:05:31
 {space 12}_cons {c |}{col 21}{res}      0.1984234     -0.8221054
 {txt}{hline 18}{c BT}{hline 32}
 Use e(b).
-r; t=0.01 13:05:31
+r; t=0.02 22:27:38
 
 {com}. assert (xbhat4-xbhat5<10e-8)
-{txt}r; t=0.00 13:05:31
+{txt}r; t=0.00 22:27:38
 
 {com}. 
 . 
@@ -17193,7 +17712,7 @@ r; t=0.01 13:05:31
      9{txt}{col 7}{c |}{res}  48{col 13}   1.67153{col 25}   8{col 31}   2.08649{col 43}  -20.33461{txt} {res}{col 56} 0.6575{txt}{col 65}{c |}{res}{col 67}Added age.
 {txt}Use {bf:long} option for full output.
 {p 0 6 2}Type e.g. {stata lasso2, lic(ebic)}{txt} to run the model selected by EBIC.{txt}{p_end}
-r; t=0.06 13:05:31
+r; t=0.10 22:27:38
 
 {com}. 
 . 
@@ -17219,7 +17738,7 @@ r; t=0.06 13:05:31
      9{txt}{col 7}{c |}{res}  41{col 13}   3.95993{col 25}   8{col 31}   1.83346{col 43}  -35.69248{txt} {res}{col 56} 0.6567{txt}{col 65}{c |}{res}{col 67}Added lcp.
 {txt}Use {bf:long} option for full output.
 {p 0 6 2}Type e.g. {stata lasso2, lic(ebic)}{txt} to run the model selected by EBIC.{txt}{p_end}
-r; t=0.05 13:05:31
+r; t=0.09 22:27:39
 
 {com}. 
 . lasso2, plotpath(lambda) plotlabel plotopt(legend(off))
@@ -17240,7 +17759,7 @@ r; t=0.05 13:05:31
      9{txt}{col 7}{c |}{res}  41{col 13}   3.95993{col 25}   8{col 31}   1.83346{col 43}  -35.69248{txt} {res}{col 56} 0.6567{txt}{col 65}{c |}{res}{col 67}Added lcp.
 {txt}Use {bf:long} option for full output.
 {p 0 6 2}Type e.g. {stata lasso2, lic(ebic)}{txt} to run the model selected by EBIC.{txt}{p_end}
-{res}{txt}r; t=1.57 13:05:33
+{res}{txt}r; t=9.92 22:27:48
 
 {com}. 
 . lasso2, plotpath(lnlambda) plotlabel plotopt(legend(off))
@@ -17262,7 +17781,7 @@ r; t=0.05 13:05:31
 {txt}Use {bf:long} option for full output.
 {p 0 6 2}Type e.g. {stata lasso2, lic(ebic)}{txt} to run the model selected by EBIC.{txt}{p_end}
 {res}{txt}(68 real changes made)
-{res}{txt}r; t=0.79 13:05:34
+{res}{txt}r; t=1.14 22:27:50
 
 {com}. 
 . lasso2, plotpath(norm) plotlabel plotopt(legend(off))
@@ -17283,7 +17802,7 @@ r; t=0.05 13:05:31
      9{txt}{col 7}{c |}{res}  41{col 13}   3.95993{col 25}   8{col 31}   1.83346{col 43}  -35.69248{txt} {res}{col 56} 0.6567{txt}{col 65}{c |}{res}{col 67}Added lcp.
 {txt}Use {bf:long} option for full output.
 {p 0 6 2}Type e.g. {stata lasso2, lic(ebic)}{txt} to run the model selected by EBIC.{txt}{p_end}
-{res}{txt}r; t=0.81 13:05:35
+{res}{txt}r; t=1.13 22:27:51
 
 {com}. 
 . lasso2, plotpath(norm) plotlabel plotopt(legend(off)) plotvar(lcavol)
@@ -17304,14 +17823,14 @@ r; t=0.05 13:05:31
      9{txt}{col 7}{c |}{res}  41{col 13}   3.95993{col 25}   8{col 31}   1.83346{col 43}  -35.69248{txt} {res}{col 56} 0.6567{txt}{col 65}{c |}{res}{col 67}Added lcp.
 {txt}Use {bf:long} option for full output.
 {p 0 6 2}Type e.g. {stata lasso2, lic(ebic)}{txt} to run the model selected by EBIC.{txt}{p_end}
-{res}{txt}r; t=0.65 13:05:35
+{res}{txt}r; t=0.98 22:27:52
 
 {com}. 
 . ********************************************************************************
 . *** validate RSS / r-squared                                                                 ***
 . ********************************************************************************
 . 
-. // loop over three mehods. "nopath" corresponds to default standardisatin on the fly.
+. // loop over three mehods. "nopath" corresponds to default standardisation on the fly.
 . // "nopath" is just a placeholder that doesn't affect calculations.
 . foreach method in prestd unitl nopath {c -(}
 {txt}  2{com}. foreach a of numlist 0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1 {c -(}
@@ -18974,7 +19493,7 @@ r1 {res} .64487113
 {txt}r2 {res} .66338529
 {reset}.64487113
 6.750e-17
-r; t=0.83 13:05:36
+r; t=1.63 22:27:53
 
 {com}. *
 . 
@@ -18984,7 +19503,7 @@ r; t=0.83 13:05:36
 . 
 . webuse air2, clear
 {txt}(TIMESLAB: Airline passengers)
-r; t=0.64 13:05:37
+r; t=1.28 22:27:55
 
 {com}. 
 . lasso2 air L(1/24).air
@@ -19049,23 +19568,23 @@ r; t=0.64 13:05:37
 {txt}{col 7}{c |}{col 65}{c |}{res}{col 67}L6.air.
 {txt}Use {bf:long} option for full output.
 {p 0 6 2}Type e.g. {stata lasso2, lic(ebic)}{txt} to run the model selected by EBIC.{txt}{p_end}
-r; t=5.04 13:05:42
+r; t=8.77 22:28:03
 
 {com}. 
 . local myebicgamma = 1-log(e(N))/(2*log(e(p)))
-{txt}r; t=0.00 13:05:42
+{txt}r; t=0.00 22:28:03
 
 {com}. 
 . di `myebicgamma'
 {res}.24678876
-{txt}r; t=0.00 13:05:42
+{txt}r; t=0.00 22:28:03
 
 {com}. di e(ebicgamma)
 {res}.24678876
-{txt}r; t=0.00 13:05:42
+{txt}r; t=0.00 22:28:03
 
 {com}. assert reldif(`myebicgamma',e(ebicgamma))<10^(-3)
-{txt}r; t=0.00 13:05:42
+{txt}r; t=0.00 22:28:03
 
 {com}. 
 . ********************************************************************************
@@ -19074,7 +19593,7 @@ r; t=5.04 13:05:42
 . 
 . use "http://fmwww.bc.edu/ec-p/data/macro/abdata.dta", clear
 {txt}(Layard & Nickell, Unemployment in Britain, Economica 53, 1986 from Ox dist)
-r; t=0.81 13:05:43
+r; t=0.88 22:28:04
 
 {com}. 
 . lasso2 ys l(0/3).k l(0/3).n, fe l(10)  
@@ -19088,10 +19607,10 @@ r; t=0.81 13:05:43
 {txt}{space 17} {c |}
 {space 16}n {c |}{col 21}{res}      0.0873134      0.1114129
 {txt}{hline 18}{c BT}{hline 32}
-r; t=0.50 13:05:43
+r; t=0.91 22:28:05
 
 {com}. mat A = e(b)
-{txt}r; t=0.00 13:05:43
+{txt}r; t=0.00 22:28:05
 
 {com}. 
 . lasso2 ys l(0/3).k l(0/3).n ibn.id, partial(ibn.id) l(10) nor
@@ -19106,10 +19625,10 @@ r; t=0.50 13:05:43
 {txt}{space 17} {c |}
 {space 16}n {c |}{col 21}{res}      0.0873134      0.1114129
 {txt}{hline 18}{c BT}{hline 32}
-r; t=0.05 13:05:43
+r; t=0.09 22:28:05
 
 {com}. mat B = e(b)
-{txt}r; t=0.00 13:05:43
+{txt}r; t=0.00 22:28:05
 
 {com}. 
 . comparemat A B
@@ -19124,7 +19643,7 @@ y1 {res}  .10311054  -.01029679   .08731341
                         L3.            
              k           k           n
 y1 {res}  .10311054  -.01029679   .08731341
-{reset}r; t=0.00 13:05:43
+{reset}r; t=0.00 22:28:05
 
 {com}. 
 . // noftools option
@@ -19139,13 +19658,13 @@ y1 {res}  .10311054  -.01029679   .08731341
 {txt}{space 17} {c |}
 {space 16}n {c |}{col 21}{res}      0.0873134      0.1114129
 {txt}{hline 18}{c BT}{hline 32}
-r; t=0.01 13:05:43
+r; t=0.02 22:28:05
 
 {com}. savedresults save ftools e()
-{txt}r; t=0.00 13:05:43
+{txt}r; t=0.02 22:28:05
 
 {com}. cap noi assert "`e(noftools)'"==""  // will be error if ftools not installed
-{txt}r; t=0.00 13:05:43
+{txt}r; t=0.00 22:28:05
 
 {com}. lasso2 ys l(0/3).k l(0/3).n, fe l(10) noftools
 {res}
@@ -19158,13 +19677,13 @@ r; t=0.01 13:05:43
 {txt}{space 17} {c |}
 {space 16}n {c |}{col 21}{res}      0.0873134      0.1114129
 {txt}{hline 18}{c BT}{hline 32}
-r; t=0.02 13:05:43
+r; t=0.05 22:28:05
 
 {com}. assert "`e(noftools)'"=="noftools"
-{txt}r; t=0.00 13:05:43
+{txt}r; t=0.00 22:28:05
 
 {com}. savedresults comp ftools e(), exclude(macros: lasso2opt)
-{txt}r; t=0.00 13:05:43
+{txt}r; t=0.00 22:28:05
 
 {com}. 
 . ********************************************************************************
@@ -19173,11 +19692,11 @@ r; t=0.02 13:05:43
 . ********************************************************************************
 . 
 . clear 
-{txt}r; t=0.00 13:05:43
+{txt}r; t=0.00 22:28:05
 
 {com}. use https://www.stata-press.com/data/r16/nlswork
 {txt}(National Longitudinal Survey.  Young Women 14-26 years of age in 1968)
-r; t=3.55 13:05:47
+r; t=2.97 22:28:08
 
 {com}. 
 . lasso2 ln_w grade age c.age#c.age ttl_exp c.ttl_exp#c.ttl_exp tenure ///
@@ -19243,7 +19762,7 @@ r; t=3.55 13:05:47
 {txt}{col 7}{c |}{col 65}{c |}{res}{col 67}87.year.
 {txt}Use {bf:long} option for full output.
 {p 0 6 2}Type e.g. {stata lasso2, lic(ebic)}{txt} to run the model selected by EBIC.{txt}{p_end}
-r; t=3.49 13:05:50
+r; t=5.60 22:28:14
 
 {com}. ereturn list 
 
@@ -19307,7 +19826,7 @@ matrices:
 
 {txt}functions:
              e(sample)   
-r; t=0.00 13:05:50
+r; t=0.00 22:28:14
 
 {com}. 
 . lasso2 ln_w grade age c.age#c.age ttl_exp c.ttl_exp#c.ttl_exp tenure ///
@@ -19332,7 +19851,7 @@ r; t=0.00 13:05:50
 {txt}{col 7}{c |}{col 65}{c |}{res}{col 67}c.ttl_exp#c.ttl_exp.
 {txt}Use {bf:long} option for full output.
 {p 0 6 2}Type e.g. {stata lasso2, lic(ebic)}{txt} to run the model selected by EBIC.{txt}{p_end}
-r; t=0.99 13:05:51
+r; t=1.56 22:28:15
 
 {com}. lasso2, lic(ebic)
 {txt}
@@ -19372,7 +19891,7 @@ c.tenure#c.tenure {c |}{col 21}{res}     -0.0016795     -0.0018790
 {txt}{space 14}87  {c |}{col 21}{res}     -0.2307205     -0.3356083
 {txt}{space 14}88  {c |}{col 21}{res}     -0.2018983     -0.3135982
 {txt}{hline 18}{c BT}{hline 32}
-r; t=0.38 13:05:52
+r; t=0.64 22:28:16
 
 {com}. 
 . lasso2 ln_w grade age c.age#c.age ttl_exp c.ttl_exp#c.ttl_exp tenure ///
@@ -19434,7 +19953,7 @@ c.tenure#c.tenure {c |}{col 21}{res}     -0.0016795     -0.0018790
 {txt}{space 14}87  {c |}{col 21}{res}     -0.2307205     -0.3356083
 {txt}{space 14}88  {c |}{col 21}{res}     -0.2018983     -0.3135982
 {txt}{hline 18}{c BT}{hline 32}
-r; t=1.41 13:05:53
+r; t=2.22 22:28:18
 
 {com}. 
 . ********************************************************************************
@@ -19442,21 +19961,21 @@ r; t=1.41 13:05:53
 . ********************************************************************************
 .                 
 . clear
-{txt}r; t=0.00 13:05:53
+{txt}r; t=0.00 22:28:18
 
 {com}. use https://www.stata-press.com/data/r16/nlswork
 {txt}(National Longitudinal Survey.  Young Women 14-26 years of age in 1968)
-r; t=3.50 13:05:56
+r; t=2.85 22:28:21
 
 {com}. 
 . foreach opt in xb u e ue xbu {c -(}
 {txt}  2{com}.         cap drop `opt'hat_lasso2
 {txt}  3{com}.         cap drop `opt'hat_xtreg
 {txt}  4{com}. {c )-}
-{txt}r; t=0.00 13:05:56
+{txt}r; t=0.00 22:28:21
 
 {com}. cap drop esample
-{txt}r; t=0.00 13:05:56
+{txt}r; t=0.00 22:28:21
 
 {com}. 
 . **replace ln_w = . if year == 80
@@ -19486,10 +20005,10 @@ r; t=3.50 13:05:56
 {txt}{col 7}{c |}{col 65}{c |}{res}{col 67}c.ttl_exp#c.ttl_exp.
 {txt}Use {bf:long} option for full output.
 {p 0 6 2}Type e.g. {stata lasso2, lic(ebic)}{txt} to run the model selected by EBIC.{txt}{p_end}
-r; t=1.47 13:05:58
+r; t=2.65 22:28:24
 
 {com}. gen byte esample=e(sample)
-{txt}r; t=0.00 13:05:58
+{txt}r; t=0.01 22:28:24
 
 {com}. lasso2, lic(ebic) postres ols
 {txt}
@@ -19510,17 +20029,17 @@ c.tenure#c.tenure {c |}{col 21}{res}     -0.0018447     -0.0018569
 {space 9}not_smsa {c |}{col 21}{res}     -0.0879979     -0.0889315
 {txt}{space 12}south {c |}{col 21}{res}     -0.0599204     -0.0609728
 {txt}{hline 18}{c BT}{hline 32}
-r; t=0.22 13:05:58
+r; t=0.37 22:28:24
 
 {com}. mat bl2 = e(b)
-{txt}r; t=0.00 13:05:58
+{txt}r; t=0.00 22:28:24
 
 {com}. local selected = e(selected)
-{txt}r; t=0.00 13:05:58
+{txt}r; t=0.00 22:28:24
 
 {com}. di "`selected'"
 {res}age c.age#c.age ttl_exp tenure c.tenure#c.tenure not_smsa south
-{txt}r; t=0.00 13:05:58
+{txt}r; t=0.00 22:28:24
 
 {com}. //ereturn list
 . 
@@ -19538,7 +20057,7 @@ Use e(betaOLS) from previous lasso2 estimation (lambda=14.33478964608).
 (441 missing values generated)
 Use e(betaOLS) from previous lasso2 estimation (lambda=14.33478964608).
 {res}{txt}(443 missing values generated)
-r; t=0.25 13:05:58
+r; t=0.60 22:28:25
 
 {com}. xtreg ln_w `selected' if esample, fe
 {res}
@@ -19575,7 +20094,7 @@ r; t=0.25 13:05:58
          {txt}rho {c |} {res} .59916157{txt}   (fraction of variance due to u_i)
 {hline 13}{c BT}{hline 64}
 F test that all u_i=0: F({res}4696{txt}, {res}23387{txt}) = {res}6.65{col 62}{txt}Prob > F = {res}0.0000
-{txt}r; t=0.21 13:05:59
+{txt}r; t=0.50 22:28:25
 
 {com}. foreach opt in xb u e ue xbu {c -(}
 {txt}  2{com}.         predict double `opt'hat_xtreg, `opt'
@@ -19585,7 +20104,7 @@ F test that all u_i=0: F({res}4696{txt}, {res}23387{txt}) = {res}6.65{col 62}{tx
 (443 missing values generated)
 (441 missing values generated)
 (443 missing values generated)
-r; t=0.27 13:05:59
+r; t=0.51 22:28:26
 
 {com}. foreach opt in xb u e ue xbu {c -(}
 {txt}  2{com}.         di "checking option `opt'
@@ -19596,22 +20115,22 @@ checking option u
 checking option e
 checking option ue
 checking option xbu
-{txt}r; t=0.01 13:05:59
+{txt}r; t=0.03 22:28:26
 
 {com}. 
 . 
 . ** alt approach from 2nd half
 . clear
-{txt}r; t=0.00 13:05:59
+{txt}r; t=0.00 22:28:26
 
 {com}. use https://www.stata-press.com/data/r16/nlswork
 {txt}(National Longitudinal Survey.  Young Women 14-26 years of age in 1968)
-r; t=2.76 13:06:02
+r; t=2.67 22:28:29
 
 {com}. 
 . replace ln_w = . if year == 80
 {txt}(1,847 real changes made, 1,847 to missing)
-r; t=0.00 13:06:02
+r; t=0.00 22:28:29
 
 {com}. 
 . lasso2 ln_w grade age c.age#c.age ttl_exp c.ttl_exp#c.ttl_exp tenure ///
@@ -19639,7 +20158,7 @@ r; t=0.00 13:06:02
 {txt}{col 7}{c |}{col 65}{c |}{res}{col 67}c.ttl_exp#c.ttl_exp.
 {txt}Use {bf:long} option for full output.
 {p 0 6 2}Type e.g. {stata lasso2, lic(ebic)}{txt} to run the model selected by EBIC.{txt}{p_end}
-r; t=1.46 13:06:03
+r; t=2.51 22:28:31
 
 {com}. lasso2, lic(ebic) postres ols   
 {txt}
@@ -19660,15 +20179,15 @@ c.tenure#c.tenure {c |}{col 21}{res}     -0.0019053     -0.0019142
 {space 9}not_smsa {c |}{col 21}{res}     -0.0892079     -0.0899220
 {txt}{space 12}south {c |}{col 21}{res}     -0.0597044     -0.0605564
 {txt}{hline 18}{c BT}{hline 32}
-r; t=0.19 13:06:03
+r; t=0.44 22:28:31
 
 {com}.                 
 . local sel = e(selected)
-{txt}r; t=0.00 13:06:03
+{txt}r; t=0.00 22:28:31
 
 {com}. di "`sel'"
 {res}age c.age#c.age ttl_exp tenure c.tenure#c.tenure not_smsa south
-{txt}r; t=0.00 13:06:03
+{txt}r; t=0.00 22:28:31
 
 {com}. 
 . predict double uehat  , ue noi  
@@ -19682,7 +20201,7 @@ y1 {res}   .0330033  -.00068058   .03728278    .0357082  -.00191421  -.08992203
 {txt}               
          south
 y1 {res} -.06055644
-{reset}r; t=0.04 13:06:03
+{reset}r; t=0.10 22:28:32
 
 {com}. predict double ehat  , e noi  
 {txt}Use e(b) from previous lasso2 estimation (lambda=11.33424642913).
@@ -19695,7 +20214,7 @@ y1 {res}   .0330033  -.00068058   .03728278    .0357082  -.00191421  -.08992203
 {txt}               
          south
 y1 {res} -.06055644
-{reset}r; t=0.06 13:06:03
+{reset}r; t=0.11 22:28:32
 
 {com}. predict double xbhat  , xb noi  
 {txt}Use e(b) from previous lasso2 estimation (lambda=11.33424642913).
@@ -19708,7 +20227,7 @@ y1 {res}   .0330033  -.00068058   .03728278    .0357082  -.00191421  -.08992203
 {txt}               
          south
 y1 {res} -.06055644
-{reset}r; t=0.05 13:06:03
+{reset}r; t=0.08 22:28:32
 
 {com}. predict double xbuhat  , xbu noi  
 {txt}Use e(b) from previous lasso2 estimation (lambda=11.33424642913).
@@ -19721,7 +20240,7 @@ y1 {res}   .0330033  -.00068058   .03728278    .0357082  -.00191421  -.08992203
 {txt}               
          south
 y1 {res} -.06055644
-{reset}r; t=0.07 13:06:04
+{reset}r; t=0.12 22:28:32
 
 {com}. predict double uhat  , u noi  
 {txt}Use e(b) from previous lasso2 estimation (lambda=11.33424642913).
@@ -19734,7 +20253,7 @@ y1 {res}   .0330033  -.00068058   .03728278    .0357082  -.00191421  -.08992203
 {txt}               
          south
 y1 {res} -.06055644
-{reset}r; t=0.08 13:06:04
+{reset}r; t=0.12 22:28:32
 
 {com}. 
 . xtreg ln_w `sel' if e(sample), fe 
@@ -19772,608 +20291,50 @@ y1 {res} -.06055644
          {txt}rho {c |} {res} .59956903{txt}   (fraction of variance due to u_i)
 {hline 13}{c BT}{hline 64}
 F test that all u_i=0: F({res}4685{txt}, {res}21586{txt}) = {res}6.23{col 62}{txt}Prob > F = {res}0.0000
-{txt}r; t=0.20 13:06:04
+{txt}r; t=0.41 22:28:32
 
 {com}. mat bxtreg = e(b)
-{txt}r; t=0.00 13:06:04
+{txt}r; t=0.00 22:28:32
 
 {com}. 
 . predict double uehat_xtreg   , ue  
 {txt}(2,253 missing values generated)
-r; t=0.01 13:06:04
+r; t=0.02 22:28:32
 
 {com}. predict double ehat_xtreg   , e 
 {txt}(2,255 missing values generated)
-r; t=0.09 13:06:04
+r; t=0.17 22:28:33
 
 {com}. predict double xbhat_xtreg  , xb
 {txt}(441 missing values generated)
-r; t=0.01 13:06:04
+r; t=0.01 22:28:33
 
 {com}. predict double xbuhat_xtreg  , xbu
 {txt}(2,255 missing values generated)
-r; t=0.09 13:06:04
+r; t=0.15 22:28:33
 
 {com}. predict double uhat_xtreg  , u
 {txt}(2,255 missing values generated)
-r; t=0.10 13:06:04
+r; t=0.14 22:28:33
 
 {com}. 
 . assert abs(ehat_xtreg-ehat)<10e-8 | (missing(ehat_xtreg) | missing(ehat))
-{txt}r; t=0.00 13:06:04
+{txt}r; t=0.01 22:28:33
 
 {com}. assert abs(uehat_xtreg-uehat)<10e-8 | (missing(uehat_xtreg) | missing(uehat)) 
-{txt}r; t=0.00 13:06:04
+{txt}r; t=0.01 22:28:33
 
 {com}. assert abs(xbhat_xtreg-xbhat)<10e-8 | (missing(xbhat_xtreg) | missing(xbhat))
-{txt}r; t=0.00 13:06:04
+{txt}r; t=0.01 22:28:33
 
 {com}. assert abs(xbuhat_xtreg-xbuhat)<10e-8 | (missing(xbuhat_xtreg) | missing(xbuhat))
-{txt}r; t=0.00 13:06:04
+{txt}r; t=0.01 22:28:33
 
 {com}. assert abs(uhat_xtreg-uhat)<10e-8 | (missing(uhat_xtreg) | missing(uhat))
-{txt}r; t=0.00 13:06:04
+{txt}r; t=0.01 22:28:33
 
 {com}. 
 . 
-. ********************************************************************************
-. *** lglmnet option                                                           ***
-. ********************************************************************************
-. 
-. * uses auto dataset
-. * can change sd(y) and lambdas to suit
-. 
-. // any lambda, any alpha
-. sysuse auto, clear
-{txt}(1978 Automobile Data)
-r; t=0.00 13:06:04
-
-{com}. replace price = price/10
-{txt}variable {bf}price{sf} was {bf}{res}int{sf}{txt} now {bf}{res}float{sf}
-{txt}(74 real changes made)
-r; t=0.00 13:06:04
-
-{com}. local glmnetlambda_a = 100
-{txt}r; t=0.00 13:06:04
-
-{com}. local glmnetlambda_b = 10
-{txt}r; t=0.00 13:06:04
-
-{com}. drop if rep78==.
-{txt}(5 observations deleted)
-r; t=0.00 13:06:04
-
-{com}. qui sum price
-{txt}r; t=0.00 13:06:04
-
-{com}. local sd = r(sd) * 1/sqrt( r(N)/(r(N)-1)   )
-{txt}r; t=0.00 13:06:04
-
-{com}. local glmnetalpha = 0.5
-{txt}r; t=0.00 13:06:04
-
-{com}. local L1lambda_a = `glmnetlambda_a' * 2 * 69
-{txt}r; t=0.00 13:06:04
-
-{com}. local L2lambda_a = `L1lambda_a' / `sd'
-{txt}r; t=0.00 13:06:04
-
-{com}. local L1lambda_b = `glmnetlambda_b' * 2 * 69
-{txt}r; t=0.00 13:06:04
-
-{com}. local L2lambda_b = `L1lambda_b' / `sd'
-{txt}r; t=0.00 13:06:04
-
-{com}. di "glmnetlambda_a=`glmnetlambda_a' L1lambda_a=`L1lambda_a' L2lambda_a=`L2lambda_a'"
-{res}glmnetlambda_a=100 L1lambda_a=13800 L2lambda_a=47.73007936218305
-{txt}r; t=0.00 13:06:04
-
-{com}. di "glmnetlambda_b=`glmnetlambda_b' L1lambda_b=`L1lambda_b' L2lambda_b=`L2lambda_b'"
-{res}glmnetlambda_b=10 L1lambda_b=1380 L2lambda_b=4.773007936218304
-{txt}r; t=0.00 13:06:04
-
-{com}. // Lasso / alpha=1
-. lasso2 price mpg-foreign, lambda(`glmnetlambda_a') lglmnet
-
-{txt}{hline 18}{c TT}{hline 32}
-{col 10}Selected {c |}           Lasso   Post-est OLS
-{hline 18}{c +}{hline 32}
-{space 11}weight {c |}{col 21}{res}      0.0381904      0.1039647
-{txt}{space 5}displacement {c |}{col 21}{res}      0.3289189      0.8887734
-{txt}{hline 18}{c +}{hline 32}
-{col 4}Partialled-out{help lasso2##examples_partialling:*}{c |}
-{hline 18}{c +}{hline 32}
-{space 12}_cons {c |}{col 21}{res}    433.6841429    123.4033602
-{txt}{hline 18}{c BT}{hline 32}
-r; t=0.01 13:06:04
-
-{com}. storedresults save glmnet e()
-{txt}r; t=0.00 13:06:04
-
-{com}. lasso2 price mpg-foreign, lambda(`L1lambda_a')
-
-{txt}{hline 18}{c TT}{hline 32}
-{col 10}Selected {c |}           Lasso   Post-est OLS
-{hline 18}{c +}{hline 32}
-{space 11}weight {c |}{col 21}{res}      0.0381904      0.1039647
-{txt}{space 5}displacement {c |}{col 21}{res}      0.3289189      0.8887734
-{txt}{hline 18}{c +}{hline 32}
-{col 4}Partialled-out{help lasso2##examples_partialling:*}{c |}
-{hline 18}{c +}{hline 32}
-{space 12}_cons {c |}{col 21}{res}    433.6841426    123.4033602
-{txt}{hline 18}{c BT}{hline 32}
-r; t=0.01 13:06:04
-
-{com}. storedresults compare glmnet e(), tol(1e-8)                                                     ///
->         exclude(macros: lasso2opt scalar: niter lambda)
-{txt}r; t=0.00 13:06:04
-
-{com}. // lambda list
-. lasso2 price mpg-foreign, lambda(`glmnetlambda_a' `glmnetlambda_b') lglmnet
-{res}
-{txt}  Knot{c |}  ID     Lambda    s      L1-Norm        EBIC{col 58}R-sq   {c |} Action
-{hline 6}{c +}{hline 57}{c +}{hline 15}
-{res}     1{txt}{col 7}{c |}{res}   1{col 13} 100.00000{col 25}   2{col 31}   0.36711{col 43}  781.56294{txt} {res}{col 56} 0.1869{txt}{col 65}{c |}{res}{col 67}Added weight
-{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}displacement
-{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}_cons.
-     2{txt}{col 7}{c |}{res}   2{col 13}  10.00000{col 25}   7{col 31} 357.08641{col 43}  763.62958{txt} {res}{col 56} 0.5509{txt}{col 65}{c |}{res}{col 67}Added rep78
-{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}headroom turn
-{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}gear_ratio
-{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}foreign.
-{txt}Use {bf:long} option for full output.
-{p 0 6 2}Type e.g. {stata lasso2, lic(ebic)}{txt} to run the model selected by EBIC.{txt}{p_end}
-r; t=0.01 13:06:04
-
-{com}. storedresults save glmnet e()
-{txt}r; t=0.00 13:06:04
-
-{com}. lasso2 price mpg-foreign, lambda(`L1lambda_a' `L1lambda_b')
-{res}
-{txt}  Knot{c |}  ID     Lambda    s      L1-Norm        EBIC{col 58}R-sq   {c |} Action
-{hline 6}{c +}{hline 57}{c +}{hline 15}
-{res}     1{txt}{col 7}{c |}{res}   1{col 13} 1.380e+04{col 25}   2{col 31}   0.36711{col 43}  781.56294{txt} {res}{col 56} 0.1869{txt}{col 65}{c |}{res}{col 67}Added weight
-{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}displacement
-{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}_cons.
-     2{txt}{col 7}{c |}{res}   2{col 13}1380.00000{col 25}   7{col 31} 357.08641{col 43}  763.62958{txt} {res}{col 56} 0.5509{txt}{col 65}{c |}{res}{col 67}Added rep78
-{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}headroom turn
-{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}gear_ratio
-{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}foreign.
-{txt}Use {bf:long} option for full output.
-{p 0 6 2}Type e.g. {stata lasso2, lic(ebic)}{txt} to run the model selected by EBIC.{txt}{p_end}
-r; t=0.01 13:06:04
-
-{com}. storedresults compare glmnet e(), tol(1e-8)                                                     ///
->         exclude(macros: lasso2opt                                                                               ///
->         scalar: niter lmax lmax0 lmin lmin0 laic laicc lbic lebic               ///
->         matrix: lambdamat lambdamat0)
-{txt}r; t=0.00 13:06:04
-
-{com}. // prestd
-. lasso2 price mpg-foreign, lambda(`glmnetlambda_a') lglmnet prestd
-{res}
-{txt}{hline 18}{c TT}{hline 32}
-{col 10}Selected {c |}           Lasso   Post-est OLS
-{hline 18}{c +}{hline 32}
-{space 11}weight {c |}{col 21}{res}      0.0381904      0.1039647
-{txt}{space 5}displacement {c |}{col 21}{res}      0.3289189      0.8887734
-{txt}{hline 18}{c +}{hline 32}
-{col 4}Partialled-out{help lasso2##examples_partialling:*}{c |}
-{hline 18}{c +}{hline 32}
-{space 12}_cons {c |}{col 21}{res}    433.6841429    123.4033602
-{txt}{hline 18}{c BT}{hline 32}
-r; t=0.02 13:06:04
-
-{com}. storedresults save glmnet e()
-{txt}r; t=0.00 13:06:04
-
-{com}. lasso2 price mpg-foreign, lambda(`L1lambda_a') prestd
-{res}
-{txt}{hline 18}{c TT}{hline 32}
-{col 10}Selected {c |}           Lasso   Post-est OLS
-{hline 18}{c +}{hline 32}
-{space 11}weight {c |}{col 21}{res}      0.0381904      0.1039647
-{txt}{space 5}displacement {c |}{col 21}{res}      0.3289189      0.8887734
-{txt}{hline 18}{c +}{hline 32}
-{col 4}Partialled-out{help lasso2##examples_partialling:*}{c |}
-{hline 18}{c +}{hline 32}
-{space 12}_cons {c |}{col 21}{res}    433.6841426    123.4033602
-{txt}{hline 18}{c BT}{hline 32}
-r; t=0.03 13:06:04
-
-{com}. storedresults compare glmnet e(), tol(1e-8)                                                     ///
->         exclude(macros: lasso2opt scalar: niter lambda)
-{txt}r; t=0.00 13:06:04
-
-{com}. // lambda list
-. lasso2 price mpg-foreign, lambda(`glmnetlambda_a' `glmnetlambda_b') lglmnet prestd
-{res}
-{txt}  Knot{c |}  ID     Lambda    s      L1-Norm        EBIC{col 58}R-sq   {c |} Action
-{hline 6}{c +}{hline 57}{c +}{hline 15}
-{res}     1{txt}{col 7}{c |}{res}   1{col 13} 100.00000{col 25}   2{col 31}   0.36711{col 43}  781.56294{txt} {res}{col 56} 0.1869{txt}{col 65}{c |}{res}{col 67}Added weight
-{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}displacement
-{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}_cons.
-     2{txt}{col 7}{c |}{res}   2{col 13}  10.00000{col 25}   7{col 31} 357.08641{col 43}  763.62958{txt} {res}{col 56} 0.5509{txt}{col 65}{c |}{res}{col 67}Added rep78
-{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}headroom turn
-{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}gear_ratio
-{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}foreign.
-{txt}Use {bf:long} option for full output.
-{p 0 6 2}Type e.g. {stata lasso2, lic(ebic)}{txt} to run the model selected by EBIC.{txt}{p_end}
-r; t=0.02 13:06:04
-
-{com}. storedresults save glmnet e()
-{txt}r; t=0.00 13:06:04
-
-{com}. lasso2 price mpg-foreign, lambda(`L1lambda_a' `L1lambda_b') prestd
-{res}
-{txt}  Knot{c |}  ID     Lambda    s      L1-Norm        EBIC{col 58}R-sq   {c |} Action
-{hline 6}{c +}{hline 57}{c +}{hline 15}
-{res}     1{txt}{col 7}{c |}{res}   1{col 13} 1.380e+04{col 25}   2{col 31}   0.36711{col 43}  781.56294{txt} {res}{col 56} 0.1869{txt}{col 65}{c |}{res}{col 67}Added weight
-{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}displacement
-{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}_cons.
-     2{txt}{col 7}{c |}{res}   2{col 13}1380.00000{col 25}   7{col 31} 357.08641{col 43}  763.62958{txt} {res}{col 56} 0.5509{txt}{col 65}{c |}{res}{col 67}Added rep78
-{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}headroom turn
-{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}gear_ratio
-{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}foreign.
-{txt}Use {bf:long} option for full output.
-{p 0 6 2}Type e.g. {stata lasso2, lic(ebic)}{txt} to run the model selected by EBIC.{txt}{p_end}
-r; t=0.04 13:06:04
-
-{com}. storedresults compare glmnet e(), tol(1e-8)                                                     ///
->         exclude(macros: lasso2opt                                                                               ///
->         scalar: niter lmax lmax0 lmin lmin0 laic laicc lbic lebic               ///
->         matrix: lambdamat lambdamat0)
-{txt}r; t=0.00 13:06:04
-
-{com}. // Ridge / alpha=0
-. lasso2 price mpg-foreign, alpha(0) lambda(`glmnetlambda_a') lglmnet
-
-{txt}{hline 18}{c TT}{hline 32}
-{col 10}Selected {c |}           Ridge   Post-est OLS
-{hline 18}{c +}{hline 32}
-{space 14}mpg {c |}{col 21}{res}     -5.7006207     -2.1805182
-{txt}{space 12}rep78 {c |}{col 21}{res}     29.6970159     18.4793513
-{txt}{space 9}headroom {c |}{col 21}{res}    -39.2421959    -63.5492137
-{txt}{space 12}trunk {c |}{col 21}{res}      2.3706654      7.1499290
-{txt}{space 11}weight {c |}{col 21}{res}      0.0993845      0.4521161
-{txt}{space 11}length {c |}{col 21}{res}      0.5562673     -7.6491006
-{txt}{space 13}turn {c |}{col 21}{res}     -2.4180456    -11.4277668
-{txt}{space 5}displacement {c |}{col 21}{res}      0.8855064      1.1540125
-{txt}{space 7}gear_ratio {c |}{col 21}{res}    -53.6017912    -31.8647898
-{txt}{space 10}foreign {c |}{col 21}{res}    172.6658167    333.4848364
-{txt}{hline 18}{c +}{hline 32}
-{col 4}Partialled-out{help lasso2##examples_partialling:*}{c |}
-{hline 18}{c +}{hline 32}
-{space 12}_cons {c |}{col 21}{res}    342.5776766    978.9493938
-{txt}{hline 18}{c BT}{hline 32}
-r; t=0.01 13:06:04
-
-{com}. storedresults save glmnet e()
-{txt}r; t=0.00 13:06:04
-
-{com}. lasso2 price mpg-foreign, alpha(0) lambda(`L2lambda_a')
-
-{txt}{hline 18}{c TT}{hline 32}
-{col 10}Selected {c |}           Ridge   Post-est OLS
-{hline 18}{c +}{hline 32}
-{space 14}mpg {c |}{col 21}{res}     -5.7006207     -2.1805182
-{txt}{space 12}rep78 {c |}{col 21}{res}     29.6970159     18.4793513
-{txt}{space 9}headroom {c |}{col 21}{res}    -39.2421959    -63.5492137
-{txt}{space 12}trunk {c |}{col 21}{res}      2.3706654      7.1499290
-{txt}{space 11}weight {c |}{col 21}{res}      0.0993845      0.4521161
-{txt}{space 11}length {c |}{col 21}{res}      0.5562673     -7.6491006
-{txt}{space 13}turn {c |}{col 21}{res}     -2.4180456    -11.4277668
-{txt}{space 5}displacement {c |}{col 21}{res}      0.8855064      1.1540125
-{txt}{space 7}gear_ratio {c |}{col 21}{res}    -53.6017912    -31.8647898
-{txt}{space 10}foreign {c |}{col 21}{res}    172.6658167    333.4848364
-{txt}{hline 18}{c +}{hline 32}
-{col 4}Partialled-out{help lasso2##examples_partialling:*}{c |}
-{hline 18}{c +}{hline 32}
-{space 12}_cons {c |}{col 21}{res}    342.5776766    978.9493938
-{txt}{hline 18}{c BT}{hline 32}
-r; t=0.01 13:06:04
-
-{com}. storedresults compare glmnet e(), tol(1e-8)                                                     ///
->         exclude(macros: lasso2opt scalar: niter lambda)
-{txt}r; t=0.01 13:06:04
-
-{com}. // lambda list
-. lasso2 price mpg-foreign, alpha(0) lambda(`glmnetlambda_a' `glmnetlambda_b') lglmnet
-{res}
-{txt}  Knot{c |}  ID     Lambda    s      L1-Norm        EBIC{col 58}R-sq   {c |} Action
-{hline 6}{c +}{hline 57}{c +}{hline 15}
-{res}     1{txt}{col 7}{c |}{res}   1{col 13} 100.00000{col 25}  10{col 31} 307.23731{col 43}  762.92238{txt} {res}{col 56} 0.4856{txt}{col 65}{c |}{res}{col 67}All
-{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}selected.
-{txt}Use {bf:long} option for full output.
-{p 0 6 2}Type e.g. {stata lasso2, lic(ebic)}{txt} to run the model selected by EBIC.{txt}{p_end}
-r; t=0.01 13:06:04
-
-{com}. storedresults save glmnet e()
-{txt}r; t=0.00 13:06:04
-
-{com}. lasso2 price mpg-foreign, alpha(0) lambda(`L2lambda_a' `L2lambda_b')
-{res}
-{txt}  Knot{c |}  ID     Lambda    s      L1-Norm        EBIC{col 58}R-sq   {c |} Action
-{hline 6}{c +}{hline 57}{c +}{hline 15}
-{res}     1{txt}{col 7}{c |}{res}   1{col 13}  47.73008{col 25}  10{col 31} 307.23731{col 43}  762.92238{txt} {res}{col 56} 0.4856{txt}{col 65}{c |}{res}{col 67}All
-{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}selected.
-{txt}Use {bf:long} option for full output.
-{p 0 6 2}Type e.g. {stata lasso2, lic(ebic)}{txt} to run the model selected by EBIC.{txt}{p_end}
-r; t=0.01 13:06:04
-
-{com}. storedresults compare glmnet e(), tol(1e-8)                                                     ///
->         exclude(macros: lasso2opt                                                                               ///
->         scalar: niter lmax lmax0 lmin lmin0 laic laicc lbic lebic               ///
->         matrix: lambdamat lambdamat0)
-{txt}r; t=0.00 13:06:04
-
-{com}. // prestd
-. lasso2 price mpg-foreign, alpha(0) lambda(`glmnetlambda_a') lglmnet prestd
-{res}
-{txt}{hline 18}{c TT}{hline 32}
-{col 10}Selected {c |}           Ridge   Post-est OLS
-{hline 18}{c +}{hline 32}
-{space 14}mpg {c |}{col 21}{res}     -5.7006207     -2.1805182
-{txt}{space 12}rep78 {c |}{col 21}{res}     29.6970159     18.4793513
-{txt}{space 9}headroom {c |}{col 21}{res}    -39.2421959    -63.5492137
-{txt}{space 12}trunk {c |}{col 21}{res}      2.3706654      7.1499290
-{txt}{space 11}weight {c |}{col 21}{res}      0.0993845      0.4521161
-{txt}{space 11}length {c |}{col 21}{res}      0.5562673     -7.6491006
-{txt}{space 13}turn {c |}{col 21}{res}     -2.4180456    -11.4277668
-{txt}{space 5}displacement {c |}{col 21}{res}      0.8855064      1.1540125
-{txt}{space 7}gear_ratio {c |}{col 21}{res}    -53.6017912    -31.8647898
-{txt}{space 10}foreign {c |}{col 21}{res}    172.6658167    333.4848364
-{txt}{hline 18}{c +}{hline 32}
-{col 4}Partialled-out{help lasso2##examples_partialling:*}{c |}
-{hline 18}{c +}{hline 32}
-{space 12}_cons {c |}{col 21}{res}    342.5776766    978.9493938
-{txt}{hline 18}{c BT}{hline 32}
-r; t=0.04 13:06:04
-
-{com}. storedresults save glmnet e()
-{txt}r; t=0.00 13:06:04
-
-{com}. lasso2 price mpg-foreign, alpha(0) lambda(`L2lambda_a') prestd
-{res}
-{txt}{hline 18}{c TT}{hline 32}
-{col 10}Selected {c |}           Ridge   Post-est OLS
-{hline 18}{c +}{hline 32}
-{space 14}mpg {c |}{col 21}{res}     -5.7006207     -2.1805182
-{txt}{space 12}rep78 {c |}{col 21}{res}     29.6970159     18.4793513
-{txt}{space 9}headroom {c |}{col 21}{res}    -39.2421959    -63.5492137
-{txt}{space 12}trunk {c |}{col 21}{res}      2.3706654      7.1499290
-{txt}{space 11}weight {c |}{col 21}{res}      0.0993845      0.4521161
-{txt}{space 11}length {c |}{col 21}{res}      0.5562673     -7.6491006
-{txt}{space 13}turn {c |}{col 21}{res}     -2.4180456    -11.4277668
-{txt}{space 5}displacement {c |}{col 21}{res}      0.8855064      1.1540125
-{txt}{space 7}gear_ratio {c |}{col 21}{res}    -53.6017912    -31.8647898
-{txt}{space 10}foreign {c |}{col 21}{res}    172.6658167    333.4848364
-{txt}{hline 18}{c +}{hline 32}
-{col 4}Partialled-out{help lasso2##examples_partialling:*}{c |}
-{hline 18}{c +}{hline 32}
-{space 12}_cons {c |}{col 21}{res}    342.5776766    978.9493938
-{txt}{hline 18}{c BT}{hline 32}
-r; t=0.02 13:06:04
-
-{com}. storedresults compare glmnet e(), tol(1e-8)                                                     ///
->         exclude(macros: lasso2opt scalar: niter lambda)
-{txt}r; t=0.00 13:06:04
-
-{com}. // lambda list
-. lasso2 price mpg-foreign, alpha(0) lambda(`glmnetlambda_a' `glmnetlambda_b') lglmnet prestd
-{res}
-{txt}  Knot{c |}  ID     Lambda    s      L1-Norm        EBIC{col 58}R-sq   {c |} Action
-{hline 6}{c +}{hline 57}{c +}{hline 15}
-{res}     1{txt}{col 7}{c |}{res}   1{col 13} 100.00000{col 25}  10{col 31} 307.23731{col 43}  762.92238{txt} {res}{col 56} 0.4856{txt}{col 65}{c |}{res}{col 67}All
-{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}selected.
-{txt}Use {bf:long} option for full output.
-{p 0 6 2}Type e.g. {stata lasso2, lic(ebic)}{txt} to run the model selected by EBIC.{txt}{p_end}
-r; t=0.03 13:06:04
-
-{com}. storedresults save glmnet e()
-{txt}r; t=0.00 13:06:04
-
-{com}. lasso2 price mpg-foreign, alpha(0) lambda(`L2lambda_a' `L2lambda_b') prestd
-{res}
-{txt}  Knot{c |}  ID     Lambda    s      L1-Norm        EBIC{col 58}R-sq   {c |} Action
-{hline 6}{c +}{hline 57}{c +}{hline 15}
-{res}     1{txt}{col 7}{c |}{res}   1{col 13}  47.73008{col 25}  10{col 31} 307.23731{col 43}  762.92238{txt} {res}{col 56} 0.4856{txt}{col 65}{c |}{res}{col 67}All
-{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}selected.
-{txt}Use {bf:long} option for full output.
-{p 0 6 2}Type e.g. {stata lasso2, lic(ebic)}{txt} to run the model selected by EBIC.{txt}{p_end}
-r; t=0.03 13:06:04
-
-{com}. storedresults compare glmnet e(), tol(1e-8)                                                     ///
->         exclude(macros: lasso2opt                                                                               ///
->         scalar: niter lmax lmax0 lmin lmin0 laic laicc lbic lebic               ///
->         matrix: lambdamat lambdamat0)
-{txt}r; t=0.00 13:06:04
-
-{com}. // Enet
-. local alpha=(`glmnetalpha'*`sd')/( (1-`glmnetalpha') + `glmnetalpha'*`sd' )
-{txt}r; t=0.00 13:06:04
-
-{com}. local lambda_a=(1-`glmnetalpha')*`L2lambda_a' + `glmnetalpha'*`L1lambda_a'
-{txt}r; t=0.00 13:06:04
-
-{com}. local lambda_b=(1-`glmnetalpha')*`L2lambda_b' + `glmnetalpha'*`L1lambda_b'
-{txt}r; t=0.00 13:06:04
-
-{com}. di "alpha=`alpha' lambda_a=`lambda_a' lambda_b=`lambda_b'"
-{res}alpha=.996553219979835 lambda_a=6923.865039681092 lambda_b=692.3865039681092
-{txt}r; t=0.00 13:06:04
-
-{com}. lasso2 price mpg-foreign, alpha(`glmnetalpha') lambda(`glmnetlambda_a') lglmnet
-
-{txt}{hline 18}{c TT}{hline 32}
-{col 10}Selected {c |}     Elastic net   Post-est OLS
-{col 10}         {c |}   (alpha=0.500)
-{hline 18}{c +}{hline 32}
-{space 14}mpg {c |}{col 21}{res}     -0.5096394      3.2448195
-{txt}{space 11}weight {c |}{col 21}{res}      0.0692915      0.2120135
-{txt}{space 5}displacement {c |}{col 21}{res}      0.5942778      1.4077214
-{txt}{space 10}foreign {c |}{col 21}{res}     30.8225000    385.3080100
-{txt}{hline 18}{c +}{hline 32}
-{col 4}Partialled-out{help lasso2##examples_partialling:*}{c |}
-{hline 18}{c +}{hline 32}
-{space 12}_cons {c |}{col 21}{res}    288.3129742   -493.3050434
-{txt}{hline 18}{c BT}{hline 32}
-r; t=0.02 13:06:04
-
-{com}. storedresults save glmnet e()
-{txt}r; t=0.00 13:06:04
-
-{com}. lasso2 price mpg-foreign, alpha(`alpha') lambda(`lambda_a')
-
-{txt}{hline 18}{c TT}{hline 32}
-{col 10}Selected {c |}     Elastic net   Post-est OLS
-{col 10}         {c |}   (alpha=0.997)
-{hline 18}{c +}{hline 32}
-{space 14}mpg {c |}{col 21}{res}     -0.5096394      3.2448195
-{txt}{space 11}weight {c |}{col 21}{res}      0.0692915      0.2120135
-{txt}{space 5}displacement {c |}{col 21}{res}      0.5942778      1.4077214
-{txt}{space 10}foreign {c |}{col 21}{res}     30.8225000    385.3080100
-{txt}{hline 18}{c +}{hline 32}
-{col 4}Partialled-out{help lasso2##examples_partialling:*}{c |}
-{hline 18}{c +}{hline 32}
-{space 12}_cons {c |}{col 21}{res}    288.3129743   -493.3050434
-{txt}{hline 18}{c BT}{hline 32}
-r; t=0.01 13:06:04
-
-{com}. storedresults compare glmnet e(), tol(1e-8)                                                     ///
->         exclude(macros: lasso2opt scalar: niter alpha lambda)
-{txt}r; t=0.00 13:06:04
-
-{com}. // lambda list
-. lasso2 price mpg-foreign, alpha(`glmnetalpha') lambda(`glmnetlambda_a' `glmnetlambda_b') lglmnet
-{res}
-{txt}  Knot{c |}  ID     Lambda    s      L1-Norm        EBIC{col 58}R-sq   {c |} Action
-{hline 6}{c +}{hline 57}{c +}{hline 15}
-{res}     1{txt}{col 7}{c |}{res}   1{col 13} 100.00000{col 25}   4{col 31}  31.99571{col 43}  773.80039{txt} {res}{col 56} 0.2999{txt}{col 65}{c |}{res}{col 67}Added mpg
-{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}weight
-{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}displacement
-{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}foreign
-{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}_cons.
-     2{txt}{col 7}{c |}{res}   2{col 13}  10.00000{col 25}   9{col 31} 406.69453{col 43}  766.12681{txt} {res}{col 56} 0.5687{txt}{col 65}{c |}{res}{col 67}Added rep78
-{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}headroom
-{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}length turn
-{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}gear_ratio.
-{txt}Use {bf:long} option for full output.
-{p 0 6 2}Type e.g. {stata lasso2, lic(ebic)}{txt} to run the model selected by EBIC.{txt}{p_end}
-r; t=0.01 13:06:04
-
-{com}. storedresults save glmnet e()
-{txt}r; t=0.00 13:06:04
-
-{com}. lasso2 price mpg-foreign, alpha(`alpha') lambda(`lambda_a' `lambda_b')
-{res}
-{txt}  Knot{c |}  ID     Lambda    s      L1-Norm        EBIC{col 58}R-sq   {c |} Action
-{hline 6}{c +}{hline 57}{c +}{hline 15}
-{res}     1{txt}{col 7}{c |}{res}   1{col 13}6923.86504{col 25}   4{col 31}  31.99571{col 43}  773.80039{txt} {res}{col 56} 0.2999{txt}{col 65}{c |}{res}{col 67}Added mpg
-{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}weight
-{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}displacement
-{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}foreign
-{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}_cons.
-     2{txt}{col 7}{c |}{res}   2{col 13} 692.38650{col 25}   9{col 31} 406.69453{col 43}  766.12681{txt} {res}{col 56} 0.5687{txt}{col 65}{c |}{res}{col 67}Added rep78
-{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}headroom
-{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}length turn
-{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}gear_ratio.
-{txt}Use {bf:long} option for full output.
-{p 0 6 2}Type e.g. {stata lasso2, lic(ebic)}{txt} to run the model selected by EBIC.{txt}{p_end}
-r; t=0.01 13:06:04
-
-{com}. storedresults compare glmnet e(), tol(1e-8)                                                     ///
->         exclude(macros: lasso2opt                                                                               ///
->         scalar: niter lmax lmax0 lmin lmin0 laic laicc lbic lebic alpha ///
->         matrix: lambdamat lambdamat0)
-{txt}r; t=0.00 13:06:04
-
-{com}. // prestd
-. lasso2 price mpg-foreign, alpha(`glmnetalpha') lambda(`glmnetlambda_a') lglmnet prestd
-{res}
-{txt}{hline 18}{c TT}{hline 32}
-{col 10}Selected {c |}     Elastic net   Post-est OLS
-{col 10}         {c |}   (alpha=0.500)
-{hline 18}{c +}{hline 32}
-{space 14}mpg {c |}{col 21}{res}     -0.5096394      3.2448195
-{txt}{space 11}weight {c |}{col 21}{res}      0.0692915      0.2120135
-{txt}{space 5}displacement {c |}{col 21}{res}      0.5942778      1.4077214
-{txt}{space 10}foreign {c |}{col 21}{res}     30.8225000    385.3080100
-{txt}{hline 18}{c +}{hline 32}
-{col 4}Partialled-out{help lasso2##examples_partialling:*}{c |}
-{hline 18}{c +}{hline 32}
-{space 12}_cons {c |}{col 21}{res}    288.3129742   -493.3050434
-{txt}{hline 18}{c BT}{hline 32}
-r; t=0.03 13:06:05
-
-{com}. storedresults save glmnet e()
-{txt}r; t=0.00 13:06:05
-
-{com}. lasso2 price mpg-foreign, alpha(`alpha') lambda(`lambda_a') prestd
-{res}
-{txt}{hline 18}{c TT}{hline 32}
-{col 10}Selected {c |}     Elastic net   Post-est OLS
-{col 10}         {c |}   (alpha=0.997)
-{hline 18}{c +}{hline 32}
-{space 14}mpg {c |}{col 21}{res}     -0.5096394      3.2448195
-{txt}{space 11}weight {c |}{col 21}{res}      0.0692915      0.2120135
-{txt}{space 5}displacement {c |}{col 21}{res}      0.5942778      1.4077214
-{txt}{space 10}foreign {c |}{col 21}{res}     30.8225000    385.3080100
-{txt}{hline 18}{c +}{hline 32}
-{col 4}Partialled-out{help lasso2##examples_partialling:*}{c |}
-{hline 18}{c +}{hline 32}
-{space 12}_cons {c |}{col 21}{res}    288.3129743   -493.3050434
-{txt}{hline 18}{c BT}{hline 32}
-r; t=0.02 13:06:05
-
-{com}. storedresults compare glmnet e(), tol(1e-8)                                                     ///
->         exclude(macros: lasso2opt scalar: niter alpha lambda)
-{txt}r; t=0.00 13:06:05
-
-{com}. // lambda list
-. lasso2 price mpg-foreign, alpha(`glmnetalpha') lambda(`glmnetlambda_a' `glmnetlambda_b') lglmnet prestd
-{res}
-{txt}  Knot{c |}  ID     Lambda    s      L1-Norm        EBIC{col 58}R-sq   {c |} Action
-{hline 6}{c +}{hline 57}{c +}{hline 15}
-{res}     1{txt}{col 7}{c |}{res}   1{col 13} 100.00000{col 25}   4{col 31}  31.99571{col 43}  773.80039{txt} {res}{col 56} 0.2999{txt}{col 65}{c |}{res}{col 67}Added mpg
-{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}weight
-{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}displacement
-{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}foreign
-{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}_cons.
-     2{txt}{col 7}{c |}{res}   2{col 13}  10.00000{col 25}   9{col 31} 406.69453{col 43}  766.12681{txt} {res}{col 56} 0.5687{txt}{col 65}{c |}{res}{col 67}Added rep78
-{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}headroom
-{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}length turn
-{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}gear_ratio.
-{txt}Use {bf:long} option for full output.
-{p 0 6 2}Type e.g. {stata lasso2, lic(ebic)}{txt} to run the model selected by EBIC.{txt}{p_end}
-r; t=0.03 13:06:05
-
-{com}. storedresults save glmnet e()
-{txt}r; t=0.00 13:06:05
-
-{com}. lasso2 price mpg-foreign, alpha(`alpha') lambda(`lambda_a' `lambda_b') prestd
-{res}
-{txt}  Knot{c |}  ID     Lambda    s      L1-Norm        EBIC{col 58}R-sq   {c |} Action
-{hline 6}{c +}{hline 57}{c +}{hline 15}
-{res}     1{txt}{col 7}{c |}{res}   1{col 13}6923.86504{col 25}   4{col 31}  31.99571{col 43}  773.80039{txt} {res}{col 56} 0.2999{txt}{col 65}{c |}{res}{col 67}Added mpg
-{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}weight
-{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}displacement
-{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}foreign
-{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}_cons.
-     2{txt}{col 7}{c |}{res}   2{col 13} 692.38650{col 25}   9{col 31} 406.69453{col 43}  766.12681{txt} {res}{col 56} 0.5687{txt}{col 65}{c |}{res}{col 67}Added rep78
-{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}headroom
-{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}length turn
-{txt}{col 7}{c |}{col 65}{c |}{res}{col 67}gear_ratio.
-{txt}Use {bf:long} option for full output.
-{p 0 6 2}Type e.g. {stata lasso2, lic(ebic)}{txt} to run the model selected by EBIC.{txt}{p_end}
-r; t=0.02 13:06:05
-
-{com}. storedresults compare glmnet e(), tol(1e-8)                                                     ///
->         exclude(macros: lasso2opt                                                                               ///
->         scalar: niter lmax lmax0 lmin lmin0 laic laicc lbic lebic alpha ///
->         matrix: lambdamat lambdamat0)
-{txt}r; t=0.00 13:06:05
-
-{com}. 
 . 
 . ********************************************************************************
 . *** finish                                                                   ***
