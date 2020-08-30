@@ -61,6 +61,9 @@
 *         Added dofminus/sdofminus to capture lost degrees of freedom from partial/FE.
 *         Added e(.) macros r2, df & untrunc lists lambdamat0, lmin0, lmax0.
 *         Added support for psolver option.
+* 1.1.12  (xxx)
+*         stdcoef option implies norecover (can't recover std coefs for partialled out vars or constant)
+*         Combination of ploadings(.)+unitloadings and adaptive+unitloadings now allowed.
 
 program lasso2, eclass sortpreserve
 	version 13
@@ -88,8 +91,8 @@ program lasso2, eclass sortpreserve
 			* 										///
 			]
 	
-	local lversion 1.0.11
-	local pversion 1.4.0
+	local lversion 1.0.12
+	local pversion 1.4.1
 
 	if "`version'" != "" {							//  Report program version number, then exit.
 		di in gr "lasso2 version `lversion'"
@@ -355,12 +358,15 @@ program _lasso2, eclass sortpreserve
 			pminus(int 0)							/// not used; just means rlasso code also works here
 			///
 			/// lambda
-			Lambda(numlist >0 min=1 descending)		/// either list or scalar
+			Lambda(numlist >0 min=1 descending)		/// L1 penalty, either list or scalar
+			lambda2(numlist >0 min=1 descending)	/// optional L2 penalty, either list or scalar
 			LFactor(real 1) 						/// 
-			LAMBDAMat(string)						/// alternative: specify lambda as matrix
+			LAMBDAMat(string)						/// alternative: specify L1 lambda as matrix
+			lambda2mat(string)						/// alternative: specify L2 lambda as matrix
 			NEWLambda(numlist >0 min=1  max=1 )		/// scalar
 			NEWPloadings(string) 					///
-			Ploadings(string) 						///
+			Ploadings(string) 						/// L1 norm loadings
+			ploadings2(string) 						/// L2 norm loadings
 			UNITLoadings							///
 			lglmnet									/// use glmnet parameterization
 			///
@@ -436,14 +442,14 @@ program _lasso2, eclass sortpreserve
 		exit 198
 	}
 	if ("`stdcoef'"!="") & ("`prestd'"=="") {
-		di as text "note: option stdcoef implies prestd; data will be pre-standardized" 
+		di as text "note: option stdcoef implies prestd and norecover"
+		di as text "      data pre-standardized; no constant reported" 
 		local prestd prestd
+		local norecover norecover
 	}
-	local checkflag 	= ("`ploadings'"!="")+("`unitloadings'"!="")+("`adaptive'"!="")
-
-// temporarily override for lglmnet
-	if `checkflag'>1 & `lglmnetflag'==0 {
-		di as error "error: cannot combine options ploadings(.), unitloadings and/or adaptive"
+	local checkflag 	= ("`ploadings'"!="")+("`adaptive'"!="")
+	if `checkflag'>1 {
+		di as error "error: cannot combine options ploadings(.) and adaptive"
 		exit 198
 	}
 	*
@@ -800,25 +806,39 @@ program _lasso2, eclass sortpreserve
 	}
 
  	*************** lambda to matrix **************************************************
-	if ("`lambda'"!="") {
-		local lcount	: word count `lambda'
+//	if ("`lambda'"!="") {
+//		local lcount	: word count `lambda'
+//		tempname lambdamat0
+//		mat `lambdamat0'	= J(1,`lcount',.)
+//		local j = 1
+//		foreach lami of local lambda {
+//			mat `lambdamat0'[1,`j'] = `lami'  
+//			local j=`j'+1
+//		}
+//		// optional adjustment using undocumented lfactor option
+//		// used for CV
+//		mat `lambdamat0'=`lambdamat0'*`lfactor'
+//	}
+//	else if ("`lambdamat'"!="") {
+//		tempname lambdamat0
+//		mat `lambdamat0'=`lambdamat'
+//		// optional adjustment using undocumented lfactor option
+//		// used for CV
+//		mat `lambdamat0'=`lambdamat0'*`lfactor'
+//	}
+	// lambda provided either as scalar(s) or matrix; convert to matrix
+	// macro lambdamat0 will be empty if not provided
+	// optional adjustment using undocumented lfactor option used for CV
+	if "`lambda'`lambdamat'"!="" {
 		tempname lambdamat0
-		mat `lambdamat0'	= J(1,`lcount',.)
-		local j = 1
-		foreach lami of local lambda {
-			mat `lambdamat0'[1,`j'] = `lami'  
-			local j=`j'+1
-		}
-		// optional adjustment using undocumented lfactor option
-		// used for CV
-		mat `lambdamat0'=`lambdamat0'*`lfactor'
+		getlambdamat, lscalar(`lambda') lmatrix(`lambdamat') lfactor(`lfactor')
+		mat `lambdamat0'	= r(lambdamat)
 	}
-	else if ("`lambdamat'"!="") {
-		tempname lambdamat0
-		mat `lambdamat0'=`lambdamat'
-		// optional adjustment using undocumented lfactor option
-		// used for CV
-		mat `lambdamat0'=`lambdamat0'*`lfactor'
+	// optional L2 norma lambda
+	if "`lambda2'`lambda2mat'"!="" {
+		tempname lambda2mat0
+		getlambdamat, lscalar(`lambda2') lmatrix(`lambda2mat') lfactor(`lfactor')
+		mat `lambda2mat0'	= r(lambdamat)
 	}
 	*
 
@@ -841,7 +861,8 @@ program _lasso2, eclass sortpreserve
 					sdofminus(`sdofminus')					/// dofs lost from partialling
 					notpen_o(`notpen_d') 					/// not penalised (display name)
 					notpen_t(`notpen_t')					///
-					lambda(`lambdamat0')					/// pass to lassoshooting
+					lambda(`lambdamat0')					/// 
+					lambda2(`lambda2mat0')					/// 
 					`adaptive'								///
 					adatheta(`adatheta')					///
 					adaloadings(`adaloadings')				///
@@ -852,7 +873,8 @@ program _lasso2, eclass sortpreserve
 					stdx(`prestdX')							///
 					stdl(`stdloadflag')						/// use standardization loadings
 					stdcoef(`stdcoefflag')					/// return in standard units
-					ploadings(`ploadings') 					///
+					ploadings(`ploadings') 					/// L1 norm loadings
+					ploadings2(`ploadings2') 				/// L2 norm loadings
 					`verbose' `vverbose'					///
 					holdout(`holdout')						///
 					`noic' 									///
@@ -1743,7 +1765,40 @@ prog DisplayCoefs
 	}
 	
 end
+
+// subroutine to process user-supplied lambda(s)
+prog define getlambdamat, rclass
+	version 13
+	syntax ,					///
+	[							///
+	lscalar(string)				///
+	lmatrix(string)				///
+	lfactor(int 1)				///
+	]
+
+	tempname lambdamat
+	if "`lscalar'"~="" {
+		// provided as scalars
+		foreach lambda_i of local lscalar {
+			mat `lambdamat'	= nullmat(`lambdamat'), `lambda_i'
+		}
+	}
+	else if "`lmatrix'"~="" {
+		// provided as matrix
+		mat `lambdamat'		= `lmatrix'
+	}
+	else {
+		di as err "internal lasso2 error - parsing lambda option"
+		exit 198
+	}
+	// optional adjustment using undocumented lfactor option
+	// used for CV
+	mat `lambdamat'			= `lambdamat' * `lfactor'
+	return matrix lambdamat	= `lambdamat'
 	
+end
+
+
 // internal version of fvstrip 1.01 ms 24march2015
 // takes varlist with possible FVs and strips out b/n/o notation
 // returns results in r(varnames)

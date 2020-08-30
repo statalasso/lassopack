@@ -132,8 +132,12 @@
 *         Added check for negative penalty loadings.
 *         Bug fix for user-supplied penalty loadings and adaptive lasso with alpha<1.
 *         Calculation of intercepts moved to return results subroutines.
-* to consider: dropping vars that are all zeros (e.g. factor base vars) - affects BIC etc.
+*         Adaptive lasso recoded in Mata.
+*         Adaptive elastic net now correctly uses adaptive weights for L1 norm only.
+* to consider: dropping or ignoring vars that are all zeros (e.g. factor base vars) - affects BIC etc.
 *              check lglmnet obj function matches glmnet
+*              put objfn calc into DoShooting(.) and out of DoLasso(.)?
+*              make nostd an lglmnet option (synonym for unitloadings)
 
 program lassoutils, rclass sortpreserve
 	version 13
@@ -835,6 +839,7 @@ program define _lassopath, rclass sortpreserve
 												/// lambda settings
 		ALPha(real 1) 							/// elastic net parameter
 		Lambda(string)							/// overwrite default lambda
+		lambda2(string)							/// overwrite default L2 lambda
 		LCount(integer 100)						///
 		LMAX(real 0) 							///
 		LMINRatio(real 1e-4)					/// ratio of maximum to minimum lambda
@@ -846,6 +851,7 @@ program define _lassopath, rclass sortpreserve
 		devmax(real 0.999)						/// maximum fraction of explained deviance for stopping path a la glmnet
 												///
 		PLoadings(string)						/// set penalty loadings as Stata row vector
+		ploadings2(string)						/// set optional L2 penalty loadings as Stata row vector
 												///
 		LGLMnet									/// use glmnet scaling for lambda/alpha
 												///
@@ -929,7 +935,7 @@ program define _lassopath, rclass sortpreserve
 		exit 198
 	}
 	
-	*** special case - lglmnet with unit loadings
+	*** special case - lglmnet with unit loadings (=not prestandardized)
 	if `lglmnetflag' & "`stdy'"==""  {
 		tempvar tY
 		tempname stdy stdx
@@ -937,10 +943,10 @@ program define _lassopath, rclass sortpreserve
 		local sdY			= r(sd) * sqrt(r(N)/(r(N)+1))
 		local mY			= r(mean)
 		if `consflag' {
-			gen double `tY'		= `mY' + (`varY' -`mY') * 1/`sdY'  if `toest'
+			gen double `tY'	= `mY' + (`varY' -`mY') * 1/`sdY'  if `toest'
 		}
 		else {
-			gen double `tY'		= `varY' * 1/`sdY'  if `toest'
+			gen double `tY'	= `varY' * 1/`sdY'  if `toest'
 		}
 		local varY			`tY'
 		mat `stdy'			= `sdY'
@@ -949,6 +955,7 @@ program define _lassopath, rclass sortpreserve
 		local prestdflag	= 1
 		local stdlflag		= 1
 	}
+	*
 
 	*********************************************************************************
 	*** penalty loadings and adaptive lasso 									  ***
@@ -974,152 +981,168 @@ program define _lassopath, rclass sortpreserve
 //	}
 	*
 	
-	*** check dimension of penalty loading vector
+	*** check dimension of penalty loading vector(s) and rename
 	if ("`ploadings'"!="") {
-		// Check that ploadings is indeed a matrix
 		tempname Psi
-		cap mat `Psi' = `ploadings'
-		if _rc != 0 {
-			di as err "invalid matrix `ploadings' in ploadings option"
-			exit _rc
+		getPsi, ploadings(`ploadings') p(`pmodel')
+		mat `Psi'		= r(Psi)
+		if ("`ploadings2'")~="" {
+			tempname Psi2
+			getPsi, ploadings(`ploadings2') p(`pmodel')
+			mat `Psi2'	= r(Psi)
 		}
-		// check dimension of col vector
-		if (colsof(`Psi')!=(`pmodel')) | (rowsof(`Psi')!=1) {
-			di as err "`ploadings' should be a row vector of length `pmodel'=dim(X) (excl constant)."
+	}
+	else if ("`adaloadings'"!="") {
+		if (colsof(`adaloadings')!=(`p')) | (rowsof(`adaloadings')!=1) {
+			di as err "`adaloadings' should be a row vector of length `p'=dim(X) (excl constant)."
 			exit 503
 		}
-		// check for negative loadings
-		tempname hasneg
-		mata: st_numscalar("`hasneg'",rowsum(st_matrix("`Psi'") :< 0))
-		if `hasneg' {
-			di as err "invalid ploadings matrix `ploadings' - has negative values"
-			exit 508
-		}
 	}
-	else if (`adaflag') {
-		if ("`adaloadings'"=="") {
-			// obtain ols coefficients
-			sum `toest', meanonly
-			local nobs = r(N)
-			tempname adaptivePsi
-			`quietly' di
-			// need to initialize zerosinada here.
-			local zerosinada = 0
-			if (`pmodel'<`nobs') { // is dim(X)>n ? if not, do full OLS
-				`quietly' di as text "Adaptive weights calculated using OLS."
-				// added vverbose behavior
-				`quietly' _regress `varY' `varXmodel' if `toest', `noconstant'
-				mat `adaptivePsi' = e(b)
-				`quietly' mat list `adaptivePsi' 
-				`quietly' di
-				if (`consflag') {
-					mat `adaptivePsi' = `adaptivePsi'[1,1..`pmodel']
-				}
-				*** check if there are any zeros in e(b)
-				// nb: will be triggered by e.g. base factor variables as well
-				forvalue i = 1(1)`pmodel' {
-					local zerosinada = `zerosinada' + (abs(el(`adaptivePsi',1,`i'))<10e-10)
-				}
-			}
-			if (`pmodel'>=`nobs') | (`zerosinada'>0) { // is dim(X)> n ? if yes, do univariate OLS
-				`quietly' di as text "Adaptive weights calculated using univariate OLS regressions." // since dim(X)>#Observation."
-					mat `adaptivePsi' = J(1,`pmodel',0)
-					local ip=1
-					foreach var of varlist `varXmodel' {
-						qui _regress `varY' `var' if `toest', `noconstant' `betaoption'
-						mat `adaptivePsi'[1,`ip'] = _b[`var']
-						local ip=`ip'+1
-				}
-				`quietly' mat list `adaptivePsi'
-				`quietly' di
-			}
-			// need adaptive weights to scale correctly if not prestandardized
-			// lambda incorporates y scaling already so remove from weights
-			// term sqrt(r(N)/(r(N)-1)) needed to remove Stata's finite-sample adj for SD
-			if ~`prestdflag' {
-				qui sum `varY' if `toest'
-				mat `adaptivePsi'	=`adaptivePsi' * 1/r(sd) * sqrt(r(N)/(r(N)-1))
-				`quietly' di as text "Adaptive weights after rescaling:"
-				`quietly' mat list `adaptivePsi'
-				`quietly' di
-			}
-		} 
-		else {
-			// user-specified adaptive loadings
-			tempname adaptivePsi0 adaptivePsi
-			cap mat `adaptivePsi0' = `adaloadings'
-			if _rc != 0 {
-				di as err "invalid matrix `adaloadings' in adaloadings option"
-				exit _rc
-			}
-			local ebnames: colnames `adaptivePsi0'
-			// need to ignore operators like o.
-			fvstrip `ebnames'
-			local ebnames `r(varlist)'
-			// need to check against original names since varXmodel names can have temps (partial, FE, etc.)
-			fvstrip `xnames_o'
-			local onames `r(varlist)'
-			local ebnamescheck: list onames - ebnames
-			if ("`ebnamescheck'"!="") {
-				di as err "`ebnamescheck' not in matrix `adaloadings' as colnames."
-				exit 198
-			}
-			local ebnamescheck: list ebnames - onames
-			// automatically ignore _cons
-			if ("`ebnamescheck'"!="") & ("`ebnamescheck'"!="_cons") {
-				local consname _cons
-				local ebnamescheck: list ebnamescheck - consname
-				di as err "`ebnamescheck' in matrix `adaloadings' but not in the model."
-				exit 198
-			}
-			if `prestdflag' {
-				`quietly' di as text "Adaptive weights (user-supplied) after rescaling:"
-			}
-			else {
-				`quietly' di as text "Adaptive weights (user-supplied):"
-			}
-			// default is near-zero coef
-			mat `adaptivePsi' = J(1,`pmodel',1e-9)
-			matrix colnames `adaptivePsi0' = xnames_o
-			local j = 1
-			foreach var of local xnames_o {
-				local vi : list posof "`var'" in ebnames
-				if (`adaptivePsi0'[1,`vi']~=0) {
-					mat `adaptivePsi'[1,`j']=abs(`adaptivePsi0'[1,`vi'])
-					// need to rescale if prestandardized
-					if `prestdflag' {
-						mat `adaptivePsi'[1,`j'] = `adaptivePsi'[1,`j'] * `stdx'[1,`j']
-					}
-				}
-				local j=`j'+1
-			}
-			`quietly' mat list `adaptivePsi'
 
-		}
-		// do inversion
-		forvalue j = 1(1)`pmodel' {
-			// abs(.) precedes raising to power theta
-			mat `adaptivePsi'[1,`j'] = (abs(1/`adaptivePsi'[1,`j']))^`adatheta'
-			// need to rescale weights to account for theta if not prestandardized
-			// not necessary if adatheta=1 (since scale^theta=scale^1=scale)
-			if ~`prestdflag' & `adatheta'~=1 {
-				local v		: word `j' of `varXmodel'
-				qui sum `v' if `toest'
-				// term sqrt(r(N)/(r(N)-1)) needed to remove Stata's finite-sample adj for variance
-				mat `adaptivePsi'[1,`j']	=`adaptivePsi'[1,`j'] * (1/r(sd) * sqrt(r(N)/(r(N)-1)))^(`adatheta'-1)
-			}
-		}
-		// missings were zeros from (presumably) omitted variables (e.g. base var of factor vars)
-		// so replace with zero penalty loadings
-		if matmissing(`adaptivePsi') {
-			mata: st_matrix("`adaptivePsi'",editmissing(st_matrix("`adaptivePsi'"),0))
-		}
-		tempname Psi
-		mat `Psi' = `adaptivePsi'
-		`quietly' di as text "Adaptive weights after inversion:"
-		`quietly' mat list `Psi'
-		`quietly' di
-	}
+//		// Check that ploadings is indeed a matrix
+//		tempname Psi
+//		cap mat `Psi' = `ploadings'
+//		if _rc != 0 {
+//			di as err "invalid matrix `ploadings' in ploadings option"
+//			exit _rc
+//		}
+//		// check dimension of col vector
+//		if (colsof(`Psi')!=(`pmodel')) | (rowsof(`Psi')!=1) {
+//			di as err "`ploadings' should be a row vector of length `pmodel'=dim(X) (excl constant)."
+//			exit 503
+//		}
+//		// check for negative loadings
+//		tempname hasneg
+//		mata: st_numscalar("`hasneg'",rowsum(st_matrix("`Psi'") :< 0))
+//		if `hasneg' {
+//			di as err "invalid ploadings matrix `ploadings' - has negative values"
+//			exit 508
+//		}
+//	}
+//	else if (`adaflag') {
+//		if ("`adaloadings'"=="") {
+//			// obtain ols coefficients
+//			sum `toest', meanonly
+//			local nobs = r(N)
+//			tempname adaptivePsi
+//			`quietly' di
+//			// need to initialize zerosinada here.
+//			local zerosinada = 0
+//			if (`pmodel'<`nobs') { // is dim(X)>n ? if not, do full OLS
+//				`quietly' di as text "Adaptive weights calculated using OLS."
+//				// added vverbose behavior
+//				`quietly' _regress `varY' `varXmodel' if `toest', `noconstant'
+//				mat `adaptivePsi' = e(b)
+//				`quietly' mat list `adaptivePsi' 
+//				`quietly' di
+//				if (`consflag') {
+//					mat `adaptivePsi' = `adaptivePsi'[1,1..`pmodel']
+//				}
+//				*** check if there are any zeros in e(b)
+//				// nb: will be triggered by e.g. base factor variables as well
+//				forvalue i = 1(1)`pmodel' {
+//					local zerosinada = `zerosinada' + (abs(el(`adaptivePsi',1,`i'))<10e-10)
+//				}
+//			}
+//			if (`pmodel'>=`nobs') | (`zerosinada'>0) { // is dim(X)> n ? if yes, do univariate OLS
+//				`quietly' di as text "Adaptive weights calculated using univariate OLS regressions." // since dim(X)>#Observation."
+//					mat `adaptivePsi' = J(1,`pmodel',0)
+//					local ip=1
+//					foreach var of varlist `varXmodel' {
+//						qui _regress `varY' `var' if `toest', `noconstant' `betaoption'
+//						mat `adaptivePsi'[1,`ip'] = _b[`var']
+//						local ip=`ip'+1
+//				}
+//				`quietly' mat list `adaptivePsi'
+//				`quietly' di
+//			}
+//			// need adaptive weights to scale correctly if not prestandardized
+//			// lambda incorporates y scaling already so remove from weights
+//			// term sqrt(r(N)/(r(N)-1)) needed to remove Stata's finite-sample adj for SD
+//			if ~`prestdflag' {
+//				qui sum `varY' if `toest'
+//				mat `adaptivePsi'	=`adaptivePsi' * 1/r(sd) * sqrt(r(N)/(r(N)-1))
+//				`quietly' di as text "Adaptive weights after rescaling:"
+//				`quietly' mat list `adaptivePsi'
+//				`quietly' di
+//			}
+//		} 
+//		else {
+//			// user-specified adaptive loadings
+//			tempname adaptivePsi0 adaptivePsi
+//			cap mat `adaptivePsi0' = `adaloadings'
+//			if _rc != 0 {
+//				di as err "invalid matrix `adaloadings' in adaloadings option"
+//				exit _rc
+//			}
+//			local ebnames: colnames `adaptivePsi0'
+//			// need to ignore operators like o.
+//			fvstrip `ebnames'
+//			local ebnames `r(varlist)'
+//			// need to check against original names since varXmodel names can have temps (partial, FE, etc.)
+//			fvstrip `xnames_o'
+//			local onames `r(varlist)'
+//			local ebnamescheck: list onames - ebnames
+//			if ("`ebnamescheck'"!="") {
+//				di as err "`ebnamescheck' not in matrix `adaloadings' as colnames."
+//				exit 198
+//			}
+//			local ebnamescheck: list ebnames - onames
+//			// automatically ignore _cons
+//			if ("`ebnamescheck'"!="") & ("`ebnamescheck'"!="_cons") {
+//				local consname _cons
+//				local ebnamescheck: list ebnamescheck - consname
+//				di as err "`ebnamescheck' in matrix `adaloadings' but not in the model."
+//				exit 198
+//			}
+//			if `prestdflag' {
+//				`quietly' di as text "Adaptive weights (user-supplied) after rescaling:"
+//			}
+//			else {
+//				`quietly' di as text "Adaptive weights (user-supplied):"
+//			}
+//			// default is near-zero coef
+//			mat `adaptivePsi' = J(1,`pmodel',1e-9)
+//			matrix colnames `adaptivePsi0' = xnames_o
+//			local j = 1
+//			foreach var of local xnames_o {
+//				local vi : list posof "`var'" in ebnames
+//				if (`adaptivePsi0'[1,`vi']~=0) {
+//					mat `adaptivePsi'[1,`j']=abs(`adaptivePsi0'[1,`vi'])
+//					// need to rescale if prestandardized
+//					if `prestdflag' {
+//						mat `adaptivePsi'[1,`j'] = `adaptivePsi'[1,`j'] * `stdx'[1,`j']
+//					}
+//				}
+//				local j=`j'+1
+//			}
+//			`quietly' mat list `adaptivePsi'
+//
+//		}
+//		// do inversion
+//		forvalue j = 1(1)`pmodel' {
+//			// abs(.) precedes raising to power theta
+//			mat `adaptivePsi'[1,`j'] = (abs(1/`adaptivePsi'[1,`j']))^`adatheta'
+//			// need to rescale weights to account for theta if not prestandardized
+//			// not necessary if adatheta=1 (since scale^theta=scale^1=scale)
+//			if ~`prestdflag' & `adatheta'~=1 {
+//				local v		: word `j' of `varXmodel'
+//				qui sum `v' if `toest'
+//				// term sqrt(r(N)/(r(N)-1)) needed to remove Stata's finite-sample adj for variance
+//				mat `adaptivePsi'[1,`j']	=`adaptivePsi'[1,`j'] * (1/r(sd) * sqrt(r(N)/(r(N)-1)))^(`adatheta'-1)
+//			}
+//		}
+//		// missings were zeros from (presumably) omitted variables (e.g. base var of factor vars)
+//		// so replace with zero penalty loadings
+//		if matmissing(`adaptivePsi') {
+//			mata: st_matrix("`adaptivePsi'",editmissing(st_matrix("`adaptivePsi'"),0))
+//		}
+//		tempname Psi
+//		mat `Psi' = `adaptivePsi'
+//		`quietly' di as text "Adaptive weights after inversion:"
+//		`quietly' mat list `Psi'
+//		`quietly' di
+//	}
 	*
 
 	*********************************************************************************
@@ -1142,17 +1165,22 @@ program define _lassopath, rclass sortpreserve
 					`dofminus',			/// lost dofs from FEs
 					`sdofminus',		/// lost dofs from partialling
 					`prestdflag',		///
-					"`lambda'",			/// lambda matrix or missing (=> construct default list)
+					"`lambda'",			/// lambda matrix for L1 norm or missing (=> construct default list)
+					"`lambda2'",		/// lambda matrix for L2 norm (also optional)
 					`lmax',				/// maximum lambda (optional; only used if lambda not specified)
 					`lcount',			/// number of lambdas (optional; only used if lambda not specified)
 					`lminratio',		/// lmin/lmax ratio (optional; only used if lambda not specified)
 					`lglmnetflag',		/// 
-					"`Psi'",			///
+					"`Psi'",			/// Optional L1 norm loadings
+					"`Psi2'",			/// Optional L2 norm loadings
 					"`stdy'",			/// Stata matrix with SD of dep var
 					"`stdx'",			/// Stata matrix with SDs of Xs
 					`stdlflag',			/// use standardisation loadings  
 					`sqrtflag',			/// sqrt lasso  
-					`alpha',			/// elastic net parameter  
+					`alpha',			/// elastic net parameter
+					`adaflag',			/// 
+					"`adaloadings'",	/// 
+					`adatheta',			/// 
 					`olsflag',			/// post-OLS estimation
 					`tolopt',			///
 					`maxiter',			///
@@ -1394,6 +1422,39 @@ program define _lassopath, rclass sortpreserve
 		di as err "internal _lassopath error - lcount=`lcount'"
 		exit 499
 	}
+end
+
+// subroutine for checking/converting ploadings
+program define getPsi, rclass
+	version 13
+	syntax ,					///
+		[						///
+		ploadings(string)		/// string with name of Stata matrix
+		p(int 0)				/// size of model should = #dim loadings
+		]
+
+	// Check that ploadings is indeed a matrix
+	tempname Psi
+	cap mat `Psi' = `ploadings'
+	if _rc != 0 {
+		di as err "invalid matrix `ploadings' in ploadings option"
+		exit _rc
+	}
+	// check dimension of col vector
+	if (colsof(`Psi')!=(`p')) | (rowsof(`Psi')!=1) {
+		di as err "`ploadings' should be a row vector of length `p'=dim(X) (excl constant)."
+		exit 503
+	}
+	// check for negative loadings
+	tempname hasneg
+	mata: st_numscalar("`hasneg'",rowsum(st_matrix("`Psi'") :< 0))
+	if `hasneg' {
+		di as err "invalid ploadings matrix `ploadings' - has negative values"
+		exit 508
+	}
+
+	return matrix Psi	= `Psi'
+
 end
 
 // subroutine for partialling out
@@ -2330,7 +2391,9 @@ struct dataStruct scalar MakeData(	string scalar nameY,		/// #1
 struct outputStructPath DoLassoPath(									///
 									struct dataStruct scalar d,			///
 									real rowvector Psi,					/// vector of penalty loadings (L1 norm)
+									real rowvector Psi2,				/// vector of penalty loadings (L1 norm)
 									real rowvector lvec,				/// vector of lambdas (L1 norm)
+									real rowvector lvec2,				/// vector of lambdas (L1 norm)
 									real scalar post,					/// 
 									real scalar verbose,				/// 
 									real scalar optTol,					/// 
@@ -2363,6 +2426,7 @@ struct outputStructPath DoLassoPath(									///
 		for (k = 1;k<=lcount;k++) { // loop over lambda
 
 			lambda	= lvec[1,k]
+			lambda2	= lvec2[1,k]
 
 			if (verbose>=1) {
 				printf(" %f",lambda)
@@ -2371,11 +2435,11 @@ struct outputStructPath DoLassoPath(									///
 			// set verbose to zero (no output for each lambda)
 			if (k==1) {
 				// DoShooting(.) handles default initial beta
-				b			= DoShooting(d,Psi,lambda,0,optTol,maxIter,zeroTol,alpha)
+				b			= DoShooting(d,Psi,Psi2,lambda,lambda2,0,optTol,maxIter,zeroTol,alpha)
 			}
 			else {
 				// initial beta is previous beta on the path
-				b			= DoShooting(d,Psi,lambda,0,optTol,maxIter,zeroTol,alpha,beta)
+				b			= DoShooting(d,Psi,Psi2,lambda,lambda2,0,optTol,maxIter,zeroTol,alpha,beta)
 			}
 			beta		= b.beta
 			lpath[k,.]	= beta'
@@ -2442,13 +2506,6 @@ struct outputStructPath DoLassoPath(									///
 		t.lambdalist0	= lvec'
 		t.lambdalist	= lvec[1..lcount1]'
 		t.Psi			= Psi
-//		if (d.cons==0) {
-//			// data are mean zero or there is no constant in the model
-//			t.intercept	= 0
-//		}
-//		else {
-//			t.intercept	= mean(*d.y):-mean((*d.X))*(t.betas')
-//		}
 		t.cons 			= d.cons
 		
 		// degrees of freedom and dimension of the model (add constant)
@@ -2456,8 +2513,9 @@ struct outputStructPath DoLassoPath(									///
 		t.shat	= rowsum(t.betas:!=0)
 		t.shat0	= rowsum(t.betas:!=0) :+ (d.sdofminus)
 
+		// requires only lvec2 and Psi2 (for ridge/elastic net)
 		if (!noic) {
-			t.dof		= getdf(d,t.betas',Psi,lvec,alpha,verbose)'
+			t.dof		= getdf(d,t.betas',Psi2,lvec2,alpha,verbose)'
 		}
 				
 		return(t)		
@@ -2471,8 +2529,8 @@ struct outputStructPath DoLassoPath(									///
 function getdf(											///
 					struct dataStruct scalar d,			///
 					real matrix betas,					/// can be a matrix of multiple betas; single beta is a COL vector
-					real rowvector Psi,					/// vector of penalty loadings (L1 norm)
-					real rowvector lvec,				/// vector of lambdas (L1 norm)
+					real rowvector Psi2,				/// vector of penalty loadings (L2 norm)
+					real rowvector lvec2,				/// vector of lambdas (L2 norm)
 					real scalar alpha,					/// enet parameter
 					real scalar verbose					/// reporting
 					)
@@ -2495,10 +2553,10 @@ function getdf(											///
 
 				for (k=1;k<=beta_ct;k++) { // loop over lambda points
 					if (d.lglmnet) {
-						df[1,k]		= trace((Xt)*invsym(quadcross(Xt,Xt):+d.n*lvec[1,k]*diag(Psi:^2))*(Xt)')
+						df[1,k]		= trace((Xt)*invsym(quadcross(Xt,Xt):+d.n*lvec2[1,k]*diag(Psi2:^2))*(Xt)')
 					}
 					else {
-						df[1,k]		= trace((Xt)*invsym(quadcross(Xt,Xt):+lvec[1,k]*d.prestdy/2*diag(Psi:^2))*(Xt)')
+						df[1,k]		= trace((Xt)*invsym(quadcross(Xt,Xt):+lvec2[1,k]*d.prestdy/2*diag(Psi2:^2))*(Xt)')
 					}
 				}
 			}
@@ -2510,12 +2568,12 @@ function getdf(											///
 				for (k=1;k<=beta_ct;k++) {			// loop over lambda points
 					nonzero		= betas[.,k]:!=0	// 0-1 col vector corresponding to nonzero beta elements
 					XA			= select((Xt),nonzero')
-					PsiA		= select((Psi),nonzero')
+					Psi2A		= select((Psi2),nonzero')
 					if (d.lglmnet) {
-						df[1,k]		= trace((XA)*invsym(quadcross(XA,XA):+(1-alpha)*d.n*lvec[1,k]*diag(PsiA:^2))*(XA)')
+						df[1,k]		= trace((XA)*invsym(quadcross(XA,XA):+(1-alpha)*d.n*lvec2[1,k]*diag(Psi2A:^2))*(XA)')
 					}
 					else {
-						df[1,k]		= trace((XA)*invsym(quadcross(XA,XA):+(1-alpha)*lvec[1,k]*d.prestdy/2*diag(PsiA:^2))*(XA)')
+						df[1,k]		= trace((XA)*invsym(quadcross(XA,XA):+(1-alpha)*lvec2[1,k]*d.prestdy/2*diag(Psi2A:^2))*(XA)')
 					}
 				}
 			}
@@ -2540,7 +2598,9 @@ function getdf(											///
 struct betaStruct DoShooting(									///
 							struct dataStruct scalar d,			/// #1 
 							real rowvector Psi,					/// #2  vector of penalty loadings (L1 norm)
+							real rowvector Psi2,				/// #3  vector of penalty loadings (L2 norm)
 							real scalar lambda,					/// #4  lambda (single value) (L1 norm)
+							real scalar lambda2,				/// #5  lambda (single value) (L2 norm)
 							real scalar verbose,				/// #6 
 							real scalar optTol,					/// #7 
 							real scalar maxIter,				/// #8 
@@ -2584,13 +2644,13 @@ struct betaStruct DoShooting(									///
 	if ((alpha==0) | (noinitflag)) {
 		
 		if (d.lglmnet) {
-			beta_ridge	= anysolver(XX+lambda*diag(Psi),Xy, r=.)		// r=rank; default LU, use QR if rank-deficient
+			beta_ridge	= anysolver(XX+lambda2*diag(Psi2),Xy, r=.)		// r=rank; default LU, use QR if rank-deficient
 		}
 		else if (d.sqrtflag) {
-			beta_ridge	= anysolver(XX*d.n*2+lambda*d.prestdy*diag(Psi:^2),Xy*d.n*2, r=.)
+			beta_ridge	= anysolver(XX*d.n*2+lambda2*d.prestdy*diag(Psi2:^2),Xy*d.n*2, r=.)
 		}
 		else {
-			beta_ridge	= anysolver(XX+lambda*d.prestdy*diag(Psi:^2),Xy, r=.)
+			beta_ridge	= anysolver(XX+lambda2*d.prestdy*diag(Psi2:^2),Xy, r=.)
 		}
 		if ((verbose>=1) & (r<cols(XX))) {
 			printf("{txt}Note: collinearities encountered in obtaining ridge solution.\n")
@@ -2668,10 +2728,10 @@ struct betaStruct DoShooting(									///
 					//  elastic net
 					if (d.lglmnet) {
 						if (S0 > lambda*Psi[j]*alpha) {
-							beta[j] = (lambda*Psi[j]*alpha - S0)/(XX[j,j] + lambda*Psi[j]*(1-alpha))
+							beta[j] = (lambda*Psi[j]*alpha - S0)/(XX[j,j] + lambda2*Psi2[j]*(1-alpha))
 						}
 						else if (S0 < -lambda*Psi[j]*alpha) {
-							beta[j] = (-lambda*Psi[j]*alpha - S0)/(XX[j,j] + lambda*Psi[j]*(1-alpha))
+							beta[j] = (-lambda*Psi[j]*alpha - S0)/(XX[j,j] + lambda2*Psi2[j]*(1-alpha))
 						}
 						else {
 							beta[j] = 0
@@ -2679,10 +2739,10 @@ struct betaStruct DoShooting(									///
 					}
 					else {
 						if (S0 > lambda*Psi[j]*alpha) {
-							beta[j] = (lambda*Psi[j]*alpha - S0)/(XX[j,j] + lambda*d.prestdy*Psi[j]^2*(1-alpha))
+							beta[j] = (lambda*Psi[j]*alpha - S0)/(XX[j,j] + lambda2*d.prestdy*Psi2[j]^2*(1-alpha))
 						}
 						else if (S0 < -lambda*Psi[j]*alpha) {
-							beta[j] = (-lambda*Psi[j]*alpha - S0)/(XX[j,j] + lambda*d.prestdy*Psi[j]^2*(1-alpha))
+							beta[j] = (-lambda*Psi[j]*alpha - S0)/(XX[j,j] + lambda2*d.prestdy*Psi2[j]^2*(1-alpha))
 						}
 						else {
 							beta[j] = 0
@@ -2723,12 +2783,12 @@ struct betaStruct DoShooting(									///
 					if (d.lglmnet) {
 						fobj	= 1/2*mse												///
 									+ lambda * alpha   *Psi*abs(beta)*d.ysd				///
-									+ lambda *(1-alpha)*(Psi:^2)*(beta:^2)
+									+ lambda2*(1-alpha)*(Psi2:^2)*(beta:^2)
 					}
 					else {
 						fobj	= mse													///
 									+ lambda/d.n *alpha    *Psi*abs(beta)				///
-									+ lambda*d.prestdy/d.n*(1-alpha)*(Psi:^2)*(beta:^2)
+									+ lambda2*d.prestdy/d.n*(1-alpha)*(Psi2:^2)*(beta:^2)
 					}
 					printf("{res}%8.0g %8.0g %14.8e %14.8e %14.8e %14.8e %14.8e\n",		///
 						m,																///
@@ -2907,7 +2967,9 @@ void ReturnResultsPath(		struct outputStructPath scalar t,	/// #1
 		// unstandardize unless overriden by stdcoef
 		if (d.lglmnet) {
 			if (d.prestdflag) {
-				betas		= betas			:/ d.prestdx * d.prestdy
+				if (stdcoef==0) {
+					betas		= betas			:/ d.prestdx * d.prestdy
+				}
 				lambdalist0	= lambdalist0	* d.prestdy
 				lambdalist	= lambdalist	* d.prestdy
 			}
@@ -2916,11 +2978,12 @@ void ReturnResultsPath(		struct outputStructPath scalar t,	/// #1
 				lambdalist	= lambdalist	* d.ysd
 			}
 		}
-		else if (d.prestdflag & stdcoef==0) {
-			betas		= betas			:/ d.prestdx * d.prestdy
+		else if (d.prestdflag) {
+			if (stdcoef==0) {
+				betas		= betas			:/ d.prestdx * d.prestdy
+			}
 			if (d.sqrtflag==0) {
 				// sqrt-lasso lambdas don't need unstandardizing (pivotal so doesn't depend on sigma/y)
-				// lambdalist= lambdalist	* d.ysd
 				lambdalist0	= lambdalist0	* d.prestdy
 				lambdalist	= lambdalist	* d.prestdy
 			}
@@ -3250,7 +3313,7 @@ struct outputStruct scalar RLasso(							/// Mata code for BCH rlasso
 			printf("{txt}Initial estimator is ridge:\n")
 			beta_ridge'
 		}
-		betas	= DoLasso(d, Psi, lambda, verbose, optTol, maxIter, zeroTol, alpha, beta_ridge)
+		betas	= DoLasso(d, Psi, Psi, lambda, lambda, verbose, optTol, maxIter, zeroTol, alpha, beta_ridge)
 		if (verbose>=1) {
 			printf("{txt}Selected variables: {res}%s\n\n",invtokens(betas.nameXSel'))
 		}
@@ -3289,7 +3352,7 @@ struct outputStruct scalar RLasso(							/// Mata code for BCH rlasso
 			beta_ridge'
 		}
 
-		betas	= DoLasso(d, Psi, lambda, verbose, optTol, maxIter, zeroTol, alpha, beta_ridge)
+		betas	= DoLasso(d, Psi, Psi, lambda, lambda, verbose, optTol, maxIter, zeroTol, alpha, beta_ridge)
 		if (verbose>=1) {
 			printf("{txt}Selected variables: {res}%s\n\n",invtokens(betas.nameXSel'))
 		}
@@ -3324,7 +3387,7 @@ struct outputStruct scalar RLasso(							/// Mata code for BCH rlasso
 				printf("{txt}Obtaining new lasso estimate...\n")
 			}
 			// new lasso estimate
-			betas = DoLasso(d, Psi, lambda, verbose, optTol, maxIter, zeroTol, alpha, beta_ridge)
+			betas = DoLasso(d, Psi, Psi, lambda, lambda, verbose, optTol, maxIter, zeroTol, alpha, beta_ridge)
 			if (verbose>=1) {
 				printf("{txt}Selected variables: {res}%s\n\n",invtokens(betas.nameXSel'))
 			}
@@ -4029,7 +4092,7 @@ struct outputStruct scalar RSqrtLasso(						/// Mata code for BCH sqrt rlasso
 		if (verbose>=1) {
 			printf("Obtaining sqrt-lasso estimate...\n")
 		}
-		betas	= DoLasso(d, Psi, lambda, verbose, optTol, maxIter, zeroTol, alpha, beta_ridge)
+		betas	= DoLasso(d, Psi, Psi, lambda, lambda, verbose, optTol, maxIter, zeroTol, alpha, beta_ridge)
 		if (verbose>=1) {
 			printf("Selected variables: %s\n\n",invtokens(betas.nameXSel'))
 		}
@@ -4042,7 +4105,7 @@ struct outputStruct scalar RSqrtLasso(						/// Mata code for BCH sqrt rlasso
 		if (verbose>=1) {
 			printf("Obtaining initial sqrt-lasso estimate...\n")
 		}
-		betas	= DoLasso(d, Psi, lambda, verbose, optTol, maxIter, zeroTol, alpha, beta_ridge)
+		betas	= DoLasso(d, Psi, Psi, lambda, lambda, verbose, optTol, maxIter, zeroTol, alpha, beta_ridge)
 		if (verbose>=1) {
 			printf("\n")
 		}
@@ -4088,7 +4151,7 @@ struct outputStruct scalar RSqrtLasso(						/// Mata code for BCH sqrt rlasso
 			}
 
 			// new lasso estimate
-			betas	= DoLasso(d, Psi, lambda, verbose, optTol, maxIter, zeroTol, alpha, beta_ridge)
+			betas	= DoLasso(d, Psi, Psi, lambda, lambda, verbose, optTol, maxIter, zeroTol, alpha, beta_ridge)
 			if (verbose>=1) {
 				printf("Selected variables: %s\n\n",invtokens(betas.nameXSel'))
 			}
@@ -4147,17 +4210,22 @@ void EstimateLassoPath(							///  Complete Mata code for lassopath
 				real scalar dofminus,			///
 				real scalar sdofminus,			///
 				real scalar prestdflag,			///
-				string scalar lambdamat,		/// single, list or missing (=> construct default list)
+				string scalar lambdamat,		/// L1 norm lambda single, list or missing (=> construct default list)
+				string scalar lambda2mat,		/// L2 norm lambda (optional)
 				real scalar lmax, 				///
 				real scalar lcount,				///
 				real scalar lminratio,			///
 				real scalar lglmnet,			///
-				string scalar PsiMat,			/// 
+				string scalar PsiMat,			/// Optional L1 norm loadings
+				string scalar Psi2Mat,			/// Optional L2 norm loadings
 				string scalar stdymat,			/// 
 				string scalar stdxmat,			///
 				real scalar stdl, 				/// standardisation loadings?
 				real scalar sqrtflag,			/// lasso or sqrt-lasso?
 				real scalar alpha,				///
+				real scalar adaflag,			/// 
+				string scalar AdaMat,			///
+				real scalar theta,				/// adaptive lasso/elastic net parameter
 				real scalar post, 				///
 				real scalar optTol,				///
 				real scalar maxIter,			///
@@ -4178,29 +4246,91 @@ void EstimateLassoPath(							///  Complete Mata code for lassopath
 	// Estimation accommodates pre-standardized data and standardization on-the-fly.
 	// Standardization on-the-fly: standardization included in penalty loadings.
 	
-	if (PsiMat!="") {						//  overall pen loadings supplied
-		Psi		= st_matrix(PsiMat)
+	if (adaflag==0) {
+		// non-adaptive case
+		// L1 norm loadings
+		if (PsiMat!="") {						//  overall pen loadings supplied
+			Psi		= st_matrix(PsiMat)
+		}
+		else if (stdl) {						//  std loadings - standardize on the fly
+			Psi		= d.sdvec					//  L1 norm loadings
+		}
+		else {									//  (pre-standardized comes here)
+			Psi = J(1,d.p,1)					//  default is 1
+		}
+		// L2 norm loadings - if not supplied, =L1 norm loadings
+		if (Psi2Mat!="") {						//  overall L2 norm pen loadings supplied
+			Psi2	= st_matrix(Psi2Mat)
+		}
+		else {									//  default
+			Psi2	= Psi
+		}
 	}
-	else if (stdl) {						//  std loadings - standardize on the fly
-		Psi		= d.sdvec					//  L1 norm loadings - SDs
+	else {	
+		// adaptive lasso/elastic net
+		if (AdaMat=="") {
+			// no adaptive coefficients provided
+			// svd returns the minimum norm generalized solution; no rows/coefs dropped
+			// but if x is all zeros (e.g. omitted base var) then coef is zero
+			if (d.n > d.p) {
+				ada_init		= anysolver(d.XX/d.n,d.Xy/d.n, r=.,"svd")'
+				if (verbose>=1) {
+					printf("{txt}Adaptive weights calculated using OLS.\n")
+					if (r<d.p) {
+						printf("{txt}Warning: rank(X'X)=%f < number of regressors=%f; generalized inverse used.\n",r,d.p)
+					}
+				}
+			}
+			else {
+				if (verbose>=1) {
+					printf("{txt}Adaptive weights calculated using univariate OLS regressions.\n")
+				}
+				ada_init		= editmissing(d.Xy :/ diagonal(d.XX),0)'
+			}
+		}
+		else {
+			// adaptive coefficients provided
+			ada_init		= st_matrix(AdaMat)
+		}
+		if (verbose>=1) {
+			printf("{txt}Initial adaptive coefficients:\n")
+			ada_init
+		}
+		ada_init	= ada_init / d.ysd
+		if (verbose>=1) {
+			printf("{txt}Initial adaptive coefficients after rescaling:\n")
+			ada_init
+		}
+		// do inversion
+		Psi		= (1:/abs(ada_init)):^theta
+		if (verbose>=1) {
+			printf("{txt}Adaptive weights after inversion:\n")
+			Psi
+		}
+		// L2 loadings (not adaptive)
+		if (d.prestdflag) {
+			Psi2	= J(1,d.p,1)
+		}
+		else {
+			Psi2	= d.sdvec
+		}
 	}
-	else {									//  (pre-standardized comes here)
-		Psi = J(1,d.p,1)					//  default is 1
-	}
-	
+
 	//  need to set loadings of notpen vars = 0
 	if (notpen_o~="") {	
 		npnames=tokens(notpen_o)
 		forbound = cols(npnames)	//  faster
 		for (i=1; i<=forbound; i++) {
 				Psi		=Psi  :* (1:-(d.nameX_o:==npnames[1,i]))
+				Psi2	=Psi2 :* (1:-(d.nameX_o:==npnames[1,i]))
 		}
 	}
 
 	// lglmnet parameterization - penalty loadings sum to p
 	// note this accommodates zero penalty loadings by adjusting others upwards
 	if (lglmnet) {
-		Psi	= Psi * cols(Psi) * 1/rowsum(Psi)
+		Psi		= Psi  * cols(Psi)  * 1/rowsum(Psi)
+		Psi2	= Psi2 * cols(Psi2) * 1/rowsum(Psi2)
 	}
 	
 	if (lambdamat=="") {
@@ -4247,7 +4377,7 @@ void EstimateLassoPath(							///  Complete Mata code for lassopath
 	}
 	else {
 		// lambdas provided
-		lambda=st_matrix(lambdamat)
+		lambda			=st_matrix(lambdamat)
 		if (d.lglmnet) {
 			if (d.prestdflag) {
 				lambda	=lambda * 1/(d.prestdy)
@@ -4256,19 +4386,44 @@ void EstimateLassoPath(							///  Complete Mata code for lassopath
 				lambda	=lambda * 1/(d.ysd)
 			}
 		}
-		else if ((d.prestdflag) & (!stdcoef) & (!d.sqrtflag)) {		//  data have been pre-standardized, so adjust lambdas accordingly
+		else if ((d.prestdflag) & (!d.sqrtflag)) {		//  data have been pre-standardized, so adjust lambdas accordingly
 			lambda		=lambda * 1/(d.prestdy)
 		}
+	}
+	if (lambda2mat=="") {
+		// no separate L2 norm lambda provided => default is L1 norm lambda
+		lambda2			= lambda
+	}
+	else {
+		// separate L2 norm lambda provided
+		lambda2			=st_matrix(lambda2mat)
+		if (d.lglmnet) {
+			if (d.prestdflag) {
+				lambda2	=lambda2 * 1/(d.prestdy)
+			}
+			else {
+				lambda2	=lambda2 * 1/(d.ysd)
+			}
+		}
+		else if ((d.prestdflag) & (!d.sqrtflag)) {		//  data have been pre-standardized, so adjust lambdas accordingly
+			lambda2		=lambda2 * 1/(d.prestdy)
+		}
+	}
+
+	// check dimensions
+	if (cols(lambda)!=cols(lambda2)) {
+		errprintf("error - dimensions of L1 and L2 penalties must be the same\n")
+		exit(198)
 	}
 
 	if ((cols(lambda)==1) & (!hasmissing(lambda))) {				//  one lambda
 		struct outputStruct scalar OUT
-		OUT = DoLasso(d,Psi,lambda,verbose,optTol,maxIter,zeroTol,alpha)
+		OUT = DoLasso(d,Psi,Psi2,lambda,lambda2,verbose,optTol,maxIter,zeroTol,alpha)
 		ReturnResults(OUT,d,stdcoef)
 	}
 	else if ((cols(lambda)>1) & (!hasmissing(lambda))) {		//  lambda is a vector or missing (=> default list)
 		struct outputStructPath scalar OUTPATH
-		OUTPATH = DoLassoPath(d,Psi,lambda,post,verbose,optTol,maxIter,zeroTol,fdev,devmax,alpha,lglmnet,noic,nodevcrit)
+		OUTPATH = DoLassoPath(d,Psi,Psi2,lambda,lambda2,post,verbose,optTol,maxIter,zeroTol,fdev,devmax,alpha,lglmnet,noic,nodevcrit)
 		ReturnResultsPath(OUTPATH,d,nameX_o,stdcoef)
 		if (holdout!="") { // used for cross-validation
 			getMSPE(OUTPATH,nameY,nameX,holdout,d)  
@@ -4283,7 +4438,9 @@ void EstimateLassoPath(							///  Complete Mata code for lassopath
 struct outputStruct scalar DoLasso(								///
 							struct dataStruct scalar d,			/// #1  data (y,X)
 							real rowvector Psi,					/// #2  penalty loading vector (L1 norm)
+							real rowvector Psi2,				/// #3  penalty loading vector (L2 norm)
 							real scalar lambda,					/// #4  lambda (single value) (L1 norm)
+							real scalar lambda2,				/// #5  lambda (single value) (L2 norm)
 							real scalar verbose,				/// #6  reporting
 							real scalar optTol,					/// #7  convergence of beta estimates
 							real scalar maxIter,				/// #8  max number of shooting iterations
@@ -4303,10 +4460,10 @@ struct outputStruct scalar DoLasso(								///
 	// no initial beta supplied (optional last argument) => will be initialized in DoShooting(.)
 	// get estimates
 	if (noinitflag) {
-		b		= DoShooting(d,Psi,lambda,verbose,optTol,maxIter,zeroTol,alpha)
+		b		= DoShooting(d,Psi,Psi2,lambda,lambda2,verbose,optTol,maxIter,zeroTol,alpha)
 	}
 	else {
-		b		= DoShooting(d,Psi,lambda,verbose,optTol,maxIter,zeroTol,alpha,beta_init)
+		b		= DoShooting(d,Psi,Psi2,lambda,lambda2,verbose,optTol,maxIter,zeroTol,alpha,beta_init)
 	}
 	beta	= b.beta
 	m		= b.m
@@ -4445,13 +4602,13 @@ struct outputStruct scalar DoLasso(								///
 		}
 		else if (alpha==0) {
 			// ridge
-			t.objfn		= 1/2*(t.rmse)^2 + lambda*quadcross(Psi':^2,beta:^2)
+			t.objfn		= 1/2*(t.rmse)^2 + lambda2*quadcross(Psi2':^2,beta:^2)
 		}
 		else {
 			// elastic net
 			t.objfn		= 1/2*(t.rmse)^2												///
 							+ lambda * alpha   *quadcross(Psi',abs(beta))*d.ysd			///
-							+ lambda *(1-alpha)*quadcross(Psi':^2,beta:^2)
+							+ lambda2*(1-alpha)*quadcross(Psi2':^2,beta:^2)
 		}
 	}
 	else {
@@ -4466,13 +4623,13 @@ struct outputStruct scalar DoLasso(								///
 		else if (alpha==0) {
 			// ridge
 			t.objfn		= (t.rmse)^2													///
-							+ lambda*d.prestdy/d.n * quadcross((Psi'):^2,beta:^2)
+							+ lambda2*d.prestdy/d.n * quadcross((Psi2'):^2,beta:^2)
 		}
 		else {
 			// elastic net
 			t.objfn		= (t.rmse)^2													///
 							+ lambda/d.n           * alpha   *quadcross(Psi',abs(beta))	///
-							+ lambda*d.prestdy/d.n *(1-alpha)*quadcross((Psi'):^2,beta:^2)
+							+ lambda2*d.prestdy/d.n*(1-alpha)*quadcross((Psi2'):^2,beta:^2)
 		}
 	}
 
@@ -4518,10 +4675,13 @@ void ReturnResults(		struct outputStruct scalar t,		/// #1
 		// initialize from data struct
 		AllNames	= d.nameX_o'			// d.nameX_o is a row vector; AllNames is a col vector (to match coef vectors)
 
+		// un-standardize unless overridden by stdcoef
 		if (d.lglmnet) {
 			if (d.prestdflag) {
-				betaAll		= betaAll		:/ d.prestdx' * d.prestdy
-				betaAllPL	= betaAllPL		:/ d.prestdx' * d.prestdy
+				if (stdcoef==0) {
+					betaAll		= betaAll		:/ d.prestdx' * d.prestdy
+					betaAllPL	= betaAllPL		:/ d.prestdx' * d.prestdy
+				}
 				rmse		= rmse			* d.prestdy
 				rmsePL		= rmsePL		* d.prestdy
 				lambda		= lambda		* d.prestdy
@@ -4532,10 +4692,12 @@ void ReturnResults(		struct outputStruct scalar t,		/// #1
 				lambda		= lambda		* d.ysd
 			}
 		}
-		else if (d.prestdflag & stdcoef==0) {
-		// un-standardize unless overridden by stdcoef
-			betaAll		= betaAll		:/ d.prestdx' * d.prestdy	//  beta is col vector, prestdx is row vector, prestdy is scalar
-			betaAllPL	= betaAllPL		:/ d.prestdx' * d.prestdy	//  beta is col vector, prestdx is row vector, prestdy is scalar
+		else if (d.prestdflag) {
+			if (stdcoef==0) {
+				//  beta is col vector, prestdx is row vector, prestdy is scalar
+				betaAll		= betaAll		:/ d.prestdx' * d.prestdy
+				betaAllPL	= betaAllPL		:/ d.prestdx' * d.prestdy
+			}
 			ePsi		= ePsi			:* d.prestdx				//  rlasso only; ePsi and prestsdx both row vectors; Psi does not change
 			rmse		= rmse			* d.prestdy
 			rmsePL		= rmsePL		* d.prestdy

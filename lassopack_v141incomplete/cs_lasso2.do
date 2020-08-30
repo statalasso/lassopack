@@ -2,10 +2,10 @@
 * lassopack package 1.4.X 18aug2020, aa/ms
 * parts of the script use R's glmnet and Matlab code "SqrtLassoIterative.m".
 
+set more off
 cscript "lasso2" adofile lasso2 lasso2_p lassoutils
 clear all
 capture log close
-set more off
 set rmsg on
 program drop _all
 log using cs_lasso2,replace
@@ -498,17 +498,73 @@ storedresults compare nopload e(), tol(1e-8)						///
 *** Validate adaptive lasso option                                           ***
 ********************************************************************************
 
+sysuse auto, clear
+drop if rep78==.
+cap mat drop sdvec
+// standardized variables used to get OLS with std coefs
+foreach var of varlist price mpg-foreign {
+	cap drop `var'_sd
+	qui sum `var', meanonly
+	qui gen double `var'_sd = `var'-r(mean)
+	qui sum `var'
+	qui replace `var'_sd = `var'_sd * 1/r(sd) * sqrt( r(N)/(r(N)-1) )
+	mat sdvec = nullmat(sdvec), r(sd)/sqrt( r(N)/(r(N)-1) )
+}
+mat ysd = sdvec[1,1]
+mat xsd = sdvec[1,2..11]
+
+// replicate adaptive lasso
+
+// use standardized coefficients + prestd
+qui reg price_sd mpg_sd-foreign_sd
+
+mata: st_matrix("psi",1:/abs(st_matrix("e(b)")))
+mat psi = psi[1,1..10]
+mat psi2 = J(1,10,1)
+
+// lasso
+lasso2 price mpg-foreign, lambda(10000) adaptive prestd
+mat b=e(b)
+lasso2 price mpg-foreign, lambda(10000) ploadings(psi) unitloadings prestd
+assert mreldif(b,e(b)) < 1e-7
+// elastic net
+lasso2 price mpg-foreign, lambda(10000) adaptive prestd alpha(0.5)
+mat b=e(b)
+lasso2 price mpg-foreign, lambda(10000) ploadings(psi) ploadings2(psi2) unitloadings prestd alpha(0.5)
+assert mreldif(b,e(b)) < 1e-7
+
+// use unstandardized coefficients
+qui reg price mpg-foreign
+
+mata: st_matrix("psi",1:/abs(st_matrix("e(b)")))
+// note that psi needs to be rescaled by sd(y) in order for lambda to be the same
+mat psi = psi[1,1..10] * ysd[1,1]
+mat psi2 = xsd
+
+// lasso
+lasso2 price mpg-foreign, lambda(10000) adaptive
+mat b=e(b)
+lasso2 price mpg-foreign, lambda(10000) ploadings(psi)
+assert mreldif(b,e(b)) < 1e-7
+// elastic net
+lasso2 price mpg-foreign, lambda(10000) adaptive alpha(0.5)
+mat b=e(b)
+lasso2 price mpg-foreign, lambda(10000) ploadings(psi) ploadings2(psi2) alpha(0.5)
+assert mreldif(b,e(b)) < 1e-7
+
+
 * lglmnet version
 * lglmnet standardizes automatically unless overridden by unitloadings.
 
 // replicate adaptive lasso with lglmnet and no standardization
-sysuse auto, clear
-drop if rep78==.
+// unitloadings overrides standardization
 
+// use unstandardized coefficients
 qui reg price mpg-foreign
 
 mata: st_matrix("psi",1:/abs(st_matrix("e(b)")))
 mat psi = psi[1,1..10]
+mat psi2 = J(1,10,1)
 
 // lasso
 lasso2 price mpg-foreign, lambda(1000) adaptive lglmnet unitloadings
@@ -518,25 +574,19 @@ assert mreldif(b,e(b)) < 1e-7
 // elastic net
 lasso2 price mpg-foreign, lambda(1000) adaptive lglmnet unitloadings alpha(0.5)
 mat b=e(b)
-lasso2 price mpg-foreign, lambda(1000) ploadings(psi) unitloadings lglmnet alpha(0.5)
+lasso2 price mpg-foreign, lambda(1000) ploadings(psi) ploadings2(psi2) unitloadings lglmnet alpha(0.5)
 assert mreldif(b,e(b)) < 1e-7
 
-
 // replicate adaptive lasso with lglmnet and standardization
-sysuse auto, clear
-drop if rep78==.
-foreach var of varlist price mpg-foreign {
-	cap drop `var'_sd
-	qui sum `var', meanonly
-	qui gen double `var'_sd = `var'-r(mean)
-	qui sum `var'
-	qui replace `var'_sd = `var'_sd * 1/r(sd) * sqrt( r(N)/(r(N)-1)   )
-}
+// lglmnet standardizes by default unless overridden by unitloadings
 
+// use standardized coefficients
+// note dep var doesn't have to be standardized
 qui reg price mpg_sd-foreign_sd
 
 mata: st_matrix("psi",1:/abs(st_matrix("e(b)")))
 mat psi = psi[1,1..10]
+mat psi2 = J(1,10,1)
 
 // lasso
 lasso2 price mpg-foreign, lambda(1000) adaptive lglmnet
@@ -546,7 +596,7 @@ assert mreldif(b,e(b)) < 1e-7
 // elastic net
 lasso2 price mpg-foreign, lambda(1000) adaptive lglmnet alpha(0.5)
 mat b=e(b)
-lasso2 price mpg-foreign, lambda(1000) ploadings(psi) lglmnet alpha(0.5)
+lasso2 price mpg-foreign, lambda(1000) ploadings(psi) ploadings2(psi2) lglmnet alpha(0.5)
 assert mreldif(b,e(b)) < 1e-7
 
 
@@ -737,19 +787,10 @@ if _rc != 198 {
 	exit 1
 } 
 *
-cap lasso2 $model, ploadings(abc) unitload
-if _rc != 198 {
-	exit 1
-} 
 cap lasso2 $model, ploadings(abc) adatheta(3)
 if _rc != 198 {
 	exit 1
-} 
-*
-cap lasso2 $model, adaptive unitload
-if _rc != 198 {
-	exit 1
-} 
+}
 *
 
 // var may not appear in partial() and notpen()
@@ -906,6 +947,7 @@ foreach i of numlist $lambdalist {
 *** verify adapative weights												 ***
 ********************************************************************************
 
+/*
 ** prestd should match no prestd (no prestd = ada weights incorporate scaling)
 ** ada theta = 1
 lasso2 $model, lambda(10) adaptive
@@ -919,6 +961,7 @@ mat A = e(b)
 lasso2 $model, lambda(1) adaptive adatheta(2) prestd
 mat B = e(b)
 comparemat A B
+
 
 ** lasso with ada theta = 1
 lasso2 $model, adaptive verb
@@ -1005,6 +1048,7 @@ forvalues i=1(1)8 {
 	mat checkpsi[1,`i'] = checkpsi[1,`i'] * (1/r(sd) * sqrt(r(N)/(r(N)-1)))
 }
 comparemat psi checkpsi
+*/
 
 ********************************************************************************
 *** pre-estimation standardisation vs std on the fly   				 		 ***
