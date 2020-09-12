@@ -135,10 +135,9 @@
 *         Adaptive lasso recoded in Mata.
 *         Adaptive elastic net now correctly uses adaptive weights for L1 norm only.
 *         Standardized and unstandardized coefficients now returned for lassopath; stdcoef option unneeded.
+*         Standardized lambdas, norms, ICs, etc. also returned.
 *         Fixed bug in reporting of value of maximized obj fn for elastic net/ridge (missing 1/2 on L2 norm).
-* to consider: dropping or ignoring vars that are all zeros (e.g. factor base vars) - affects BIC etc.
-
-
+*         EBIC now excludes omitted/base variables when calculating model size p.
 
 
 program lassoutils, rclass sortpreserve
@@ -834,6 +833,7 @@ program define _lassopath, rclass sortpreserve
 		consflag(int 1)							/// default is constant specified
 		dofminus(int 0)							/// lost degrees of freedom from FEs
 		sdofminus(int 0)						/// lost degrees of freedom from partialling out ("s"=small; includes the constant)
+		pminus(int 0)							/// omitted/base variables to be excluded from model count
 		dmflag(int 0)							/// data have been demeaned or should be treated as demeaned
 		notpen_t(string) 						///
 		notpen_o(string) 						///
@@ -1019,6 +1019,7 @@ program define _lassopath, rclass sortpreserve
 					`dmflag',			///
 					`dofminus',			/// lost dofs from FEs
 					`sdofminus',		/// lost dofs from partialling
+					`pminus',			///
 					`prestdflag',		///
 					"`lambda'",			/// lambda matrix for L1 norm or missing (=> construct default list)
 					"`lambda2'",		/// lambda matrix for L2 norm (also optional)
@@ -1051,7 +1052,8 @@ program define _lassopath, rclass sortpreserve
 
 	if (`r(lcount)'>1) { //------- #lambda > 1 -----------------------------------------------//
 	
-		tempname Psi betas sbetas dof lambdamat0 lambdamat slambdamat0 slambdamat l1norm wl1norm stdvec shat shat0
+		tempname Psi betas sbetas dof lambdamat0 lambdamat slambdamat0 slambdamat
+		tempname l1norm sl1norm wl1norm swl1norm stdvec shat shat0
 		mat `Psi' 			= r(Psi)
 		mat `betas' 		= r(betas)
 		mat `sbetas' 		= r(sbetas)
@@ -1063,14 +1065,17 @@ program define _lassopath, rclass sortpreserve
 		mat `slambdamat'	= r(slambdalist)
 		mat `slambdamat0'	= r(slambdalist0)
 		mat `l1norm'		= r(l1norm)
+		mat `sl1norm'		= r(sl1norm)
 		mat `wl1norm'		= r(wl1norm)
+		mat `swl1norm'		= r(swl1norm)
 		mat `stdvec'		= r(stdvec)
 		if ("`holdout'"!="") {
 			tempname mspe0
 			mat `mspe0' = r(mspe)	
 		}
 		else {
-			tempname rss ess tss rsq aic aicc bic ebic
+			tempname rss ess tss rsq
+			tempname aic aicc bic ebic saic saicc sbic sebic icstd
 			mat `rss' = r(rss)
 			mat `ess' = r(ess)
 			mat `tss' = r(tss)
@@ -1079,13 +1084,22 @@ program define _lassopath, rclass sortpreserve
 			mat `bic' = r(bic)
 			mat `aicc' = r(aicc)
 			mat `ebic' = r(ebic)
+			scalar `icstd' = r(icstd)
+			mat `saic' = r(saic)
+			mat `sbic' = r(sbic)
+			mat `saicc' = r(saicc)
+			mat `sebic' = r(sebic)
 			return scalar aicmin = r(aicmin)
-			return scalar laicid = r(laicid)
 			return scalar aiccmin = r(aiccmin)
-			return scalar laiccid = r(laiccid)
 			return scalar bicmin = r(bicmin)
-			return scalar lbicid = r(lbicid)
 			return scalar ebicmin = r(ebicmin)
+			return scalar saicmin = r(saicmin)
+			return scalar saiccmin = r(saiccmin)
+			return scalar sbicmin = r(sbicmin)
+			return scalar sebicmin = r(sebicmin)
+			return scalar laicid = r(laicid)
+			return scalar laiccid = r(laiccid)
+			return scalar lbicid = r(lbicid)
 			return scalar lebicid = r(lebicid)
 			return scalar ebicgamma = r(ebicgamma)
 		}
@@ -1108,7 +1122,9 @@ program define _lassopath, rclass sortpreserve
 		return matrix slambdalist0 	= `slambdamat0'
 		return matrix Psi			= `Psi'
 		return matrix l1norm		= `l1norm'
+		return matrix sl1norm		= `sl1norm'
 		return matrix wl1norm		= `wl1norm'
+		return matrix swl1norm		= `swl1norm'
 		return matrix stdvec 		= `stdvec'
 		if ("`holdout'"!="") {
 			return matrix mspe 		= `mspe0'
@@ -1122,6 +1138,10 @@ program define _lassopath, rclass sortpreserve
 			return matrix aicc 		= `aicc' 
 			return matrix bic 		= `bic' 
 			return matrix ebic 		= `ebic' 
+			return matrix saic 		= `saic' 
+			return matrix saicc 	= `saicc' 
+			return matrix sbic 		= `sbic' 
+			return matrix sebic 	= `sebic' 
 		}
 	}
 	else if (`r(lcount)'==1) { 
@@ -1130,7 +1150,7 @@ program define _lassopath, rclass sortpreserve
 		*** the following code is based on _rlasso
 		tempname b bOLS sb sbOLS Psi sPsi stdvec
 		tempname bAll bAllOLS sbAll sbAllOLS
-		tempname lambda slambda lambda0 rmse rmseOLS objfn srmse srmseOLS sobjfn r2
+		tempname lambda slambda lambda0 rmse rmseOLS objfn sobjfn srmse srmseOLS r2
 
 		// coefs are returned as column vectors
 		// convert to row vectors (Stata standard)
@@ -2268,7 +2288,6 @@ struct outputStructPath DoLassoPath(									///
 									real scalar devmax,					/// (glmnet) maximum fraction of explained deviance for stopping path
 									real scalar alpha,					/// 
 									real scalar lglmnet,				/// 
-									real scalar noic,					///
 									real scalar nodevcrit)
 {
 
@@ -2385,9 +2404,7 @@ struct outputStructPath DoLassoPath(									///
 		t.shat0	= rowsum(t.betas:!=0) :+ (d.sdofminus)
 
 		// requires only lvec2 and Psi2 (for ridge/elastic net)
-		if (!noic) {
-			t.dof		= getdf(d,t.betas',Psi2,lvec2,alpha,verbose)'
-		}
+		t.dof		= getdf(d,t.betas',Psi2,lvec2,alpha,verbose)'
 				
 		return(t)		
 
@@ -2869,10 +2886,18 @@ void ReturnResultsPath(		struct outputStructPath scalar t,	/// #1
 		// weighted L1 norm weights by penalty loadings (if prestandardized, by sd(X))
 		l1norm				= rowsum(abs(betas :* (t.Psi :> 0)))
 		if (d.prestdflag) {
+			sl1norm				= l1norm / d.prestdy
+		}
+		else {
+			sl1norm				= l1norm / d.ysd
+		}
+		if (d.prestdflag) {
 			wl1norm			= rowsum(abs(betas) :* d.prestdx)
+			swl1norm		= wl1norm / d.prestdy
 		}
 		else {
 			wl1norm			= rowsum(abs(betas :* t.Psi))
+			swl1norm		= wl1norm / d.ysd
 		}
 
 		pall				= cols(Xnamesall)
@@ -2897,7 +2922,9 @@ void ReturnResultsPath(		struct outputStructPath scalar t,	/// #1
 		st_matrix("r(slambdalist)",slambdalist)
 		st_matrix("r(slambdalist0)",slambdalist0)
 		st_matrix("r(l1norm)",l1norm)
+		st_matrix("r(sl1norm)",sl1norm)
 		st_matrix("r(wl1norm)",wl1norm)
+		st_matrix("r(swl1norm)",swl1norm)
 		st_matrix("r(betas)",betas)
 		st_matrix("r(sbetas)",sbetas)
 		st_matrix("r(Psi)",t.Psi)
@@ -2911,7 +2938,9 @@ void ReturnResultsPath(		struct outputStructPath scalar t,	/// #1
 		st_matrixcolstripe("r(slambdalist0)",("","Lambdas"))
 		st_matrixcolstripe("r(slambdalist)",("","Lambdas"))
 		st_matrixcolstripe("r(l1norm)",("","L1norm"))
+		st_matrixcolstripe("r(sl1norm)",("","sL1norm"))
 		st_matrixcolstripe("r(wl1norm)",("","wL1norm"))
+		st_matrixcolstripe("r(swl1norm)",("","swL1norm"))
 }
 // end ReturnResultsPath
 	
@@ -4091,6 +4120,7 @@ void EstimateLassoPath(							///  Complete Mata code for lassopath
 				real scalar dmflag,				///
 				real scalar dofminus,			///
 				real scalar sdofminus,			///
+				real scalar pminus,				///
 				real scalar prestdflag,			///
 				string scalar lambdamat,		/// L1 norm lambda single, list or missing (=> construct default list)
 				string scalar lambda2mat,		/// L2 norm lambda (optional)
@@ -4171,7 +4201,7 @@ void EstimateLassoPath(							///  Complete Mata code for lassopath
 					printf("{txt}Adaptive weights calculated using OLS.\n")
 					if (r<d.p) {
 						printf("{txt}Warning: rank(X'X)=%f < number of regressors=%f (including any factor vars).\n",r,d.p)
-						printf("{text}        generalized inverse used to obtain OLS coefficients.\n")
+						printf("{text}         generalized inverse used to obtain OLS coefficients.\n")
 					}
 				}
 			}
@@ -4326,13 +4356,13 @@ void EstimateLassoPath(							///  Complete Mata code for lassopath
 	}
 	else if ((cols(lambda)>1) & (!hasmissing(lambda))) {		//  lambda is a vector or missing (=> default list)
 		struct outputStructPath scalar OUTPATH
-		OUTPATH = DoLassoPath(d,Psi,Psi2,lambda,lambda2,post,verbose,optTol,maxIter,zeroTol,fdev,devmax,alpha,lglmnet,noic,nodevcrit)
+		OUTPATH = DoLassoPath(d,Psi,Psi2,lambda,lambda2,post,verbose,optTol,maxIter,zeroTol,fdev,devmax,alpha,lglmnet,nodevcrit)
 		ReturnResultsPath(OUTPATH,d,nameX_o)
 		if (holdout!="") { // used for cross-validation
 			getMSPE(OUTPATH,nameY,nameX,holdout,d)  
 		}
 		else if (!noic) { // calculate IC 
-			getInfoCriteria(OUTPATH,d,ebicgamma)
+			getInfoCriteria(OUTPATH,d,ebicgamma,pminus)
 		}
 	}
 }
@@ -4803,11 +4833,13 @@ real matrix getMinIC(real matrix IC)		//  =0 if nothing to partial out, =project
 
 void getInfoCriteria(struct outputStructPath scalar t,
  			struct dataStruct scalar d,
-			real ebicgamma)
+			real ebicgamma,
+			real pminus)
 {		
 		// t.betas is lcount by p	
 		// t.dof is 1 by lcount
 		// need to check for constant
+		// pminus is #missing vars (base or omitted variables)
 		XB  = quadcross(((*d.X):-(d.mvec*d.cons))',(t.betas)')	// n by lcount
 
 		TSS = quadcolsum(((*d.y):-(d.ymvec*d.cons)):^2)	// 1 by lcount
@@ -4823,8 +4855,9 @@ void getInfoCriteria(struct outputStructPath scalar t,
 		// ebic parameter
 		// default choice is based on P=n^kappa and gamma=1-1/(2*kappa)
 		// see Chen & Chen (2008, p. 768, Section 5)
+		// note we subtract pminus to account for non-variables (all zeros = base or omitted vars) 
 		if ((ebicgamma<0) | (ebicgamma>1)) {
-			ebicgamma = 1-log(d.n)/(2*log(d.p))
+			ebicgamma = 1-log(d.n)/(2*log(d.p-pminus))
 			ebicgamma = max((ebicgamma,0)) // ensures that ebicgamma are in [0,1]
 			ebicgamma = min((ebicgamma,1))
 		}
@@ -4834,8 +4867,9 @@ void getInfoCriteria(struct outputStructPath scalar t,
 		// AIC = d.n + d.n*log(2*pi()) + d.n*log(RSS/d.n) + 2*(t.dof')
 		// BIC = d.n + d.n*log(2*pi()) + d.n*log(RSS/d.n) + log(d.n)*(t.dof')
 		AIC		= d.n*log(RSS/d.n) + (t.dof')*2 
-		BIC 	= d.n*log(RSS/d.n) + (t.dof')*log(d.n) 
-		EBIC 	= BIC :+ 2 * (t.dof') * log(d.p) * ebicgamma
+		BIC 	= d.n*log(RSS/d.n) + (t.dof')*log(d.n)
+		// note we subtract pminus to account for non-variables (all zeros = base or omitted vars) 
+		EBIC 	= BIC :+ 2 * (t.dof') * log(d.p-pminus) * ebicgamma
 		AICC	= d.n*log(RSS/d.n) + (t.dof')*2:*((d.n):/(d.n:-t.dof'))
 
 		// obtain minimum IC and obtimal lambda
@@ -4876,6 +4910,22 @@ void getInfoCriteria(struct outputStructPath scalar t,
 		st_matrix("r(aicc)",AICC')
 		st_numscalar("r(aiccmin)",aiccmin)
 		st_numscalar("r(laiccid)",laiccid)
+		// constant to remove from IC to standardize
+		if (d.prestdflag) {	
+			icstd	= 2*ln((d.prestdy))
+		}
+		else {
+			icstd	= 2*ln((d.ysd))
+		}
+		st_numscalar("r(icstd)",icstd)
+		st_matrix("r(saic)",AIC' :- icstd)
+		st_matrix("r(sbic)",BIC' :- icstd)
+		st_matrix("r(sebic)",EBIC' :- icstd)
+		st_matrix("r(saicc)",AICC' :- icstd)
+		st_numscalar("r(saicmin)",aicmin - icstd)
+		st_numscalar("r(sbicmin)",bicmin - icstd)
+		st_numscalar("r(sebicmin)",ebicmin - icstd)
+		st_numscalar("r(saiccmin)",aiccmin - icstd)
 }
 // end 
 

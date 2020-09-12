@@ -1061,8 +1061,7 @@ The set of returned e-class objects depends on whether lambda is a scalar or a l
 {synopt:{cmd:e(r2)}}R-sq for lasso estimation{p_end}
 {synopt:{cmd:e(rmse)}}root mean squared error{p_end}
 {synopt:{cmd:e(rmseOLS)}}root mean squared error of post-estimation OLS{p_end}
-{synopt:{cmd:e(pmse)}}minimized objective function (penalized mse, lasso/elastic net/ridge only){p_end}
-{synopt:{cmd:e(prmse)}}minimized objective function (penalized rmse, sqrt-lasso only){p_end}
+{synopt:{cmd:e(objfn)}}minimized objective function{p_end}
 {synopt:{cmd:e(k)}}number of selected and unpenalized/partialled-out regressors including constant
 (if present){p_end}
 {synopt:{cmd:e(s)}}number of selected regressors{p_end}

@@ -399,19 +399,20 @@ di "glmnetlambda_a=`glmnetlambda_a' L1lambda_a=`L1lambda_a' L2lambda_a=`L2lambda
 di "glmnetlambda_b=`glmnetlambda_b' L1lambda_b=`L1lambda_b' L2lambda_b=`L2lambda_b'"
 // Lasso / alpha=1
 lasso2 y mpg-foreign, lambda(`glmnetlambda_a') lglmnet
-local pmse = e(pmse)
+local objfn = e(objfn)
 storedresults save glmnet e()
 lasso2 y mpg-foreign, lambda(`L1lambda_a') prestd
 storedresults compare glmnet e(), tol(1e-8)							///
-	exclude(macros: lasso2opt scalar: niter lambda pmse slambda spmse)
-assert reldif(2*`pmse',e(pmse))<1e-8
+	exclude(macros: lasso2opt scalar: niter lambda objfn slambda sobjfn)
+assert reldif(2*`objfn',e(objfn))<1e-8
 // lambda list
 lasso2 y mpg-foreign, lambda(`glmnetlambda_a' `glmnetlambda_b') lglmnet
 storedresults save glmnet e()
 lasso2 y mpg-foreign, lambda(`L1lambda_a' `L1lambda_b') prestd
 storedresults compare glmnet e(), tol(1e-8)							///
 	exclude(macros: lasso2opt										///
-	scalar: niter lmax lmax0 lmin lmin0 laic laicc lbic lebic		///
+	scalar: niter lmax lmax0 lmin lmin0								///
+			laic laicc lbic lebic slaic slaicc slbic slebic			///
 	matrix: lambdamat lambdamat0 slambdamat slambdamat0)
 // Enet
 local alpha=(`glmnetalpha'*`sd')/( (1-`glmnetalpha') + `glmnetalpha'*`sd' )
@@ -419,39 +420,41 @@ local lambda_a=(1-`glmnetalpha')*`L2lambda_a' + `glmnetalpha'*`L1lambda_a'
 local lambda_b=(1-`glmnetalpha')*`L2lambda_b' + `glmnetalpha'*`L1lambda_b'
 di "alpha=`alpha' lambda_a=`lambda_a' lambda_b=`lambda_b'"
 lasso2 y mpg-foreign, alpha(`glmnetalpha') lambda(`glmnetlambda_a') lglmnet
-local pmse = e(pmse)
+local objfn = e(objfn)
 storedresults save glmnet e()
 lasso2 y mpg-foreign, alpha(`alpha') lambda(`lambda_a') prestd
 storedresults compare glmnet e(), tol(1e-8)							///
-	exclude(macros: lasso2opt scalar: niter alpha lambda pmse slambda spmse)
-di 2*`pmse'
-di e(pmse)
-assert reldif(2*`pmse',e(pmse))<1e-8
+	exclude(macros: lasso2opt scalar: niter alpha lambda objfn slambda sobjfn)
+di 2*`objfn'
+di e(objfn)
+assert reldif(2*`objfn',e(objfn))<1e-8
 // lambda list
 lasso2 y mpg-foreign, alpha(`glmnetalpha') lambda(`glmnetlambda_a' `glmnetlambda_b') lglmnet
 storedresults save glmnet e()
 lasso2 y mpg-foreign, alpha(`alpha') lambda(`lambda_a' `lambda_b') prestd
 storedresults compare glmnet e(), tol(1e-8)							///
 	exclude(macros: lasso2opt										///
-	scalar: niter lmax lmax0 lmin lmin0 laic laicc lbic lebic alpha	///
+	scalar: niter lmax lmax0 lmin lmin0								///
+			laic laicc lbic lebic slaic slaicc slbic slebic alpha	///
 	matrix: lambdamat lambdamat0 slambdamat slambdamat0)
 // Ridge / alpha=0
 lasso2 y mpg-foreign, alpha(0) lambda(`glmnetlambda_a') lglmnet
-local pmse = e(pmse)
+local objfn = e(objfn)
 storedresults save glmnet e()
 lasso2 y mpg-foreign, alpha(0) lambda(`L2lambda_a') prestd
 storedresults compare glmnet e(), tol(1e-8)							///
-	exclude(macros: lasso2opt scalar: niter lambda pmse slambda spmse)
-di 2*`pmse'
-di e(pmse)
-assert reldif(2*`pmse',e(pmse))<1e-8
+	exclude(macros: lasso2opt scalar: niter lambda objfn slambda sobjfn)
+di 2*`objfn'
+di e(objfn)
+assert reldif(2*`objfn',e(objfn))<1e-8
 // lambda list
 lasso2 y mpg-foreign, alpha(0) lambda(`glmnetlambda_a' `glmnetlambda_b') lglmnet
 storedresults save glmnet e()
 lasso2 y mpg-foreign, alpha(0) lambda(`L2lambda_a' `L2lambda_b') prestd
 storedresults compare glmnet e(), tol(1e-8)							///
 	exclude(macros: lasso2opt										///
-	scalar: niter lmax lmax0 lmin lmin0 laic laicc lbic lebic		///
+	scalar: niter lmax lmax0 lmin lmin0								///
+			laic laicc lbic lebic slaic slaicc slbic slebic			///
 	matrix: lambdamat lambdamat0 slambdamat slambdamat0)
 
 

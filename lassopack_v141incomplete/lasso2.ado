@@ -65,8 +65,9 @@
 *         stdcoef option implemented here; lassoutils returns both std and unstd coefs.
 *         Combination of ploadings(.)+unitloadings and adaptive+unitloadings now allowed.
 *         Added nostd option - synonym for unitloadings but clearer when used with lglmnet.
+*         Added stdall option - standardized lambda, L1, ICs, as well as coefficients. stdall=>stdcoef.
 *         Fixed bug in display in partialled-out vs factor variables.
-* to consider - rename pmse to objfn
+*         e(objfn) replaces e(pmse) and e(prmse).
 * note in help file that "adaloadings" actually means ada coefs
 
 
@@ -378,6 +379,7 @@ program _lasso2, eclass sortpreserve
 			/// standardization
 			PREStd 									///
 			STDCoef 								/// 
+			STDAll									///
 			NOSTD									/// synonym for unitloadings; for use with lglmnet
 			///
 			/// choice of estimator
@@ -515,6 +517,10 @@ program _lasso2, eclass sortpreserve
 	}
 	local partialflag	= ("`partial'"~="")   	// =1 if regressor other than constant is partialled out
 	local notpenflag	= ("`notpen'"~="")  	// =1 if regressor other than constant is not penalised
+	local stdallflag	= ("`stdall'"~="")		// return everything in std units
+	if `stdallflag' {
+		local stdcoef stdcoef					// stdall => stdcoef
+	}
 	local stdcoefflag	= ("`stdcoef'"~="")		// return coef estimates in std units
 	local prestdflag 	= ("`prestd'"~="")		// =1 if data to be pre-standardized
 	// default is to use standardization loadings; overridden by ploadings, unitloadings, pre-standardization, adaptive
@@ -670,11 +676,9 @@ program _lasso2, eclass sortpreserve
 	* notpen_o		= full, expanded set of not-penalized
 	* notpen_t		= as above but with temp names for all variables
 
-	//  p is number of penalized vars in the model; follows convention in BCH papers
-	//  p is calculated in lassoutils/_rlasso as number of model vars excluding constant
-	//  here we calculate which of the model vars are unpenalized or omitted/base vars
-	//  to provide as `pminus' to lassoutils/_rlasso (unless provided by user)
-	//  do here so that code above is compatible with lasso2
+	//  p is calculated in lassoutils as number of model vars excluding constant
+	//  here we calculate which of the model vars are omitted/base vars
+	//  to provide as `pminus' to lassoutils
 	//  use _o names / display names since they have info on whether var is omitted/base/etc.
 	if ~`pminus' {
 		foreach vn of local varXmodel_d {								//  display names
@@ -684,23 +688,10 @@ program _lasso2, eclass sortpreserve
 				local ++pminus
 			}
 		}
-		foreach vn of local notpen_d {									//  display names
-			_ms_parse_parts `vn'
-			// increment pminus if notpen variable is NOT MISSING
-			if ~r(omit) {
-				local ++pminus
-			}
-		}
 	}
 	//  p0 here is total number of variables provided to model EXCLUDING constant
 	local p0	: word count `varXmodel_o'
 	local p		=`p0'-`pminus'
-	// warn
-	if `p'<=0 {
-		di as text "warning: no penalized regressors; results are OLS"
-	}
-	//  now for error-checking below, p0 should INCLUDE constant unless partialled-out etc.
-	local p0	=`p0'+`consflag'
 	*
 
 	******************* FE, partialling out, standardization ************************************
@@ -845,6 +836,7 @@ program _lasso2, eclass sortpreserve
 					dmflag(`dmflag')						/// =1 if data have been demeaned
 					dofminus(`dofminus')					/// dofs lost from FEs
 					sdofminus(`sdofminus')					/// dofs lost from partialling
+					pminus(`pminus')						///
 					notpen_o(`notpen_d') 					/// not penalised (display name)
 					notpen_t(`notpen_t')					///
 					lambda(`lambdamat0')					/// 
@@ -1050,7 +1042,7 @@ program _lasso2, eclass sortpreserve
 		ereturn local method		`method'
 		ereturn local predict		lasso2_p
 		ereturn local cmd			lasso2
-		//*//ereturn scalar pminus		=`pminus'
+		ereturn scalar pminus		=`pminus'
 		//*//ereturn scalar center		=`center'
 		ereturn scalar stdcoef		=`stdcoefflag'
 		ereturn scalar cons			=`consmodel'
@@ -1072,14 +1064,8 @@ program _lasso2, eclass sortpreserve
 		ereturn scalar srmseOLS		=`srmseOLS'
 		ereturn scalar r2			=`r2'
 		ereturn scalar df			=`df'
-		if "`method'"=="sqrt-lasso" {
-			ereturn scalar prmse	=`objfn'
-			ereturn scalar sprmse	=`sobjfn'
-		}
-		else {
-			ereturn scalar pmse		=`objfn'
-			ereturn scalar spmse	=`sobjfn'
-		}
+		ereturn scalar objfn		=`objfn'
+		ereturn scalar sobjfn		=`sobjfn'
 		ereturn scalar p			=`p'
 		ereturn scalar k			=`k'				//  number of all estimated coefs INCLUDING PARTIALLED-OUT AND CONSTANT
 		ereturn scalar s			=`s'				//  number of selected
@@ -1145,7 +1131,8 @@ program _lasso2, eclass sortpreserve
 		local lmin0		=r(lmin0)
 		local lmax		=r(lmax)
 		local lmax0		=r(lmax0)
-		tempname betas sbetas lambdas lambdas0 slambdas slambdas0 l1norm wl1norm Rsquared dof shat shat0
+		tempname betas sbetas lambdas lambdas0 slambdas slambdas0
+		tempname l1norm sl1norm wl1norm swl1norm Rsquared dof shat shat0
 		mat `betas'		=r(betas)
 		mat `sbetas'	=r(sbetas)
 		mat `lambdas'	=r(lambdalist)
@@ -1153,7 +1140,9 @@ program _lasso2, eclass sortpreserve
 		mat `slambdas'	=r(slambdalist)
 		mat `slambdas0'	=r(slambdalist0)
 		mat `l1norm'	=r(l1norm)
+		mat `sl1norm'	=r(sl1norm)
 		mat `wl1norm'	=r(wl1norm)
+		mat `swl1norm'	=r(swl1norm)
 		mat `Rsquared'	=r(Rsquared)
 		mat `dof'		=r(dof)
 		mat `shat'		=r(shat)
@@ -1165,32 +1154,45 @@ program _lasso2, eclass sortpreserve
 			//mat list `mspe0'
 		}	
 		else if "`noic'"=="" {
-			tempname rss ess tss rsq aicmat bicmat aiccmat ebicmat
+			tempname rss ess tss rsq
+			tempname aicmat bicmat aiccmat ebicmat saicmat sbicmat saiccmat sebicmat
 			mat `rss' = r(rss)
 			mat `ess' = r(ess)
 			mat `tss' = r(tss)
 			mat `rsq' = r(rsq)	
 			// aic
+			local laicid = r(laicid)
 			mat `aicmat' = r(aic)
 			local aicmin = r(aicmin)
-			local laicid = r(laicid)
 			local laic = `lambdas'[`laicid',1]
+			mat `saicmat' = r(saic)
+			local saicmin = r(saicmin)
+			local slaic = `slambdas'[`laicid',1]
 			// aicc
+			local laiccid = r(laiccid)
 			mat `aiccmat' = r(aicc)
 			local aiccmin = r(aiccmin)
-			local laiccid = r(laiccid)
 			local laicc = `lambdas'[`laiccid',1]
-			// ebic
-			mat `ebicmat' = r(ebic)
-			local ebicmin = r(ebicmin)
-			local lebicid = r(lebicid)
-			local ebicgamma = r(ebicgamma)
-			local lebic = `lambdas'[`lebicid',1]
+			mat `saiccmat' = r(saicc)
+			local saiccmin = r(saiccmin)
+			local slaicc = `slambdas'[`laiccid',1]
 			// bic
+			local lbicid = r(lbicid)
 			mat `bicmat' = r(bic)
 			local bicmin = r(bicmin)
-			local lbicid = r(lbicid)
 			local lbic = `lambdas'[`lbicid',1]
+			mat `sbicmat' = r(sbic)
+			local sbicmin = r(sbicmin)
+			local slbic = `slambdas'[`lbicid',1]
+			// ebic
+			local ebicgamma = r(ebicgamma)
+			local lebicid = r(lebicid)
+			mat `ebicmat' = r(ebic)
+			local ebicmin = r(ebicmin)
+			local lebic = `lambdas'[`lebicid',1]
+			mat `sebicmat' = r(sebic)
+			local sebicmin = r(sebicmin)
+			local slebic = `slambdas'[`lebicid',1]
 		}
 
 		// standardization removed constant if present so k is number of elements in vectors
@@ -1234,6 +1236,7 @@ program _lasso2, eclass sortpreserve
 		*** ereturns
 		ereturn post    , obs(`N') depname(`varY_d') esample(`toest')	//  display name
 		ereturn scalar stdcoef		=`stdcoefflag'
+		ereturn scalar stdall		=`stdallflag'
 		ereturn scalar cons 		=`consmodel'
 		ereturn scalar fe 			=`feflag'
 		ereturn scalar alpha		=`alpha'
@@ -1261,7 +1264,9 @@ program _lasso2, eclass sortpreserve
 		ereturn local partial_var 	`partial'
 		ereturn local notpen		`notpen_d'			//  display name
 		ereturn matrix l1norm		=`l1norm'
+		ereturn matrix sl1norm		=`sl1norm'
 		ereturn matrix wl1norm		=`wl1norm'
+		ereturn matrix swl1norm		=`swl1norm'
 		ereturn matrix Psi			=`Psi'
 		ereturn matrix betas		=`betas' 	 
 		ereturn matrix sbetas		=`sbetas' 	 
@@ -1279,27 +1284,39 @@ program _lasso2, eclass sortpreserve
 			ereturn matrix mspe = `mspe0'
 		}
 		else if "`noic'"=="" {
-			ereturn scalar aicmin = `aicmin'
 			//ereturn scalar laicid = `laicid'
-			ereturn scalar bicmin = `bicmin'
-			//ereturn scalar lbicid = `lbicid'
-			ereturn scalar aiccmin = `aiccmin'
 			//ereturn scalar laiccid = `laiccid'
-			ereturn scalar ebicmin = `ebicmin'
-			ereturn scalar ebicgamma = `ebicgamma'
+			//ereturn scalar lbicid = `lbicid'
 			//ereturn scalar lebicid = `lebicid'
-			ereturn matrix rss 		= `rss' 
-			ereturn matrix ess 		= `ess' 
-			ereturn matrix tss		= `tss' 
-			ereturn matrix rsq 		= `rsq' 
-			ereturn matrix aic 		= `aicmat' 
-			ereturn scalar laic		= `laic'
-			ereturn matrix bic 		= `bicmat' 
-			ereturn scalar lbic		= `lbic'
-			ereturn matrix aicc		= `aiccmat' 
-			ereturn scalar laicc	= `laicc'
-			ereturn matrix ebic		= `ebicmat' 
-			ereturn scalar lebic 	= `lebic'
+			ereturn scalar saicmin		= `saicmin'
+			ereturn scalar sbicmin		= `sbicmin'
+			ereturn scalar saiccmin		= `saiccmin'
+			ereturn scalar sebicmin 	= `sebicmin'
+			ereturn scalar aicmin		= `aicmin'
+			ereturn scalar aiccmin		= `aiccmin'
+			ereturn scalar bicmin		= `bicmin'
+			ereturn scalar ebicmin		= `ebicmin'
+			ereturn scalar ebicgamma	= `ebicgamma'
+			ereturn matrix rss			= `rss' 
+			ereturn matrix ess			= `ess' 
+			ereturn matrix tss			= `tss' 
+			ereturn matrix rsq			= `rsq' 
+			ereturn scalar slaic		= `slaic'
+			ereturn scalar slaicc		= `slaicc'
+			ereturn scalar slbic		= `slbic'
+			ereturn scalar slebic	 	= `slebic'
+			ereturn scalar laic			= `laic'
+			ereturn scalar laicc		= `laicc'
+			ereturn scalar lbic			= `lbic'
+			ereturn scalar lebic	 	= `lebic'
+			ereturn matrix aic			= `aicmat' 
+			ereturn matrix bic			= `bicmat' 
+			ereturn matrix aicc			= `aiccmat' 
+			ereturn matrix ebic			= `ebicmat' 
+			ereturn matrix saic			= `saicmat' 
+			ereturn matrix saicc		= `saiccmat' 
+			ereturn matrix sbic			= `sbicmat' 
+			ereturn matrix sebic		= `sebicmat' 
 		}
 	}
 end
@@ -1477,24 +1494,28 @@ program define DisplayPath
 		di as err "Option ic(`ic') not allowed. Using the default ic(ebic)."
 		local ic ebic
 	}
+	if e(stdall) {
+		// prefix for standardized IC
+		local s s
+	}
 	if ("`ic'"=="ebic") {
-		mat `icmat' 	=e(ebic)
-		local icmin 	=e(ebicmin)
+		mat `icmat' 	=e(`s'ebic)
+		local icmin 	=e(`s'ebicmin)
 		local ic EBIC
 	}
 	else if ("`ic'"=="aic") {
-		mat `icmat' 	=e(aic)
-		local icmin 	=e(aicmin)
+		mat `icmat' 	=e(`s'aic)
+		local icmin 	=e(`s'aicmin)
 		local ic AIC
 	}
 	else if ("`ic'"=="bic") {
-		mat `icmat' 	=e(bic)
-		local icmin 	=e(bicmin)
+		mat `icmat' 	=e(`s'bic)
+		local icmin 	=e(`s'bicmin)
 		local ic BIC
 	}
 	else if ("`ic'"=="aicc") {
-		mat `icmat' 	=e(aicc)
-		local icmin 	=e(aiccmin)	
+		mat `icmat' 	=e(`s'aicc)
+		local icmin 	=e(`s'aiccmin)	
 		local ic AICc
 	}
 	else {
@@ -1504,7 +1525,12 @@ program define DisplayPath
 	}
 	****************************************************************************
 	
-	mat `lambdas'	=e(lambdamat)
+	if e(stdall) {
+		mat `lambdas'	=e(slambdamat)
+	}
+	else {
+		mat `lambdas'	=e(lambdamat)
+	}
 	mat `dof'		=e(s)
 	mat `rsq' 		=e(rsq)
 	mata: `vnames'	=st_matrixcolstripe("e(betas)")		// starts as k x 2
@@ -1517,12 +1543,22 @@ program define DisplayPath
 	mata: `r1'		=J(1,cols(`betas'),0)
 	di
 	if "`wnorm'"=="" {
-		mat `l1norm' = e(l1norm)
+		if e(stdall) {
+			mat `l1norm' = e(sl1norm)
+		}
+		else {
+			mat `l1norm' = e(l1norm)
+		}
 		di as text "  Knot{c |}  ID     Lambda    s      L1-Norm        `ic'" _c
 		di as text _col(58) "R-sq   {c |} Action"
 	}
 	else {
-		mat `l1norm' = e(wl1norm)
+		if e(stdall) {
+			mat `l1norm' = e(swl1norm)
+		}
+		else {
+			mat `l1norm' = e(wl1norm)
+		}
 		di as text "  Knot{c |}  ID     Lambda    s     wL1-Norm        `ic'" _c
 		di as text _col(58) "R-sq   {c |} Action"  
 	}
