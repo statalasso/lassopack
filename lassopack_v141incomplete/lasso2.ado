@@ -1,10 +1,9 @@
-*! lasso2 1.0.12 xxaug2020
+*! lasso2 1.0.12 xxsept2020
 *! lassopack package 1.4.1
 *! authors aa/ms
 
 * additional notes
 * return dof for 1 lambda
-* for ridge (or elastic net), maybe report last lambda instead of just knots?
 
 * eclass wrapper for elastic net & sqrt-lasso estimation
 * all partialling, transformations, standardization, FE, tempvars handled here
@@ -62,8 +61,14 @@
 *         Added e(.) macros r2, df & untrunc lists lambdamat0, lmin0, lmax0.
 *         Added support for psolver option.
 * 1.1.12  (xxx)
-*         stdcoef option implies norecover (can't recover std coefs for partialled out vars or constant)
+*         stdcoef option implies norecover (can't recover std coefs for partialled out vars or constant).
+*         stdcoef option implemented here; lassoutils returns both std and unstd coefs.
 *         Combination of ploadings(.)+unitloadings and adaptive+unitloadings now allowed.
+*         Added nostd option - synonym for unitloadings but clearer when used with lglmnet.
+*         Fixed bug in display in partialled-out vs factor variables.
+* to consider - rename pmse to objfn
+* note in help file that "adaloadings" actually means ada coefs
+
 
 program lasso2, eclass sortpreserve
 	version 13
@@ -373,6 +378,7 @@ program _lasso2, eclass sortpreserve
 			/// standardization
 			PREStd 									///
 			STDCoef 								/// 
+			NOSTD									/// synonym for unitloadings; for use with lglmnet
 			///
 			/// choice of estimator
 			ADAptive  								/// adaptive lasso
@@ -392,7 +398,13 @@ program _lasso2, eclass sortpreserve
 			*										///
 			]
 
-	*** flags	
+	*** convenience option for lglmnet
+	if "`nostd'"~="" {
+		local unitloadings unitloadings
+	}
+	*
+	
+	*** flags
 	local feflag		=("`fe'"~="")
 	local debugflag		=("`debug'"~="")
 	local lglmnetflag	=("`lglmnet'"~="")
@@ -440,12 +452,6 @@ program _lasso2, eclass sortpreserve
 	if ("`notpenpar'"!="") {
 		di as error "`notpenpar' listed in both notpen(.) and partial(.)"
 		exit 198
-	}
-	if ("`stdcoef'"!="") & ("`prestd'"=="") {
-		di as text "note: option stdcoef implies prestd and norecover"
-		di as text "      data pre-standardized; no constant reported" 
-		local prestd prestd
-		local norecover norecover
 	}
 	local checkflag 	= ("`ploadings'"!="")+("`adaptive'"!="")
 	if `checkflag'>1 {
@@ -806,26 +812,6 @@ program _lasso2, eclass sortpreserve
 	}
 
  	*************** lambda to matrix **************************************************
-//	if ("`lambda'"!="") {
-//		local lcount	: word count `lambda'
-//		tempname lambdamat0
-//		mat `lambdamat0'	= J(1,`lcount',.)
-//		local j = 1
-//		foreach lami of local lambda {
-//			mat `lambdamat0'[1,`j'] = `lami'  
-//			local j=`j'+1
-//		}
-//		// optional adjustment using undocumented lfactor option
-//		// used for CV
-//		mat `lambdamat0'=`lambdamat0'*`lfactor'
-//	}
-//	else if ("`lambdamat'"!="") {
-//		tempname lambdamat0
-//		mat `lambdamat0'=`lambdamat'
-//		// optional adjustment using undocumented lfactor option
-//		// used for CV
-//		mat `lambdamat0'=`lambdamat0'*`lfactor'
-//	}
 	// lambda provided either as scalar(s) or matrix; convert to matrix
 	// macro lambdamat0 will be empty if not provided
 	// optional adjustment using undocumented lfactor option used for CV
@@ -872,7 +858,6 @@ program _lasso2, eclass sortpreserve
 					stdy(`prestdY')							///
 					stdx(`prestdX')							///
 					stdl(`stdloadflag')						/// use standardization loadings
-					stdcoef(`stdcoefflag')					/// return in standard units
 					ploadings(`ploadings') 					/// L1 norm loadings
 					ploadings2(`ploadings2') 				/// L2 norm loadings
 					`verbose' `vverbose'					///
@@ -887,28 +872,42 @@ program _lasso2, eclass sortpreserve
 	local lcount	=r(lcount)
 	if (`lcount'==1) { //------- scalar lambda -----------------------------------------------//	
 		
+		// message relevant for single lambda only
+		if `stdcoefflag' {
+			di as text "note: option stdcoef implies norecover; no constant reported" 
+			// set partial-recovery flag to 0
+			local parrflag 0
+		}
+		
 		*** e-return lasso estimation results
-		tempname b beta betaOLS Psi stdvec
-		tempname betaAll betaAllOLS
-		tempname lambda lambda0 rmse rmseOLS objfn r2 df
+		tempname b beta betaOLS sbeta sbetaOLS Psi stdvec
+		tempname betaAll betaAllOLS sbetaAll sbetaAllOLS
+		tempname lambda slambda lambda0 rmse rmseOLS objfn srmse srmseOLS sobjfn r2 df
 		if "`cluster'" ~= "" {
 			local N_clust		=r(N_clust)
 		}
 		mat `beta'			=r(beta)		//  may be empty!
 		mat `betaOLS'		=r(betaOLS)		//  may be empty!
 		mat `betaAll'		=r(betaAll)
+		mat `sbeta'			=r(sbeta)
+		mat `sbetaOLS'		=r(sbetaOLS)
 		mat `betaAllOLS'	=r(betaAllOLS)
+		mat `sbetaAll'		=r(sbetaAll)
+		mat `sbetaAllOLS'	=r(sbetaAllOLS)
 		mat `Psi'			=r(Psi)
 		//*//mat `sPsi'			=r(sPsi)
 		mat `stdvec'		=r(stdvec)
 		scalar `lambda'		=r(lambda)
-		//*//scalar `slambda'	=r(slambda)
+		scalar `slambda'	=r(slambda)
 		scalar `lambda0'	=r(lambda0)
 		scalar `rmse'		=r(rmse)		//  Lasso RMSE
 		scalar `rmseOLS'	=r(rmseOLS)		//  post-Lasso RMSE
+		scalar `srmse'		=r(srmse)		//  Standardized Lasso RMSE
+		scalar `srmseOLS'	=r(srmseOLS)	//  Standardized post-Lasso RMSE
 		scalar `r2'			=r(r2)
 		scalar `df'			=r(df)
 		scalar `objfn'		=r(objfn)
+		scalar `sobjfn'		=r(sobjfn)
 		local selected		`r(selected)'	//  EXCL NOTPEN/CONS
 		local selected0		`r(selected0)'	//  INCL NOTPEN, EXCL CONS
 		local s				=r(s)			//  EXCL NOTPEN/CONS; number of elements in selected
@@ -935,6 +934,10 @@ program _lasso2, eclass sortpreserve
 		mat rownames `betaOLS'		= `varY_d'
 		mat rownames `betaAll'		= `varY_d'
 		mat rownames `betaAllOLS'	= `varY_d'
+		mat rownames `sbeta'		= `varY_d'
+		mat rownames `sbetaOLS'		= `varY_d'
+		mat rownames `sbetaAll'		= `varY_d'
+		mat rownames `sbetaAllOLS'	= `varY_d'
 		// used below
 		if `k'>0 {										// cnames will be empty if k=0
 			local cnames_o	: colnames `beta'
@@ -992,19 +995,37 @@ program _lasso2, eclass sortpreserve
 			local k				=colsof(`beta')
 		}
 		*	
-		
+
 		*** Post results
-		if "`ols'"=="" & "`postall'"=="" {
-			mat `b' = `beta'		//  selected post-lasso coeffs by default
-		}
-		else if "`ols'"!="" & "`postall'"=="" {
-			mat `b' = `betaOLS'
-		}
-		else if "`ols'"=="" & "`postall'"!="" {
-			mat `b' = `betaAll'
+		if `stdcoefflag' {
+			// post standardized coeffs
+			if "`ols'"=="" & "`postall'"=="" {
+				mat `b' = `sbeta'		//  selected post-lasso coeffs by default
+			}
+			else if "`ols'"!="" & "`postall'"=="" {
+				mat `b' = `sbetaOLS'
+			}
+			else if "`ols'"=="" & "`postall'"!="" {
+				mat `b' = `sbetaAll'
+			}
+			else {
+				mat `b' = `sbetaAllOLS'
+			}
 		}
 		else {
-			mat `b' = `betaAllOLS'
+			// post unstandardized coeffs
+			if "`ols'"=="" & "`postall'"=="" {
+				mat `b' = `beta'		//  selected post-lasso coeffs by default
+			}
+			else if "`ols'"!="" & "`postall'"=="" {
+				mat `b' = `betaOLS'
+			}
+			else if "`ols'"=="" & "`postall'"!="" {
+				mat `b' = `betaAll'
+			}
+			else {
+				mat `b' = `betaAllOLS'
+			}
 		}
 
 		if `k'==0 {				//  no vars selected
@@ -1012,7 +1033,7 @@ program _lasso2, eclass sortpreserve
 		}
 		else {
 			ereturn post `b', obs(`N') depname(`varY_d') esample(`toest')		// display name
-		}	
+		}
 		
 		// additional returned results
 		ereturn local noftools		`noftools'
@@ -1031,8 +1052,9 @@ program _lasso2, eclass sortpreserve
 		ereturn local cmd			lasso2
 		//*//ereturn scalar pminus		=`pminus'
 		//*//ereturn scalar center		=`center'
+		ereturn scalar stdcoef		=`stdcoefflag'
 		ereturn scalar cons			=`consmodel'
-		//*//ereturn scalar slambda		=`slambda'
+		ereturn scalar slambda		=`slambda'
 		//*//ereturn scalar lambda0		=`lambda0'
 		ereturn scalar lambda		=`lambda'
 
@@ -1046,13 +1068,17 @@ program _lasso2, eclass sortpreserve
 		ereturn scalar fe			=`feflag'
 		ereturn scalar rmse			=`rmse'
 		ereturn scalar rmseOLS		=`rmseOLS'
+		ereturn scalar srmse		=`srmse'
+		ereturn scalar srmseOLS		=`srmseOLS'
 		ereturn scalar r2			=`r2'
 		ereturn scalar df			=`df'
 		if "`method'"=="sqrt-lasso" {
 			ereturn scalar prmse	=`objfn'
+			ereturn scalar sprmse	=`sobjfn'
 		}
 		else {
 			ereturn scalar pmse		=`objfn'
+			ereturn scalar spmse	=`sobjfn'
 		}
 		ereturn scalar p			=`p'
 		ereturn scalar k			=`k'				//  number of all estimated coefs INCLUDING PARTIALLED-OUT AND CONSTANT
@@ -1061,6 +1087,10 @@ program _lasso2, eclass sortpreserve
 		ereturn matrix stdvec		=`stdvec'
 		//*//ereturn matrix sPsi 		=`sPsi'
 		ereturn matrix Psi 			=`Psi'
+		ereturn matrix sbetaAllOLS	=`sbetaAllOLS'
+		ereturn matrix sbetaAll		=`sbetaAll'
+		ereturn matrix sbetaOLS		=`sbetaOLS'
+		ereturn matrix sbeta		=`sbeta'
 		ereturn matrix betaAllOLS	=`betaAllOLS'
 		ereturn matrix betaAll		=`betaAll'
 		ereturn matrix betaOLS		=`betaOLS'
@@ -1115,10 +1145,13 @@ program _lasso2, eclass sortpreserve
 		local lmin0		=r(lmin0)
 		local lmax		=r(lmax)
 		local lmax0		=r(lmax0)
-		tempname betas lambdas lambdas0 l1norm wl1norm Rsquared dof shat shat0
+		tempname betas sbetas lambdas lambdas0 slambdas slambdas0 l1norm wl1norm Rsquared dof shat shat0
 		mat `betas'		=r(betas)
+		mat `sbetas'	=r(sbetas)
 		mat `lambdas'	=r(lambdalist)
 		mat `lambdas0'	=r(lambdalist0)
+		mat `slambdas'	=r(slambdalist)
+		mat `slambdas0'	=r(slambdalist0)
 		mat `l1norm'	=r(l1norm)
 		mat `wl1norm'	=r(wl1norm)
 		mat `Rsquared'	=r(Rsquared)
@@ -1160,7 +1193,6 @@ program _lasso2, eclass sortpreserve
 			local lbic = `lambdas'[`lbicid',1]
 		}
 
-		*********** Unstandardize = convert coef estimates etc. back into original units
 		// standardization removed constant if present so k is number of elements in vectors
 		local cnames_o	: colnames `betas'
 		local pmodel	: word count `cnames_o' 
@@ -1201,6 +1233,7 @@ program _lasso2, eclass sortpreserve
 	
 		*** ereturns
 		ereturn post    , obs(`N') depname(`varY_d') esample(`toest')	//  display name
+		ereturn scalar stdcoef		=`stdcoefflag'
 		ereturn scalar cons 		=`consmodel'
 		ereturn scalar fe 			=`feflag'
 		ereturn scalar alpha		=`alpha'
@@ -1231,11 +1264,14 @@ program _lasso2, eclass sortpreserve
 		ereturn matrix wl1norm		=`wl1norm'
 		ereturn matrix Psi			=`Psi'
 		ereturn matrix betas		=`betas' 	 
+		ereturn matrix sbetas		=`sbetas' 	 
 		ereturn matrix dof			=`dof'
 		ereturn matrix s			=`shat'
 		ereturn matrix s0			=`shat0'
 		ereturn matrix lambdamat	=`lambdas'
 		ereturn matrix lambdamat0	=`lambdas0'
+		ereturn matrix slambdamat	=`slambdas'
+		ereturn matrix slambdamat0	=`slambdas0'
 		ereturn scalar dofminus		=`dofminus'
 		ereturn scalar sdofminus	=`sdofminus'
 		ereturn matrix stdvec		=`stdvec'
@@ -1512,7 +1548,8 @@ program define DisplayPath
 			di as res _col(25) %4.0f el(`dof',`i',1) _c
 			di as res _col(31) %10.5f el(`l1norm',`i',1) _c
 			di as res _col(43) %11.5f el(`icmat',`i',1) _c			//  can be negative so add a space
-			if ("`long'"!="") & (reldif(`icmin',el(`icmat',`i',1))<10^-5) & ("`icmin'"!=".") {
+			// changed from 10^-5 to 10^-12
+			if ("`long'"!="") & (reldif(`icmin',el(`icmat',`i',1))<10^-12) & ("`icmin'"!=".") {
 				di as text "*" _c
 			}
 			else {
@@ -1590,8 +1627,7 @@ program define DispVars
 	di
 end
 
-// Used in rlasso and lasso2.
-// version  2020-07-26
+// version 2020-09-11
 prog DisplayCoefs
 
 	syntax	,								///
@@ -1602,8 +1638,23 @@ prog DisplayCoefs
 	
 	local cons			=e(cons)
 
-	if colsof(e(betaAll)) > e(p) {
-		// betaAll has partialled-out coefs to display
+	local alist			: colnames e(betaAll)
+	fvstrip `alist'
+	local alist			`r(varlist)'
+	local plist			`e(partial)'
+	fvstrip `plist'
+	local plist			`r(varlist)'
+	// vplist is partialled-out vars that don't appear as regressors
+	// if this is empty, then they appear as regressors and should be displayed
+	// if this not empty, then there is no separate partialled-out section to display
+	// stdcoef overrides this - no partialled-out including constant
+	local vplist		: list plist - alist
+	if e(stdcoef) {
+		local partial
+		local partial_ct	=0
+	}
+	else if `: word count `vplist'' == 0 {
+		// betaAll includes partialled-out coefs to display
 		local partial		`e(partial)'
 		local partial_ct	=e(partial_ct)
 	}
@@ -1625,16 +1676,28 @@ prog DisplayCoefs
 	// coef vectors
 	tempname beta betaOLS
 	if "`displayall'"~="" {						//  there must be some vars specified even if nothing selected
-		mat `beta'		=e(betaAll)
-		mat `betaOLS'	=e(betaAllOLS)
+		if e(stdcoef) {
+			mat `beta'		=e(ssbetaAll)
+			mat `betaOLS'	=e(ssbetaAllOLS)
+		}
+		else {
+			mat `beta'		=e(betaAll)
+			mat `betaOLS'	=e(betaAllOLS)
+		}
 		local col_ct	=colsof(`beta')
 		local vlist		: colnames `beta'
 		local vlistOLS	: colnames `betaOLS'
 		local baselevels baselevels
 	}
 	else if e(k)>0 {							//  display only selected, but only if there are any
-		mat `beta'		=e(beta)
-		mat `betaOLS'	=e(betaOLS)
+		if e(stdcoef) {
+			mat `beta'		=e(sbeta)
+			mat `betaOLS'	=e(sbetaOLS)
+		}
+		else {
+			mat `beta'		=e(beta)
+			mat `betaOLS'	=e(betaOLS)
+		}
 		local col_ct	=colsof(`beta')
 		local vlist		: colnames `beta'
 		local vlistOLS	: colnames `betaOLS'
@@ -1773,7 +1836,7 @@ prog define getlambdamat, rclass
 	[							///
 	lscalar(string)				///
 	lmatrix(string)				///
-	lfactor(int 1)				///
+	lfactor(real 1)				///
 	]
 
 	tempname lambdamat

@@ -16,8 +16,8 @@ which lasso2_p
 which lassoutils
 
 * data source
-global prostate prostate.data
-*global prostate https://web.stanford.edu/~hastie/ElemStatLearn/datasets/prostate.data
+* global prostate prostate.data
+global prostate https://web.stanford.edu/~hastie/ElemStatLearn/datasets/prostate.data
 
 * program to compare two matrices in terms of avg abs deviation
 cap program drop comparemat

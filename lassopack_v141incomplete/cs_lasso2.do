@@ -1,5 +1,5 @@
 * certification script for 
-* lassopack package 1.4.X 18aug2020, aa/ms
+* lassopack package 1.4.X 11sept2020, aa/ms
 * parts of the script use R's glmnet and Matlab code "SqrtLassoIterative.m".
 
 set more off
@@ -249,7 +249,7 @@ s0 10119.16 . . . . 3.549222 -62.23642 -106.0307
 s0 6.079465 . .
 */
 mat G = 3.549222, -62.23642, -106.0307, 6.079465, 10119.16
-lasso2 $model, lambda(1000) lglmnet unitloadings
+lasso2 $model, lambda(1000) lglmnet nostd
 assert mreldif(e(b),G) <1e-5
 
 // single lambda, lasso, no standardisation, noconstant
@@ -262,7 +262,7 @@ assert mreldif(e(b),G) <1e-5
 s0 . 6.830147 . . . 1.85882 -2.334519 . 3.886964 . .
 */
 mat G = 6.830147, 1.85882, -2.334519, 3.886964
-lasso2 $model, lambda(1000) lglmnet unitloadings nocons
+lasso2 $model, lambda(1000) lglmnet nostd nocons
 // note looser tolerance
 assert mreldif(e(b),G) <1e-4
 
@@ -370,7 +370,7 @@ s0 -247.7182 8.463531 . .
 mat G = -58.51055, 322.0282, -218.2771, 21.3079, 4.093964, -72.31631,	///
 		-247.7182, 8.463531, 16039.13 
 mat psi = 4, 3, 2, 1, 1, 1, 1, 2, 3, 4
-lasso2 $model, lambda(400) alpha(0.5) lglmnet ploadings(psi) unitloadings
+lasso2 $model, lambda(400) alpha(0.5) lglmnet ploadings(psi) nostd
 // note looser tolerance
 assert mreldif(e(b),G) <1e-4
 
@@ -403,7 +403,7 @@ local pmse = e(pmse)
 storedresults save glmnet e()
 lasso2 y mpg-foreign, lambda(`L1lambda_a') prestd
 storedresults compare glmnet e(), tol(1e-8)							///
-	exclude(macros: lasso2opt scalar: niter lambda pmse)
+	exclude(macros: lasso2opt scalar: niter lambda pmse slambda spmse)
 assert reldif(2*`pmse',e(pmse))<1e-8
 // lambda list
 lasso2 y mpg-foreign, lambda(`glmnetlambda_a' `glmnetlambda_b') lglmnet
@@ -412,7 +412,7 @@ lasso2 y mpg-foreign, lambda(`L1lambda_a' `L1lambda_b') prestd
 storedresults compare glmnet e(), tol(1e-8)							///
 	exclude(macros: lasso2opt										///
 	scalar: niter lmax lmax0 lmin lmin0 laic laicc lbic lebic		///
-	matrix: lambdamat lambdamat0)
+	matrix: lambdamat lambdamat0 slambdamat slambdamat0)
 // Enet
 local alpha=(`glmnetalpha'*`sd')/( (1-`glmnetalpha') + `glmnetalpha'*`sd' )
 local lambda_a=(1-`glmnetalpha')*`L2lambda_a' + `glmnetalpha'*`L1lambda_a'
@@ -423,7 +423,7 @@ local pmse = e(pmse)
 storedresults save glmnet e()
 lasso2 y mpg-foreign, alpha(`alpha') lambda(`lambda_a') prestd
 storedresults compare glmnet e(), tol(1e-8)							///
-	exclude(macros: lasso2opt scalar: niter alpha lambda pmse)
+	exclude(macros: lasso2opt scalar: niter alpha lambda pmse slambda spmse)
 di 2*`pmse'
 di e(pmse)
 assert reldif(2*`pmse',e(pmse))<1e-8
@@ -434,14 +434,14 @@ lasso2 y mpg-foreign, alpha(`alpha') lambda(`lambda_a' `lambda_b') prestd
 storedresults compare glmnet e(), tol(1e-8)							///
 	exclude(macros: lasso2opt										///
 	scalar: niter lmax lmax0 lmin lmin0 laic laicc lbic lebic alpha	///
-	matrix: lambdamat lambdamat0)
+	matrix: lambdamat lambdamat0 slambdamat slambdamat0)
 // Ridge / alpha=0
 lasso2 y mpg-foreign, alpha(0) lambda(`glmnetlambda_a') lglmnet
 local pmse = e(pmse)
 storedresults save glmnet e()
 lasso2 y mpg-foreign, alpha(0) lambda(`L2lambda_a') prestd
 storedresults compare glmnet e(), tol(1e-8)							///
-	exclude(macros: lasso2opt scalar: niter lambda pmse)
+	exclude(macros: lasso2opt scalar: niter lambda pmse slambda spmse)
 di 2*`pmse'
 di e(pmse)
 assert reldif(2*`pmse',e(pmse))<1e-8
@@ -452,7 +452,7 @@ lasso2 y mpg-foreign, alpha(0) lambda(`L2lambda_a' `L2lambda_b') prestd
 storedresults compare glmnet e(), tol(1e-8)							///
 	exclude(macros: lasso2opt										///
 	scalar: niter lmax lmax0 lmin lmin0 laic laicc lbic lebic		///
-	matrix: lambdamat lambdamat0)
+	matrix: lambdamat lambdamat0 slambdamat slambdamat0)
 
 
 ********************************************************************************
@@ -525,15 +525,34 @@ mat psi2 = J(1,10,1)
 // lasso
 lasso2 price mpg-foreign, lambda(10000) adaptive prestd
 mat b=e(b)
-lasso2 price mpg-foreign, lambda(10000) ploadings(psi) unitloadings prestd
+lasso2 price mpg-foreign, lambda(10000) ploadings(psi) prestd
 assert mreldif(b,e(b)) < 1e-7
 // elastic net
 lasso2 price mpg-foreign, lambda(10000) adaptive prestd alpha(0.5)
 mat b=e(b)
-lasso2 price mpg-foreign, lambda(10000) ploadings(psi) ploadings2(psi2) unitloadings prestd alpha(0.5)
+lasso2 price mpg-foreign, lambda(10000) ploadings(psi) ploadings2(psi2) prestd alpha(0.5)
 assert mreldif(b,e(b)) < 1e-7
 
-// use unstandardized coefficients
+// using adaloadings option + standardized coefficients + prestd
+qui reg price_sd mpg_sd-foreign_sd
+
+mata: st_matrix("psi",st_matrix("e(b)"))
+mat psi = psi[1,1..10]
+mat psi2 = J(1,10,1)
+
+// lasso
+lasso2 price mpg-foreign, lambda(10000) adaptive prestd
+mat b=e(b)
+lasso2 price mpg-foreign, lambda(10000) adaloadings(psi) prestd
+assert mreldif(b,e(b)) < 1e-7
+// elastic net
+lasso2 price mpg-foreign, lambda(10000) adaptive prestd alpha(0.5)
+mat b=e(b)
+lasso2 price mpg-foreign, lambda(10000) adaloadings(psi) prestd alpha(0.5)
+assert mreldif(b,e(b)) < 1e-7
+
+
+// use unstandardized coefficients and no prestandardization
 qui reg price mpg-foreign
 
 mata: st_matrix("psi",1:/abs(st_matrix("e(b)")))
@@ -552,12 +571,51 @@ mat b=e(b)
 lasso2 price mpg-foreign, lambda(10000) ploadings(psi) ploadings2(psi2) alpha(0.5)
 assert mreldif(b,e(b)) < 1e-7
 
+// use adaloadings option + unstandardized coefficients + no prestandardization
+qui reg price mpg-foreign
+
+mata: st_matrix("psi",st_matrix("e(b)"))
+// note that psi does NOT need to be rescaled by sd(y) - handled automatically
+mat psi = psi[1,1..10]
+mat psi2 = xsd
+
+// lasso
+lasso2 price mpg-foreign, lambda(10000) adaptive
+mat b=e(b)
+lasso2 price mpg-foreign, lambda(10000) adaloadings(psi)
+assert mreldif(b,e(b)) < 1e-7
+// elastic net
+lasso2 price mpg-foreign, lambda(10000) adaptive alpha(0.5)
+mat b=e(b)
+lasso2 price mpg-foreign, lambda(10000) adaloadings(psi) alpha(0.5)
+assert mreldif(b,e(b)) < 1e-7
+
+
+
+// confirm prestd and no prestd yield same estimates
+// lasso, theta=1
+lasso2 price mpg-foreign, lambda(10000) adaptive
+mat b=e(b)
+lasso2 price mpg-foreign, lambda(10000) adaptive prestd
+assert mreldif(b,e(b)) < 1e-7
+// lasso, theta=2
+lasso2 price mpg-foreign, lambda(10000) adaptive adatheta(2)
+mat b=e(b)
+lasso2 price mpg-foreign, lambda(10000) adaptive prestd adatheta(2)
+assert mreldif(b,e(b)) < 1e-7
+// elastic net
+lasso2 price mpg-foreign, lambda(10000) adaptive alpha(0.5) adatheta(2)
+mat b=e(b)
+lasso2 price mpg-foreign, lambda(10000) adaptive prestd alpha(0.5) adatheta(2)
+assert mreldif(b,e(b)) < 1e-7
+
+
 
 * lglmnet version
-* lglmnet standardizes automatically unless overridden by unitloadings.
+* lglmnet standardizes automatically unless overridden by nostd (=unitloadings)
 
 // replicate adaptive lasso with lglmnet and no standardization
-// unitloadings overrides standardization
+// nostd overrides standardization
 
 // use unstandardized coefficients
 qui reg price mpg-foreign
@@ -567,18 +625,35 @@ mat psi = psi[1,1..10]
 mat psi2 = J(1,10,1)
 
 // lasso
-lasso2 price mpg-foreign, lambda(1000) adaptive lglmnet unitloadings
+lasso2 price mpg-foreign, lambda(1000) adaptive lglmnet nostd
 mat b=e(b)
-lasso2 price mpg-foreign, lambda(1000) ploadings(psi) unitloadings lglmnet
+lasso2 price mpg-foreign, lambda(1000) ploadings(psi) nostd lglmnet
 assert mreldif(b,e(b)) < 1e-7
 // elastic net
-lasso2 price mpg-foreign, lambda(1000) adaptive lglmnet unitloadings alpha(0.5)
+lasso2 price mpg-foreign, lambda(1000) adaptive lglmnet nostd alpha(0.5)
 mat b=e(b)
-lasso2 price mpg-foreign, lambda(1000) ploadings(psi) ploadings2(psi2) unitloadings lglmnet alpha(0.5)
+lasso2 price mpg-foreign, lambda(1000) ploadings(psi) ploadings2(psi2) nostd lglmnet alpha(0.5)
+assert mreldif(b,e(b)) < 1e-7
+
+// use adaloadings option + unstandardized coefficients + no standardization
+qui reg price mpg-foreign
+
+mata: st_matrix("psi",st_matrix("e(b)"))
+mat psi = psi[1,1..10]
+
+// lasso
+lasso2 price mpg-foreign, lambda(10000) adaptive lglmnet nostd
+mat b=e(b)
+lasso2 price mpg-foreign, lambda(10000) adaloadings(psi) nostd lglmnet
+assert mreldif(b,e(b)) < 1e-7
+// elastic net
+lasso2 price mpg-foreign, lambda(10000) adaptive lglmnet nostd alpha(0.5)
+mat b=e(b)
+lasso2 price mpg-foreign, lambda(10000) adaloadings(psi) nostd lglmnet alpha(0.5)
 assert mreldif(b,e(b)) < 1e-7
 
 // replicate adaptive lasso with lglmnet and standardization
-// lglmnet standardizes by default unless overridden by unitloadings
+// lglmnet standardizes by default unless overridden by nostd
 
 // use standardized coefficients
 // note dep var doesn't have to be standardized
@@ -598,6 +673,25 @@ lasso2 price mpg-foreign, lambda(1000) adaptive lglmnet alpha(0.5)
 mat b=e(b)
 lasso2 price mpg-foreign, lambda(1000) ploadings(psi) ploadings2(psi2) lglmnet alpha(0.5)
 assert mreldif(b,e(b)) < 1e-7
+
+// use standardized coefficients + adaloadings option
+// note dep var doesn't have to be standardized
+qui reg price mpg_sd-foreign_sd
+
+mata: st_matrix("psi",st_matrix("e(b)"))
+mat psi = psi[1,1..10]
+
+// lasso
+lasso2 price mpg-foreign, lambda(1000) adaptive lglmnet
+mat b=e(b)
+lasso2 price mpg-foreign, lambda(1000) adaloadings(psi) lglmnet
+assert mreldif(b,e(b)) < 1e-7
+// elastic net
+lasso2 price mpg-foreign, lambda(1000) adaptive lglmnet alpha(0.5)
+mat b=e(b)
+lasso2 price mpg-foreign, lambda(1000) adaloadings(psi) lglmnet alpha(0.5)
+assert mreldif(b,e(b)) < 1e-7
+
 
 
 ********************************************************************************
@@ -942,113 +1036,6 @@ foreach i of numlist $lambdalist {
 }
 *
 
-
-********************************************************************************
-*** verify adapative weights												 ***
-********************************************************************************
-
-/*
-** prestd should match no prestd (no prestd = ada weights incorporate scaling)
-** ada theta = 1
-lasso2 $model, lambda(10) adaptive
-mat A = e(b)
-lasso2 $model, lambda(10) adaptive prestd
-mat B = e(b)
-comparemat A B
-** ada theta = 2
-lasso2 $model, lambda(1) adaptive adatheta(2)
-mat A = e(b)
-lasso2 $model, lambda(1) adaptive adatheta(2) prestd
-mat B = e(b)
-comparemat A B
-
-
-** lasso with ada theta = 1
-lasso2 $model, adaptive verb
-mat psi = e(Psi)
-
-reg $model
-mat bols = e(b)
-// need to remove depvar from scaling of weights
-qui sum `e(depvar)'
-mat bols = bols * 1/r(sd) * sqrt(r(N)/(r(N)-1))
-
-mat checkpsi = J(1,8,.)
-forvalues i=1(1)8 {
-	mat checkpsi[1,`i'] = abs(1/bols[1,`i'])
-}
-comparemat psi checkpsi
-
-
-** lasso with ada theta = 2
-lasso2 $model, adaptive verb adatheta(2)
-mat psi = e(Psi)
-
-reg $model
-mat bols = e(b)
-// need to remove depvar from scaling of weights
-qui sum `e(depvar)'
-mat bols = bols * 1/r(sd) * sqrt(r(N)/(r(N)-1))
-global depvar `e(depvar)'
-global indepvars	: list global(model) - global(depvar)
-mat checkpsi = J(1,8,.)
-// need to remove theta from scaling of weights
-forvalues i=1(1)8 {
-	mat checkpsi[1,`i'] = abs(1/bols[1,`i'])^2
-	local v		: word `i' of $indepvars
-	qui sum `v'
-	mat checkpsi[1,`i'] = checkpsi[1,`i'] * (1/r(sd) * sqrt(r(N)/(r(N)-1)))
-}
-comparemat psi checkpsi
-
-// use of adaloadings option
-
-** prestd should match no prestd (no prestd = ada weights incorporate scaling)
-** ada theta = 1
-lasso2 $model , l(10) alph(0)
-mat b = e(betaAll)
-lasso2 $model, lambda(10) adaloadings(b) adaptive
-mat A = e(b)
-lasso2 $model, lambda(10) adaloadings(b) adaptive prestd
-mat B = e(b)
-comparemat A B
-** ada theta = 2
-lasso2 $model , l(10) alph(0)
-mat b = e(betaAll)
-lasso2 $model, lambda(1) adaloadings(b) adaptive adatheta(2)
-mat A = e(b)
-lasso2 $model, lambda(1) adaloadings(b) adaptive adatheta(2) prestd
-mat B = e(b)
-comparemat A B
-
-// adaloadings with theta=1
-lasso2 $model , l(10) alph(0)
-mat b = e(betaAll)
-lasso2 $model, adaptive adal(b) adat(1)
-mat psi = e(Psi)
-mat checkpsi = J(1,8,.)
-forvalues i=1(1)8 {
-	mat checkpsi[1,`i'] = abs(1/b[1,`i'])
-}
-comparemat psi checkpsi
-
-// adaloadings with theta=2
-lasso2 $model , l(10) alph(0)
-mat b = e(betaAll)
-lasso2 $model, adaptive adal(b) adat(2)
-mat psi = e(Psi)
-global depvar `e(depvar)'
-global indepvars	: list global(model) - global(depvar)
-mat checkpsi = J(1,8,.)
-// need to remove theta from scaling of weights
-forvalues i=1(1)8 {
-	mat checkpsi[1,`i'] = abs(1/b[1,`i'])^2
-	local v		: word `i' of $indepvars
-	qui sum `v'
-	mat checkpsi[1,`i'] = checkpsi[1,`i'] * (1/r(sd) * sqrt(r(N)/(r(N)-1)))
-}
-comparemat psi checkpsi
-*/
 
 ********************************************************************************
 *** pre-estimation standardisation vs std on the fly   				 		 ***
