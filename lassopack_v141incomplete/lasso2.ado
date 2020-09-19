@@ -833,6 +833,7 @@ program _lasso2, eclass sortpreserve
 					xnames_o(`varXmodel_d')					/// display name
 					xnames_t(`varXmodel_t')					///
 					consflag(`consflag')					/// =0 if cons already partialled out or if no cons
+					stdallflag(`stdallflag')				/// =1 if lambdas etc. are provided in the standardized metric
 					dmflag(`dmflag')						/// =1 if data have been demeaned
 					dofminus(`dofminus')					/// dofs lost from FEs
 					sdofminus(`sdofminus')					/// dofs lost from partialling
@@ -1155,44 +1156,49 @@ program _lasso2, eclass sortpreserve
 		}	
 		else if "`noic'"=="" {
 			tempname rss ess tss rsq
-			tempname aicmat bicmat aiccmat ebicmat saicmat sbicmat saiccmat sebicmat
-			mat `rss' = r(rss)
-			mat `ess' = r(ess)
-			mat `tss' = r(tss)
-			mat `rsq' = r(rsq)	
+			tempname aicmat bicmat aiccmat ebicmat saicmat sbicmat saiccmat sebicmat IC sIC
+			mat `rss'			= r(rss)
+			mat `ess'			= r(ess)
+			mat `tss'			= r(tss)
+			mat `rsq'			= r(rsq)	
 			// aic
-			local laicid = r(laicid)
-			mat `aicmat' = r(aic)
-			local aicmin = r(aicmin)
-			local laic = `lambdas'[`laicid',1]
-			mat `saicmat' = r(saic)
-			local saicmin = r(saicmin)
-			local slaic = `slambdas'[`laicid',1]
+			local laicid		= r(laicid)
+			mat `aicmat'		= r(aic)
+			local aicmin		= r(aicmin)
+			local laic			= `lambdas'[`laicid',1]
+			mat `saicmat'		= r(saic)
+			local saicmin		= r(saicmin)
+			local slaic			= `slambdas'[`laicid',1]
 			// aicc
-			local laiccid = r(laiccid)
-			mat `aiccmat' = r(aicc)
-			local aiccmin = r(aiccmin)
-			local laicc = `lambdas'[`laiccid',1]
-			mat `saiccmat' = r(saicc)
-			local saiccmin = r(saiccmin)
-			local slaicc = `slambdas'[`laiccid',1]
+			local laiccid		= r(laiccid)
+			mat `aiccmat'		= r(aicc)
+			local aiccmin		= r(aiccmin)
+			local laicc			= `lambdas'[`laiccid',1]
+			mat `saiccmat'		= r(saicc)
+			local saiccmin		= r(saiccmin)
+			local slaicc		= `slambdas'[`laiccid',1]
 			// bic
-			local lbicid = r(lbicid)
-			mat `bicmat' = r(bic)
-			local bicmin = r(bicmin)
-			local lbic = `lambdas'[`lbicid',1]
-			mat `sbicmat' = r(sbic)
-			local sbicmin = r(sbicmin)
-			local slbic = `slambdas'[`lbicid',1]
+			local lbicid		= r(lbicid)
+			mat `bicmat'		= r(bic)
+			local bicmin		= r(bicmin)
+			local lbic			= `lambdas'[`lbicid',1]
+			mat `sbicmat'		= r(sbic)
+			local sbicmin		= r(sbicmin)
+			local slbic			= `slambdas'[`lbicid',1]
 			// ebic
-			local ebicgamma = r(ebicgamma)
-			local lebicid = r(lebicid)
-			mat `ebicmat' = r(ebic)
-			local ebicmin = r(ebicmin)
-			local lebic = `lambdas'[`lebicid',1]
-			mat `sebicmat' = r(sebic)
-			local sebicmin = r(sebicmin)
-			local slebic = `slambdas'[`lebicid',1]
+			local ebicgamma		= r(ebicgamma)
+			local lebicid		= r(lebicid)
+			mat `ebicmat'		= r(ebic)
+			local ebicmin		= r(ebicmin)
+			local lebic			= `lambdas'[`lebicid',1]
+			mat `sebicmat'		= r(sebic)
+			local sebicmin		= r(sebicmin)
+			local slebic		= `slambdas'[`lebicid',1]
+			
+			mat `IC'			= `aicmat', `aiccmat', `bicmat', `ebicmat'
+			mat colnames `IC'	= "AIC" "AICC" "BIC" "EBIC"
+			mat `sIC'			= `saicmat', `saiccmat', `sbicmat', `sebicmat'
+			mat colnames `sIC'	= "sAIC" "sAICC" "sBIC" "sEBIC"
 		}
 
 		// standardization removed constant if present so k is number of elements in vectors
@@ -1289,18 +1295,18 @@ program _lasso2, eclass sortpreserve
 			//ereturn scalar lbicid = `lbicid'
 			//ereturn scalar lebicid = `lebicid'
 			ereturn scalar saicmin		= `saicmin'
-			ereturn scalar sbicmin		= `sbicmin'
 			ereturn scalar saiccmin		= `saiccmin'
+			ereturn scalar sbicmin		= `sbicmin'
 			ereturn scalar sebicmin 	= `sebicmin'
 			ereturn scalar aicmin		= `aicmin'
 			ereturn scalar aiccmin		= `aiccmin'
 			ereturn scalar bicmin		= `bicmin'
 			ereturn scalar ebicmin		= `ebicmin'
 			ereturn scalar ebicgamma	= `ebicgamma'
-			ereturn matrix rss			= `rss' 
-			ereturn matrix ess			= `ess' 
-			ereturn matrix tss			= `tss' 
-			ereturn matrix rsq			= `rsq' 
+			ereturn matrix rss			= `rss'
+			ereturn matrix ess			= `ess'
+			ereturn matrix tss			= `tss'
+			ereturn matrix rsq			= `rsq'
 			ereturn scalar slaic		= `slaic'
 			ereturn scalar slaicc		= `slaicc'
 			ereturn scalar slbic		= `slbic'
@@ -1309,14 +1315,17 @@ program _lasso2, eclass sortpreserve
 			ereturn scalar laicc		= `laicc'
 			ereturn scalar lbic			= `lbic'
 			ereturn scalar lebic	 	= `lebic'
-			ereturn matrix aic			= `aicmat' 
-			ereturn matrix bic			= `bicmat' 
-			ereturn matrix aicc			= `aiccmat' 
-			ereturn matrix ebic			= `ebicmat' 
-			ereturn matrix saic			= `saicmat' 
-			ereturn matrix saicc		= `saiccmat' 
-			ereturn matrix sbic			= `sbicmat' 
-			ereturn matrix sebic		= `sebicmat' 
+			// ereturn matrix aic		= `aicmat'
+			// ereturn matrix bic		= `bicmat'
+			// ereturn matrix aicc		= `aiccmat'
+			// ereturn matrix ebic		= `ebicmat'
+			// ereturn matrix saic		= `saicmat'
+			// ereturn matrix saicc		= `saiccmat'
+			// ereturn matrix sbic		= `sbicmat'
+			// ereturn matrix sebic		= `sebicmat'
+			
+			ereturn matrix IC			= `IC'
+			ereturn matrix sIC			= `sIC'
 		}
 	}
 end
@@ -1340,21 +1349,27 @@ program define plotpath
 			error 198
 		}
 	
-// Contents of b matrix and lambda vector made into Stata variables for plotting.
-// Varnames taken from colnames of b matrix.
-// Strip out constant (if it's there) since creating a variable called _cons not alllowed.
-// If `plotvar' macro is empty, graph all regressors.
+		// Contents of b matrix and lambda vector made into Stata variables for plotting.
+		// Varnames taken from colnames of b matrix.
+		// Strip out constant (if it's there) since creating a variable called _cons not alllowed.
+		// If `plotvar' macro is empty, graph all regressors.
 		tempname lambdas l1norm 
 		tempvar touse
 		gen `touse'=e(sample)
-		mat b=e(betas)
-		//mat lambdalist = e(lambdalist)
-		mat `lambdas' = e(lambdamat)
+		
+		// standardized or not
+		if e(stdall) {
+			local s s
+		}
+
+		mat b=e(`s'betas)
+		mat `lambdas' = e(`s'lambdamat)
+
 		if "`wnorm'"=="" {
-			mat `l1norm' = e(l1norm)
+			mat `l1norm' = e(`s'l1norm)
 		}
 		else {
-			mat `l1norm' = e(wl1norm)
+			mat `l1norm' = e(`s'wl1norm)
 		}
 		local lcount = e(lcount)
 		local cons = e(cons)
@@ -1365,7 +1380,7 @@ program define plotpath
 		local bnames : colnames b
 		fvstrip `bnames'				//  annoying - Stata inserts b/n etc. in first factor variable etc.
 		local bnames `r(varlist)'
-// process pv names
+		// process pv names
 		if "`plotvar'"=="" {
 			local pvnames `bnames'		//  plot all
 		}
@@ -1377,12 +1392,12 @@ program define plotpath
 			fvunab pvn_unab	: `pvn'
 			local pvnames_unab `pvnames_unab' `pvn_unab'
 		}
-// process b names
+		// process b names
 		foreach bn in `bnames' {		//  unab one-by-one to standardise, get i prefix etc.
 			fvunab bn_unab	: `bn'
 			local bnames_unab `bnames_unab' `bn_unab'
 		}
-// now that unabbreviated varlists are prepared, check that plotvars are in regressors
+		// now that unabbreviated varlists are prepared, check that plotvars are in regressors
 		if "`plotvar'"~="" {
 			local nplotvarcheck	 : list pvnames_unab - bnames_unab
 			if ("`nplotvarcheck'"!="") {								
@@ -1390,12 +1405,12 @@ program define plotpath
 				exit 198
 			}
 		}
-// in case there are any . or # operators included, change to "_" or "__"
+		// in case there are any . or # operators included, change to "_" or "__"
 		local bnames	: subinstr local bnames_unab "." "_", all count(local numsubs)
 		local pvnames	: subinstr local pvnames_unab "." "_", all count(local numsubs)
 		local bnames	: subinstr local bnames "#" "__", all count(local numsubs)
 		local pvnames	: subinstr local pvnames "#" "__", all count(local numsubs)
-// check for max number of variables to plot
+		// check for max number of variables to plot
 		local npv : word count `pvnames'
 		if `npv' >= 100 {
 			di as err "Error: lassopath can graph at most 99 regressors"
@@ -1403,7 +1418,7 @@ program define plotpath
 			exit 103
 		}
 
-// create graphing data and then plot
+		// create graphing data and then plot
  		preserve						//  do this here so that above vars exist
 		clear
 		qui svmat b
@@ -1484,7 +1499,7 @@ program define DisplayPath
 
 	version 12
 	tempname betas r1 r2 vnames d addedM removedM lambdas dof l1norm vnames0 allselected allsec
-	tempname icmat rsq
+	tempname all_ic icmat rsq
 	
 	***** information criteria *************************************************
 	if ("`ic'"=="") {
@@ -1498,23 +1513,27 @@ program define DisplayPath
 		// prefix for standardized IC
 		local s s
 	}
+	
+	// has all IC or standardized IC vectors
+	mat `all_ic'		= e(`s'IC)
+	
 	if ("`ic'"=="ebic") {
-		mat `icmat' 	=e(`s'ebic)
+		mat `icmat' 	=`all_ic'[.,"`s'EBIC"]
 		local icmin 	=e(`s'ebicmin)
 		local ic EBIC
 	}
 	else if ("`ic'"=="aic") {
-		mat `icmat' 	=e(`s'aic)
+		mat `icmat' 	=`all_ic'[.,"`s'AIC"]
 		local icmin 	=e(`s'aicmin)
 		local ic AIC
 	}
 	else if ("`ic'"=="bic") {
-		mat `icmat' 	=e(`s'bic)
+		mat `icmat' 	=`all_ic'[.,"`s'BIC"]
 		local icmin 	=e(`s'bicmin)
 		local ic BIC
 	}
 	else if ("`ic'"=="aicc") {
-		mat `icmat' 	=e(`s'aicc)
+		mat `icmat' 	=`all_ic'[.,"`s'AICC"]
 		local icmin 	=e(`s'aiccmin)	
 		local ic AICc
 	}
@@ -1525,12 +1544,8 @@ program define DisplayPath
 	}
 	****************************************************************************
 	
-	if e(stdall) {
-		mat `lambdas'	=e(slambdamat)
-	}
-	else {
-		mat `lambdas'	=e(lambdamat)
-	}
+	mat `lambdas'	=e(`s'lambdamat)
+
 	mat `dof'		=e(s)
 	mat `rsq' 		=e(rsq)
 	mata: `vnames'	=st_matrixcolstripe("e(betas)")		// starts as k x 2
@@ -1543,22 +1558,12 @@ program define DisplayPath
 	mata: `r1'		=J(1,cols(`betas'),0)
 	di
 	if "`wnorm'"=="" {
-		if e(stdall) {
-			mat `l1norm' = e(sl1norm)
-		}
-		else {
-			mat `l1norm' = e(l1norm)
-		}
+		mat `l1norm' = e(`s'l1norm)
 		di as text "  Knot{c |}  ID     Lambda    s      L1-Norm        `ic'" _c
 		di as text _col(58) "R-sq   {c |} Action"
 	}
 	else {
-		if e(stdall) {
-			mat `l1norm' = e(swl1norm)
-		}
-		else {
-			mat `l1norm' = e(wl1norm)
-		}
+		mat `l1norm' = e(`s'wl1norm)
 		di as text "  Knot{c |}  ID     Lambda    s     wL1-Norm        `ic'" _c
 		di as text _col(58) "R-sq   {c |} Action"  
 	}

@@ -1,5 +1,5 @@
-*! cvlasso 1.0.10 29july2020
-*! lassopack package 1.4.0
+*! cvlasso 1.0.11 xxxsept2020
+*! lassopack package 1.4.1
 *! authors aa/ms
 
 * Updates (release date):
@@ -27,6 +27,8 @@
 * 1.0.10  (29july2020)
 *         Updated with nodevcrit option to preserve old behavior with new lasso2 use of
 *         dev crit for path (nodevcrit = use full lambda list, no exiting path early).
+* 1.0.11  (xxxsept2020)
+*         added nopath option to calls to lasso2
 
 program cvlasso, eclass sortpreserve
 	version 13
@@ -52,7 +54,7 @@ program cvlasso, eclass sortpreserve
 			* 										///
 			]
 
-	local lversion 1.0.07
+	local lversion 1.0.11
 	local pversion 1.1.01
 
 	if "`version'" != "" {							//  Report program version number, then exit.
@@ -352,6 +354,7 @@ program _cvlasso, eclass sortpreserve
 										alpha(`alphai')			///
 										verb norecover			///
 										nodevcrit				/// force use of full lambda list
+										nopath					///
 										`options' 	
 
 				if ("`saveest'"!="") {
@@ -436,6 +439,7 @@ program _cvlasso, eclass sortpreserve
 										holdout(`validation') 	///
 										alpha(`alphai')			///
 										nodevcrit				/// force use of full lambda list
+										nopath					///
 										`options' 	
 				if ("`saveest'"!="") {
 					estimates store `saveest'`rsam'

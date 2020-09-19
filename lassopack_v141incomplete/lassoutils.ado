@@ -136,6 +136,7 @@
 *         Adaptive elastic net now correctly uses adaptive weights for L1 norm only.
 *         Standardized and unstandardized coefficients now returned for lassopath; stdcoef option unneeded.
 *         Standardized lambdas, norms, ICs, etc. also returned.
+*         lassopath code takes stdall option - indicates that provided lambdas are in the standardized metric
 *         Fixed bug in reporting of value of maximized obj fn for elastic net/ridge (missing 1/2 on L2 norm).
 *         EBIC now excludes omitted/base variables when calculating model size p.
 
@@ -831,6 +832,7 @@ program define _lassopath, rclass sortpreserve
 		[										/// 
 		verbose(int 0)							///
 		consflag(int 1)							/// default is constant specified
+		stdallflag(int 0)						/// =1 if lambdas etc. are provided in the standardized metric
 		dofminus(int 0)							/// lost degrees of freedom from FEs
 		sdofminus(int 0)						/// lost degrees of freedom from partialling out ("s"=small; includes the constant)
 		pminus(int 0)							/// omitted/base variables to be excluded from model count
@@ -1016,6 +1018,7 @@ program define _lassopath, rclass sortpreserve
 					"`toest'",			///
 					"`holdout'", 		/// holdout for MSPE
 					`consflag',			///
+					`stdallflag',		///
 					`dmflag',			///
 					`dofminus',			/// lost dofs from FEs
 					`sdofminus',		/// lost dofs from partialling
@@ -2904,6 +2907,9 @@ void ReturnResultsPath(		struct outputStructPath scalar t,	/// #1
 
 		// no intercept if pre-standardized
 		// note that betas are in original metric
+		// standardized betas do not have a constant so retain name list for these
+		sXnamesall		= Xnamesall
+		spall			= pall
 		if (t.cons) {
 			// note transposes
 			intercept	= mean(*d.y) :- mean(*d.X)*betas'
@@ -2933,6 +2939,7 @@ void ReturnResultsPath(		struct outputStructPath scalar t,	/// #1
 		st_matrix("r(shat0)",t.shat0)
 		st_matrix("r(stdvec)",d.sdvec)
 		st_matrixcolstripe("r(betas)",(J(pall,1,""),Xnamesall'))
+		st_matrixcolstripe("r(sbetas)",(J(spall,1,""),sXnamesall'))
 		st_matrixcolstripe("r(lambdalist0)",("","Lambdas"))
 		st_matrixcolstripe("r(lambdalist)",("","Lambdas"))
 		st_matrixcolstripe("r(slambdalist0)",("","Lambdas"))
@@ -4117,6 +4124,7 @@ void EstimateLassoPath(							///  Complete Mata code for lassopath
 				string scalar toest,			///
 				string scalar holdout, 			/// validation data
 				real scalar cons,				///
+				real scalar stdall,				///
 				real scalar dmflag,				///
 				real scalar dofminus,			///
 				real scalar sdofminus,			///
@@ -4278,13 +4286,24 @@ void EstimateLassoPath(							///  Complete Mata code for lassopath
 					lmax = max(abs((d.Xy)):/((Psi)'))/d.ysd/d.n * 1/max((0.001,alpha))
 				}
 			}
-			else if (d.prestdflag) {
-					// lambda max provided, rescale it
-					lmax = lmax / d.prestdy
-			}
-			else {
-					// lambda max provided, rescale it
-					lmax = lmax / d.ysd
+			else {		// lambda max provided
+				// if lambda max has been provided in the standardized metric, then must first unstandardize
+				if (stdall) {
+					if (d.prestdflag) {
+						lmax	=lmax * d.prestdy
+					}
+					else {
+						lmax	=lmax * d.ysd
+					}
+				}
+				if (d.prestdflag) {
+						// lambda max provided, rescale it
+						lmax = lmax / d.prestdy
+				}
+				else {
+						// lambda max provided, rescale it
+						lmax = lmax / d.ysd
+				}
 			}
 			lmin	= lminratio*lmax
 			lambda	=exp(rangen(log(lmax),log(lmin),lcount))'
@@ -4301,8 +4320,19 @@ void EstimateLassoPath(							///  Complete Mata code for lassopath
 					lmax = max(abs((d.Xy)):/((Psi)'))*2/max((0.001,alpha))
 				}
 			}
-			else if ((d.prestdflag) & (!d.sqrtflag)) {
-					lmax = lmax / d.prestdy
+			else {		// lambda max provided
+				// if lambda max has been provided in the standardized metric, then must first unstandardize
+				if (stdall) {
+					if (d.prestdflag) {
+						lmax	=lmax * d.prestdy
+					}
+					else {
+						lmax	=lmax * d.ysd
+					}
+				}
+				if ((d.prestdflag) & (!d.sqrtflag)) {
+						lmax = lmax / d.prestdy
+				}
 			}
 			lmin = lminratio*lmax
 			lambda=exp(rangen(log(lmax),log(lmin),lcount))'
@@ -4311,6 +4341,16 @@ void EstimateLassoPath(							///  Complete Mata code for lassopath
 	else {
 		// lambdas provided
 		lambda			=st_matrix(lambdamat)
+		// if lambdas have been provided in the standardized metric, then must first unstandardize
+		if (stdall) {
+			if (d.prestdflag) {
+				lambda	=lambda * d.prestdy
+			}
+			else {
+				lambda	=lambda * d.ysd
+			}
+		}
+		// now adjust lambdas for prestandardization as necessary
 		if (d.lglmnet) {
 			if (d.prestdflag) {
 				lambda	=lambda * 1/(d.prestdy)
@@ -4330,6 +4370,16 @@ void EstimateLassoPath(							///  Complete Mata code for lassopath
 	else {
 		// separate L2 norm lambda provided
 		lambda2			=st_matrix(lambda2mat)
+		// if lambdas have been provided in the standardized metric, then must first unstandardize
+		if (stdall) {
+			if (d.prestdflag) {
+				lambda2	=lambda2 * d.prestdy
+			}
+			else {
+				lambda2	=lambda2 * d.ysd
+			}
+		}
+		// now adjust lambdas for prestandardization as necessary
 		if (d.lglmnet) {
 			if (d.prestdflag) {
 				lambda2	=lambda2 * 1/(d.prestdy)
