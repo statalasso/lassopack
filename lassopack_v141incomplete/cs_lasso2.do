@@ -765,7 +765,7 @@ comparemat a b
 *** validation using Stata's elasticnet										 ***
 ********************************************************************************
 
-// ridge
+// ridge (requires 2 grid points for some reason)
 cap noi elasticnet linear $model, alphas(0) grid(2, min(0.25))
 lassoselect alpha = 0 lambda = 0.25
 lassocoef, display(coef, penalized)
@@ -776,7 +776,7 @@ lasso2 $model, lambda($L) alpha(0)
 assert mreldif(b,e(b))<1e-7
 
 // lasso
-cap noi elasticnet linear $model, alphas(1) grid(2, min(0.25))
+cap noi elasticnet linear $model, alphas(1) grid(1, min(0.25))
 lassoselect alpha = 1 lambda = 0.25
 lassocoef, display(coef, penalized)
 mat b=e(b)
@@ -786,7 +786,7 @@ lasso2 $model, lambda($L)
 assert mreldif(b,e(b))<1e-7
 
 // elastic net
-cap noi elasticnet linear $model, alphas(0.5) grid(2, min(0.25))
+cap noi elasticnet linear $model, alphas(0.5) grid(1, min(0.25))
 lassoselect alpha = 0.5 lambda = 0.25
 lassocoef, display(coef, penalized)
 mat b=e(b)
