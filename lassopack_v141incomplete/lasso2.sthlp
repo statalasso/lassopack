@@ -1077,13 +1077,14 @@ The variable price1000 is used to illustrate scaling effects.{p_end}
 {phang2}. {stata "gen double price1000 = price/1000"}{p_end}
 
 {pstd}To load the data into R for comparison with glmnet, use the following commands.
-The packages glmnet, haven and tidyverse are assumed.{p_end}
-{phang2}{res:auto <- read_dta("http://www.stata-press.com/data/r9/auto.dta")}{p_end}
-{phang2}{res:auto <- auto %>% drop_na()}{p_end}
+The packages haven and tidyr need to be installed.{p_end}
+{phang2}{res:auto <- haven::read_dta("http://www.stata-press.com/data/r9/auto.dta")}{p_end}
+{phang2}{res:auto <- tidyr::drop_na()}{p_end}
 {phang2}{res:n <- nrow(auto)}{p_end}
 {phang2}{res:price <- auto$price}{p_end}
-{phang2}{res:X <- auto[,c("mpg","rep78","headroom","trunk","weight","length","turn","displacement","gear_ratio","foreign")]}{p_end}
-{phang2}{res:X <- X %>% mutate(foreign = as.integer(foreign)) %>% as.matrix()}{p_end}
+{phang2}{res:X <- auto[, c("mpg", "rep78", "headroom", "trunk", "weight", "length", "turn", "displacement", "gear_ratio", "foreign")]}{p_end}
+{phang2}{res:X$foreign <- as.integer(X$foreign)}{p_end}
+{phang2}{res:X <- as.matrix(X)}{p_end}
 
 {pstd}Replication of StataCorp's {helpb lasso} and {helpb elasticnet}
 requires only the rescaling of lambda by 2N.
@@ -1103,7 +1104,7 @@ N=69 so the {opt lasso2} lambda becomes 138000/(2*69) = 1000{p_end}
 so {opt lasso2}'s default parameterization again requires only rescaling by 2N.
 When the {opt lglmnet} option is used with the {opt lglmnet} option,
 the L0 penalty should be provided using the glmnet definition.
-To estimate in R, use the following command:{p_end}
+To estimate in R, load glmnet with library("glmnet") and use the following command:{p_end}
 {phang2}{res:r<-glmnet(X,price,alpha=1,lambda=1000,thresh=1e-15)}{p_end}
 
 {phang2}. {stata "lasso2 price mpg-foreign, lambda(138000)"}{p_end}
