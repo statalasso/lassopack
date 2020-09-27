@@ -1,4 +1,4 @@
-*! lasso2 1.0.12 xxsept2020
+*! lasso2 1.0.12 27sept2020
 *! lassopack package 1.4.1
 *! authors aa/ms
 
@@ -60,7 +60,7 @@
 *         Added dofminus/sdofminus to capture lost degrees of freedom from partial/FE.
 *         Added e(.) macros r2, df & untrunc lists lambdamat0, lmin0, lmax0.
 *         Added support for psolver option.
-* 1.1.12  (xxx)
+* 1.1.12  (27sept2020)
 *         stdcoef option implies norecover (can't recover std coefs for partialled out vars or constant).
 *         stdcoef option implemented here; lassoutils returns both std and unstd coefs.
 *         Combination of ploadings(.)+unitloadings and adaptive+unitloadings now allowed.

@@ -1,4 +1,4 @@
-*! cvlasso 1.0.11 xxxsept2020
+*! cvlasso 1.0.11 27sept2020
 *! lassopack package 1.4.1
 *! authors aa/ms
 
@@ -27,7 +27,7 @@
 * 1.0.10  (29july2020)
 *         Updated with nodevcrit option to preserve old behavior with new lasso2 use of
 *         dev crit for path (nodevcrit = use full lambda list, no exiting path early).
-* 1.0.11  (xxxsept2020)
+* 1.0.11  (27sept2020)
 *         added nopath option to calls to lasso2
 
 program cvlasso, eclass sortpreserve

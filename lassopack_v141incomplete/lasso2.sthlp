@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0.15  23sept2020}{...}
+{* *! version 1.0.15  27sept2020}{...}
 {hline}
 {cmd:help lasso2}{right: lassopack v1.4.1}
 {hline}
@@ -29,6 +29,7 @@
 {cmdab:lc:ount}{cmd:(}{it:integer}{cmd:)}
 {cmdab:lminr:atio}{cmd:(}{it:real}{cmd:)}
 {cmdab:lmax:}{cmd:(}{it:real}{cmd:)}
+{cmd:lglmnet}
 {cmdab:notp:en(}{it:varlist}{cmd:)}
 {cmdab:par:tial(}{it:varlist}{cmd:)}
 {cmd:psolver(}{it:string}{cmd:)}

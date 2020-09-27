@@ -1,4 +1,4 @@
-*! lassoutils 1.2.03 xxxsept2020
+*! lassoutils 1.2.03 27sept2020
 *! lassopack package 1.4.1
 *! authors aa/cbh/ms
 
@@ -123,7 +123,7 @@
 *         Reverted to adaptive lasso behavior where any omitted vars trigger univariate OLS.
 *         Bug fix in lmax+prestd option (lmax should be rescaled).
 *         Reporting bug fix with vverbose option and elastic net - wrong obj fn. (Reporting only.)
-* 1.2.03 (xxx)
+* 1.2.03 (27sept2020)
 *         Added lglmnet option for _lassopath.
 *         Recoded algorithms to drop use of lambda2 and psi2.
 *         Removed * for options so illegals caught.

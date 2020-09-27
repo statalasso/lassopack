@@ -1,5 +1,5 @@
 * certification script for 
-* lassopack package 1.1.01 08nov2018, aa
+* lassopack package 1.4.1 27sept2020
 * parts of the script use R's glmnet for validation
 
 cscript "cvlasso" adofile cvlasso lasso2 lasso2_p lassoutils
@@ -192,14 +192,15 @@ comparemat A B
 assert myxb2==myxb
 
 // and now with alpha list
-cvlasso $model if sample, alpha(0 0.3 0.7 1)
+// use lglmnet option
+cvlasso $model if sample, alpha(0 0.3 0.7 1) lglmnet
 local mylopt = e(`type')
 local myalpha = e(alphamin)
 cap drop myr
 predict double myr if !sample, r `type' postres
 mat A = e(b)
 
-lasso2 $model if sample, lambda(`mylopt') alpha(`myalpha') 
+lasso2 $model if sample, lambda(`mylopt') alpha(`myalpha') lglmnet
 cap drop myr2
 predict double myr2 if !sample, r
 mat B = e(b)
