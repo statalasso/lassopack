@@ -1,66 +1,64 @@
 {smcl}
 {com}{sf}{ul off}{txt}{.-}
       name:  {res}<unnamed>
-       {txt}log:  {res}C:\LocalStore\ecomes\Dropbox\statalasso\working\cs_cvlasso.smcl
+       {txt}log:  {res}C:\Users\ecomes\Documents\GitHub\lassopack\lassopack_v141incomplete\cs_cvlasso.smcl
   {txt}log type:  {res}smcl
- {txt}opened on:  {res}27 Jul 2020, 18:21:00
-{txt}r; t=0.03 18:21:00
+ {txt}opened on:  {res}27 Sep 2020, 20:21:45
+{txt}r; t=0.02 20:21:45
 
 {com}. about
 
-{txt}Stata/SE 16.0 for Windows (64-bit x86-64)
-Revision 14 Nov 2019
+{txt}Stata/SE 16.1 for Windows (64-bit x86-64)
+Revision 30 Jun 2020
 Copyright 1985-2019 StataCorp LLC
 
 Total physical memory:     {res}  16.00 GB
-{txt}Available physical memory: {res}   8.06 GB
+{txt}Available physical memory: {res}   5.19 GB
 
-5-user Stata network perpetual license:
-       Serial number:  401606228165
-         Licensed to:  Mark Schaffer
-                       Heriot-Watt University
-{txt}r; t=0.00 18:21:00
+{txt}Stata license: {res}5-user network perpetual
+{txt}Serial number: {res}401606228165
+  {txt}Licensed to: {res}Mark Schaffer
+               Heriot-Watt University
+{txt}r; t=0.01 20:21:45
 
 {com}. which cvlasso
 {txt}.\cvlasso.ado
-{res}*! cvlasso 1.0.10 27july2020
-*! lassopack package 1.3.1
+{res}*! cvlasso 1.0.11 27sept2020
+*! lassopack package 1.4.1
 *! authors aa/ms
-{txt}r; t=0.00 18:21:00
+{txt}r; t=0.00 20:21:45
 
 {com}. which lasso2
 {txt}.\lasso2.ado
-{res}*! lasso2 1.0.11 26july2020
-*! lassopack package 1.3.1
+{res}*! lasso2 1.0.12 27sept2020
+*! lassopack package 1.4.1
 *! authors aa/ms
-{txt}r; t=0.00 18:21:00
+{txt}r; t=0.00 20:21:45
 
 {com}. which lasso2_p
-{txt}C:\LocalStore\ecomes\Dropbox\StataLasso\Current\lasso2_p.ado
+{txt}.\lasso2_p.ado
 {res}*! lasso2_p 1.0.06 14oct2019
-*! lassopack package 1.3.1
+*! lassopack package 1.4
 *! authors aa/ms
-{txt}r; t=0.00 18:21:00
+{txt}r; t=0.00 20:21:45
 
 {com}. which lassoutils
 {txt}.\lassoutils.ado
-{res}*! lassoutils 1.2.01 24july2020
-*! lassopack package 1.3
+{res}*! lassoutils 1.2.03 27sept2020
+*! lassopack package 1.4.1
 *! authors aa/cbh/ms
-{txt}r; t=0.01 18:21:00
+{txt}r; t=0.01 20:21:45
 
 {com}. 
 . * data source
-. global prostate prostate.data
-{txt}r; t=0.00 18:21:00
-
-{com}. global prostate https://web.stanford.edu/~hastie/ElemStatLearn/datasets/prostate.data
-{txt}r; t=0.00 18:21:00
+. * global prostate prostate.data
+. global prostate https://web.stanford.edu/~hastie/ElemStatLearn/datasets/prostate.data
+{txt}r; t=0.00 20:21:45
 
 {com}. 
 . * program to compare two matrices in terms of avg abs deviation
 . cap program drop comparemat
-{txt}r; t=0.00 18:21:00
+{txt}r; t=0.00 20:21:45
 
 {com}. program define comparemat , rclass
 {txt}  1{com}.         syntax anything [, tol(real 10e-3)] 
@@ -76,12 +74,12 @@ Total physical memory:     {res}  16.00 GB
 {txt} 11{com}.         return scalar mreldif = `diff'
 {txt} 12{com}.         assert `diff'<`tol'
 {txt} 13{com}. end
-{txt}r; t=0.00 18:21:00
+{txt}r; t=0.00 20:21:45
 
 {com}. 
 . 
 . set seed 123456
-{txt}r; t=0.00 18:21:00
+{txt}r; t=0.00 20:21:45
 
 {com}. 
 . ********************************************************************************
@@ -91,29 +89,29 @@ Total physical memory:     {res}  16.00 GB
 . * load example data
 . insheet using "$prostate", tab clear
 {txt}(11 vars, 97 obs)
-r; t=0.57 18:21:00
+r; t=1.50 20:21:47
 
 {com}. drop if _n==97 // to ensure same size for each fold
 {txt}(1 observation deleted)
-r; t=0.00 18:21:00
+r; t=0.00 20:21:47
 
 {com}. 
 . global model lpsa lcavol lweight age lbph svi lcp gleason pgg45
-{txt}r; t=0.00 18:21:00
+{txt}r; t=0.00 20:21:47
 
 {com}. 
 . * generate fold variable
 . gen myfid = 1 if _n<=32
 {txt}(64 missing values generated)
-r; t=0.00 18:21:00
+r; t=0.00 20:21:47
 
 {com}. replace myfid = 2 if _n>32 & _n<=64
 {txt}(32 real changes made)
-r; t=0.00 18:21:00
+r; t=0.00 20:21:47
 
 {com}. replace myfid = 3 if _n>64
 {txt}(32 real changes made)
-r; t=0.00 18:21:00
+r; t=0.00 20:21:47
 
 {com}. 
 . cvlasso $model, foldvar(myfid) lambda(150 15 1.5)
@@ -130,10 +128,10 @@ Fold {res}1 2 3
   Run model: {stata cvlasso, lopt}
 {p 0 8 2}^ lse = largest lambda for which MSPE is within one standard error of the minimal MSPE.{p_end}
   Run model: {stata cvlasso, lse}
-r; t=0.22 18:21:01
+r; t=0.77 20:21:48
 
 {com}. mat L = e(mmspe)
-{txt}r; t=0.00 18:21:01
+{txt}r; t=0.00 20:21:48
 
 {com}. /*
 > c<-cv.glmnet(X,y,foldid=fid,lambda=c(150, 15, 1.5)/(2*n),keep=TRUE, intercept=TRUE,standardize=TRUE)
@@ -144,7 +142,7 @@ r; t=0.22 18:21:01
 > 1 0.608541
 > */
 . mat G = ( 2.38651835211576 \ 1.46349718052732 \ 1.48495268875459 )
-{txt}r; t=0.00 18:21:01
+{txt}r; t=0.00 20:21:48
 
 {com}. comparemat L G // compare coeffs
 {txt}mreldif=.0001112103968545. tolerance = .01
@@ -160,10 +158,10 @@ c1 {res} 2.3865184
 r1 {res} 2.3865184
 {txt}r2 {res} 1.4634972
 {txt}r3 {res} 1.4849527
-{reset}r; t=0.02 18:21:01
+{reset}r; t=0.04 20:21:48
 
 {com}. cap drop xb
-{txt}r; t=0.00 18:21:01
+{txt}r; t=0.00 20:21:48
 
 {com}. predict double xb, lopt
 {txt}Estimate lasso with lambda=15 (lopt).
@@ -183,17 +181,17 @@ r1 {res} 2.3865184
 {txt}{hline 18}{c BT}{hline 32}
 No xb or residuals options specified. Assume xb (fitted values).
 Use e(b) from previous lasso2 estimation (lambda=15).
-r; t=0.02 18:21:01
+r; t=0.10 20:21:48
 
 {com}. sum xb
 
 {txt}    Variable {c |}        Obs        Mean    Std. Dev.       Min        Max
 {hline 13}{c +}{hline 57}
 {space 10}xb {c |}{res}         96    2.446048    .7801003   .9116189   4.111986
-{txt}r; t=0.00 18:21:01
+{txt}r; t=0.00 20:21:48
 
 {com}. assert reldif(0.608541,r(Var))<0.001 // compare predicted values
-{txt}r; t=0.00 18:21:01
+{txt}r; t=0.00 20:21:48
 
 {com}. 
 . 
@@ -211,10 +209,10 @@ Fold {res}1 2 3
   Run model: {stata cvlasso, lopt}
 {p 0 8 2}^ lse = largest lambda for which MSPE is within one standard error of the minimal MSPE.{p_end}
   Run model: {stata cvlasso, lse}
-r; t=0.02 18:21:01
+r; t=0.03 20:21:48
 
 {com}. mat L = e(mmspe)
-{txt}r; t=0.00 18:21:01
+{txt}r; t=0.00 20:21:48
 
 {com}. /*
 > c<-cv.glmnet(X,y,foldid=fid,lambda=c(150, 15, 1.5)/(2*n),keep=TRUE, intercept=TRUE,standardize=TRUE)
@@ -225,7 +223,7 @@ r; t=0.02 18:21:01
 > 1 0.608541
 > */
 . mat G = ( 2.38651835211576 \ 1.46349718052732 \ 1.48495268875459 )
-{txt}r; t=0.00 18:21:01
+{txt}r; t=0.00 20:21:48
 
 {com}. comparemat L G // compare coeffs
 {txt}mreldif=.0001112103968545. tolerance = .01
@@ -241,10 +239,10 @@ c1 {res} 2.3865184
 r1 {res} 2.3865184
 {txt}r2 {res} 1.4634972
 {txt}r3 {res} 1.4849527
-{reset}r; t=0.00 18:21:01
+{reset}r; t=0.00 20:21:48
 
 {com}. cap drop xb
-{txt}r; t=0.00 18:21:01
+{txt}r; t=0.00 20:21:48
 
 {com}. predict double xb, lopt
 {txt}Estimate lasso with lambda=15 (lopt).
@@ -264,17 +262,17 @@ r1 {res} 2.3865184
 {txt}{hline 18}{c BT}{hline 32}
 No xb or residuals options specified. Assume xb (fitted values).
 Use e(b) from previous lasso2 estimation (lambda=15).
-r; t=0.87 18:21:02
+r; t=1.44 20:21:49
 
 {com}. sum xb
 
 {txt}    Variable {c |}        Obs        Mean    Std. Dev.       Min        Max
 {hline 13}{c +}{hline 57}
 {space 10}xb {c |}{res}         96    2.446048    .7801003   .9116189   4.111986
-{txt}r; t=0.00 18:21:02
+{txt}r; t=0.00 20:21:49
 
 {com}. assert reldif(0.608541,r(Var))<0.001 // compare predicted values
-{txt}r; t=0.00 18:21:02
+{txt}r; t=0.00 20:21:49
 
 {com}. 
 . 
@@ -293,10 +291,10 @@ Fold {res}1 2 3
 {p 0 8 2}^ lse = largest lambda for which MSPE is within one standard error of the minimal MSPE.{p_end}
   Run model: {stata cvlasso, lse}
 {err}Warning: lopt is at the limit of the lambda range.
-{txt}r; t=0.02 18:21:02
+{txt}r; t=0.03 20:21:49
 
 {com}. mat L = e(mmspe)
-{txt}r; t=0.00 18:21:02
+{txt}r; t=0.00 20:21:49
 
 {com}. /*
 > > # cross-validation with intercept & standardisation
@@ -308,7 +306,7 @@ Fold {res}1 2 3
 > 1 0.7840688
 > */ 
 . mat G = ( 2.10369705382686 \ 1.42993421234064 \ 1.42756055333919 )
-{txt}r; t=0.00 18:21:02
+{txt}r; t=0.00 20:21:49
 
 {com}. comparemat L G // compare coeffs
 {txt}mreldif=.0000306155184697. tolerance = .01
@@ -324,10 +322,10 @@ c1 {res} 2.1036977
 r1 {res} 2.1036971
 {txt}r2 {res} 1.4299342
 {txt}r3 {res} 1.4275606
-{reset}r; t=0.00 18:21:02
+{reset}r; t=0.00 20:21:49
 
 {com}. cap drop xb
-{txt}r; t=0.00 18:21:02
+{txt}r; t=0.00 20:21:49
 
 {com}. predict double xb, lopt
 {txt}Estimate lasso with lambda=1.5 (lopt).
@@ -349,17 +347,17 @@ r1 {res} 2.1036971
 {txt}{hline 18}{c BT}{hline 32}
 No xb or residuals options specified. Assume xb (fitted values).
 Use e(b) from previous lasso2 estimation (lambda=1.5).
-r; t=0.01 18:21:02
+r; t=0.02 20:21:49
 
 {com}. sum xb
 
 {txt}    Variable {c |}        Obs        Mean    Std. Dev.       Min        Max
 {hline 13}{c +}{hline 57}
 {space 10}xb {c |}{res}         96    2.446048    .8854875    .513909   4.598263
-{txt}r; t=0.00 18:21:02
+{txt}r; t=0.00 20:21:49
 
 {com}. assert reldif(0.7840688,r(Var))<0.001 // compare predicted values
-{txt}r; t=0.00 18:21:02
+{txt}r; t=0.00 20:21:49
 
 {com}. 
 . 
@@ -378,10 +376,10 @@ Fold {res}1 2 3
 {p 0 8 2}^ lse = largest lambda for which MSPE is within one standard error of the minimal MSPE.{p_end}
   Run model: {stata cvlasso, lse}
 {err}Warning: lopt is at the limit of the lambda range.
-{txt}r; t=0.09 18:21:02
+{txt}r; t=0.14 20:21:49
 
 {com}. mat L = e(mmspe)
-{txt}r; t=0.00 18:21:02
+{txt}r; t=0.00 20:21:49
 
 {com}. /*
 > > c<-cv.glmnet(X,y,foldid=fid,lambda=c(150, 15, 1.5)/(2*n),keep=TRUE, intercept=FALSE,standardize=FALSE)
@@ -392,7 +390,7 @@ Fold {res}1 2 3
 > 1 0.7919695
 > */
 . mat G = ( 1.99980614859113 \ 1.26638436668758 \ 1.24680539174676 )
-{txt}r; t=0.00 18:21:02
+{txt}r; t=0.00 20:21:49
 
 {com}. comparemat L G // compare coeffs
 {txt}mreldif=.0003010647418424. tolerance = .01
@@ -408,10 +406,10 @@ c1 {res} 1.9998833
 r1 {res} 1.9998061
 {txt}r2 {res} 1.2663844
 {txt}r3 {res} 1.2468054
-{reset}r; t=0.00 18:21:02
+{reset}r; t=0.00 20:21:49
 
 {com}. cap drop xb
-{txt}r; t=0.00 18:21:02
+{txt}r; t=0.00 20:21:49
 
 {com}. predict double xb, lopt
 {txt}Estimate lasso with lambda=1.5 (lopt).
@@ -430,17 +428,17 @@ r1 {res} 1.9998061
 {txt}{hline 18}{c BT}{hline 32}
 No xb or residuals options specified. Assume xb (fitted values).
 Use e(b) from previous lasso2 estimation (lambda=1.5).
-r; t=0.02 18:21:02
+r; t=0.03 20:21:49
 
 {com}. sum xb
 
 {txt}    Variable {c |}        Obs        Mean    Std. Dev.       Min        Max
 {hline 13}{c +}{hline 57}
 {space 10}xb {c |}{res}         96    2.443933    .8905195   .5327895   4.561406
-{txt}r; t=0.00 18:21:02
+{txt}r; t=0.00 20:21:49
 
 {com}. assert reldif(0.7919695,r(Var))<0.001 // compare predicted values
-{txt}r; t=0.00 18:21:02
+{txt}r; t=0.00 20:21:49
 
 {com}. 
 . cvlasso $model, foldvar(myfid) lambda(150 15 1.5) nocons
@@ -457,10 +455,10 @@ Fold {res}1 2 3
   Run model: {stata cvlasso, lopt}
 {p 0 8 2}^ lse = largest lambda for which MSPE is within one standard error of the minimal MSPE.{p_end}
   Run model: {stata cvlasso, lse}
-r; t=0.09 18:21:02
+r; t=0.15 20:21:49
 
 {com}. mat L = e(mmspe)
-{txt}r; t=0.00 18:21:02
+{txt}r; t=0.00 20:21:49
 
 {com}. /*
 > c<-cv.glmnet(X,y,foldid=fid,lambda=c(150, 15, 1.5)/(2*n),keep=TRUE, intercept=FALSE,standardize=TRUE)
@@ -471,7 +469,7 @@ r; t=0.09 18:21:02
 > 1 0.6062457
 > */
 . mat G = ( 1.90652583524832 \ 1.23222044017428 \ 1.31053116174191 )
-{txt}r; t=0.00 18:21:02
+{txt}r; t=0.00 20:21:49
 
 {com}. comparemat L G // compare coeffs
 {txt}mreldif=.0007943382600103. tolerance = .01
@@ -487,10 +485,10 @@ c1 {res} 1.9069161
 r1 {res} 1.9065258
 {txt}r2 {res} 1.2322204
 {txt}r3 {res} 1.3105312
-{reset}r; t=0.00 18:21:02
+{reset}r; t=0.00 20:21:49
 
 {com}. cap drop xb
-{txt}r; t=0.00 18:21:02
+{txt}r; t=0.00 20:21:49
 
 {com}. predict double xb, lopt
 {txt}Estimate lasso with lambda=15 (lopt).
@@ -506,17 +504,17 @@ r1 {res} 1.9065258
 {txt}{hline 18}{c BT}{hline 32}
 No xb or residuals options specified. Assume xb (fitted values).
 Use e(b) from previous lasso2 estimation (lambda=15).
-r; t=0.01 18:21:02
+r; t=0.02 20:21:49
 
 {com}. sum xb
 
 {txt}    Variable {c |}        Obs        Mean    Std. Dev.       Min        Max
 {hline 13}{c +}{hline 57}
 {space 10}xb {c |}{res}         96    2.446541    .7785216   .9124108     4.1091
-{txt}r; t=0.00 18:21:02
+{txt}r; t=0.00 20:21:49
 
 {com}. assert reldif(0.6062457,r(Var))<0.001 // compare predicted values
-{txt}r; t=0.00 18:21:02
+{txt}r; t=0.00 20:21:49
 
 {com}. 
 . cvlasso $model, foldvar(myfid) lambda(150 15 1.5) nocons prestd
@@ -533,10 +531,10 @@ Fold {res}1 2 3
   Run model: {stata cvlasso, lopt}
 {p 0 8 2}^ lse = largest lambda for which MSPE is within one standard error of the minimal MSPE.{p_end}
   Run model: {stata cvlasso, lse}
-r; t=0.09 18:21:02
+r; t=0.15 20:21:50
 
 {com}. mat L = e(mmspe)
-{txt}r; t=0.00 18:21:02
+{txt}r; t=0.00 20:21:50
 
 {com}. /*
 > c<-cv.glmnet(X,y,foldid=fid,lambda=c(150, 15, 1.5)/(2*n),keep=TRUE, intercept=FALSE,standardize=TRUE)
@@ -547,7 +545,7 @@ r; t=0.09 18:21:02
 > 1 0.6062457
 > */
 . mat G = ( 1.90652583524832 \ 1.23222044017428 \ 1.31053116174191 )
-{txt}r; t=0.00 18:21:02
+{txt}r; t=0.00 20:21:50
 
 {com}. comparemat L G // compare coeffs
 {txt}mreldif=.0007943382600105. tolerance = .01
@@ -563,10 +561,10 @@ c1 {res} 1.9069161
 r1 {res} 1.9065258
 {txt}r2 {res} 1.2322204
 {txt}r3 {res} 1.3105312
-{reset}r; t=0.00 18:21:02
+{reset}r; t=0.00 20:21:50
 
 {com}. cap drop xb
-{txt}r; t=0.00 18:21:02
+{txt}r; t=0.00 20:21:50
 
 {com}. predict double xb, lopt
 {txt}Estimate lasso with lambda=15 (lopt).
@@ -582,17 +580,17 @@ r1 {res} 1.9065258
 {txt}{hline 18}{c BT}{hline 32}
 No xb or residuals options specified. Assume xb (fitted values).
 Use e(b) from previous lasso2 estimation (lambda=15).
-r; t=0.01 18:21:02
+r; t=0.02 20:21:50
 
 {com}. sum xb
 
 {txt}    Variable {c |}        Obs        Mean    Std. Dev.       Min        Max
 {hline 13}{c +}{hline 57}
 {space 10}xb {c |}{res}         96    2.446541    .7785216   .9124108     4.1091
-{txt}r; t=0.00 18:21:02
+{txt}r; t=0.00 20:21:50
 
 {com}. assert reldif(0.6062457,r(Var))<0.001 // compare predicted values
-{txt}r; t=0.00 18:21:02
+{txt}r; t=0.00 20:21:50
 
 {com}. 
 . 
@@ -603,14 +601,14 @@ r; t=0.01 18:21:02
 . * load example data
 . insheet using "$prostate", tab clear
 {txt}(11 vars, 97 obs)
-r; t=0.21 18:21:02
+r; t=0.18 20:21:50
 
 {com}.  
 . global model lpsa lcavol lweight age lbph svi lcp gleason pgg45
-{txt}r; t=0.00 18:21:02
+{txt}r; t=0.00 20:21:50
 
 {com}. gen sample = _n<70 
-{txt}r; t=0.00 18:21:02
+{txt}r; t=0.00 20:21:50
 
 {com}.  
 . foreach type of newlist lopt lse {c -(} 
@@ -634,14 +632,15 @@ r; t=0.21 18:21:02
 {txt} 13{com}. assert myxb2==myxb
 {txt} 14{com}. 
 . // and now with alpha list
-. cvlasso $model if sample, alpha(0 0.3 0.7 1)
+. // use lglmnet option
+. cvlasso $model if sample, alpha(0 0.3 0.7 1) lglmnet
 {txt} 15{com}. local mylopt = e(`type')
 {txt} 16{com}. local myalpha = e(alphamin)
 {txt} 17{com}. cap drop myr
 {txt} 18{com}. predict double myr if !sample, r `type' postres
 {txt} 19{com}. mat A = e(b)
 {txt} 20{com}. 
-. lasso2 $model if sample, lambda(`mylopt') alpha(`myalpha') 
+. lasso2 $model if sample, lambda(`mylopt') alpha(`myalpha') lglmnet
 {txt} 21{com}. cap drop myr2
 {txt} 22{com}. predict double myr2 if !sample, r
 {txt} 23{com}. mat B = e(b)
@@ -763,69 +762,69 @@ K-fold cross-validation with 10 folds. Elastic net with alpha=0.
 Fold {res}1 2 3 4 5 6 7 8 9 10 
 {txt}          {c |} {space 3} {txt}    Lambda {space 3} {txt}      MSPE {space 3} {txt}  st. dev.
 {hline 10}{c +}{hline 45}
-{txt}         1{c |} {space 3} {res}  64.86388 {space 3} {res}  .4058132 {space 3} {res} .06221679  ^
-{txt}         2{c |} {space 3} {res} 59.101552 {space 3} {res} .40324694 {space 3} {res} .06142219  
-{txt}         3{c |} {space 3} {res} 53.851133 {space 3} {res} .40093415 {space 3} {res} .06074699  
-{txt}         4{c |} {space 3} {res} 49.067147 {space 3} {res} .39886836 {space 3} {res}  .0601891  
-{txt}         5{c |} {space 3} {res} 44.708157 {space 3} {res} .39704166 {space 3} {res} .05974469  
-{txt}         6{c |} {space 3} {res} 40.736407 {space 3} {res} .39544472 {space 3} {res} .05940836  
-{txt}         7{c |} {space 3} {res} 37.117497 {space 3} {res} .39406688 {space 3} {res} .05917335  
-{txt}         8{c |} {space 3} {res} 33.820081 {space 3} {res} .39289627 {space 3} {res} .05903176  
-{txt}         9{c |} {space 3} {res} 30.815598 {space 3} {res} .39192004 {space 3} {res} .05897483  
-{txt}        10{c |} {space 3} {res} 28.078025 {space 3} {res} .39112448 {space 3} {res} .05899333  
-{txt}        11{c |} {space 3} {res} 25.583651 {space 3} {res} .39049534 {space 3} {res} .05907774  
-{txt}        12{c |} {space 3} {res}  23.31087 {space 3} {res} .39001796 {space 3} {res} .05921862  
-{txt}        13{c |} {space 3} {res} 21.239997 {space 3} {res} .38967762 {space 3} {res} .05940678  
-{txt}        14{c |} {space 3} {res} 19.353094 {space 3} {res} .38945964 {space 3} {res}  .0596335  
-{txt}        15{c |} {space 3} {res} 17.633818 {space 3} {res} .38934968 {space 3} {res} .05989068  
-{txt}        16{c |} {space 3} {res} 16.067278 {space 3} {res} .38933388 {space 3} {res} .06017092  *
-{txt}        17{c |} {space 3} {res} 14.639906 {space 3} {res} .38939902 {space 3} {res} .06046757  
-{txt}        18{c |} {space 3} {res} 13.339337 {space 3} {res} .38953267 {space 3} {res} .06077479  
-{txt}        19{c |} {space 3} {res} 12.154307 {space 3} {res} .38972324 {space 3} {res} .06108748  
-{txt}        20{c |} {space 3} {res} 11.074552 {space 3} {res} .38996011 {space 3} {res} .06140132  
-{txt}        21{c |} {space 3} {res} 10.090719 {space 3} {res} .39023361 {space 3} {res} .06171267  
-{txt}        22{c |} {space 3} {res} 9.1942875 {space 3} {res} .39053506 {space 3} {res} .06201856  
-{txt}        23{c |} {space 3} {res} 8.3774923 {space 3} {res} .39085677 {space 3} {res} .06231659  
-{txt}        24{c |} {space 3} {res}  7.633259 {space 3} {res}   .391192 {space 3} {res} .06260488  
-{txt}        25{c |} {space 3} {res} 6.9551413 {space 3} {res} .39153492 {space 3} {res} .06288201  
-{txt}        26{c |} {space 3} {res} 6.3372657 {space 3} {res} .39188054 {space 3} {res} .06314697  
-{txt}        27{c |} {space 3} {res} 5.7742805 {space 3} {res} .39222469 {space 3} {res} .06339906  
-{txt}        28{c |} {space 3} {res} 5.2613093 {space 3} {res} .39256391 {space 3} {res}  .0636379  
-{txt}        29{c |} {space 3} {res} 4.7939091 {space 3} {res} .39289538 {space 3} {res} .06386333  
-{txt}        30{c |} {space 3} {res} 4.3680314 {space 3} {res} .39321688 {space 3} {res} .06407537  
-{txt}        31{c |} {space 3} {res} 3.9799876 {space 3} {res} .39352671 {space 3} {res} .06427422  
-{txt}        32{c |} {space 3} {res} 3.6264164 {space 3} {res} .39382361 {space 3} {res}  .0644602  
-{txt}        33{c |} {space 3} {res} 3.3042556 {space 3} {res} .39410669 {space 3} {res} .06463371  
-{txt}        34{c |} {space 3} {res} 3.0107146 {space 3} {res} .39437542 {space 3} {res} .06479524  
-{txt}        35{c |} {space 3} {res}  2.743251 {space 3} {res} .39462951 {space 3} {res} .06494531  
-{txt}        36{c |} {space 3} {res} 2.4995482 {space 3} {res} .39486892 {space 3} {res} .06508449  
-{txt}        37{c |} {space 3} {res} 2.2774952 {space 3} {res} .39509378 {space 3} {res} .06521336  
-{txt}        38{c |} {space 3} {res} 2.0751688 {space 3} {res} .39530438 {space 3} {res}  .0653325  
-{txt}        39{c |} {space 3} {res} 1.8908165 {space 3} {res} .39550113 {space 3} {res} .06544252  
-{txt}        40{c |} {space 3} {res} 1.7228416 {space 3} {res} .39568451 {space 3} {res} .06554397  
-{txt}        41{c |} {space 3} {res} 1.5697891 {space 3} {res} .39585508 {space 3} {res} .06563744  
-{txt}        42{c |} {space 3} {res} 1.4303334 {space 3} {res} .39601343 {space 3} {res} .06572345  
-{txt}        43{c |} {space 3} {res} 1.3032665 {space 3} {res} .39616019 {space 3} {res} .06580254  
-{txt}        44{c |} {space 3} {res} 1.1874879 {space 3} {res} .39629599 {space 3} {res}  .0658752  
-{txt}        45{c |} {space 3} {res} 1.0819947 {space 3} {res} .39642149 {space 3} {res} .06594191  
-{txt}        46{c |} {space 3} {res} .98587331 {space 3} {res}  .3965373 {space 3} {res} .06600311  
-{txt}        47{c |} {space 3} {res} .89829104 {space 3} {res} .39664407 {space 3} {res} .06605922  
-{txt}        48{c |} {space 3} {res} .81848934 {space 3} {res} .39674238 {space 3} {res} .06611064  
-{txt}        49{c |} {space 3} {res}   .745777 {space 3} {res} .39683283 {space 3} {res} .06615773  
-{txt}        50{c |} {space 3} {res} .67952423 {space 3} {res} .39691598 {space 3} {res} .06620084  
-{txt}        51{c |} {space 3} {res} .61915717 {space 3} {res} .39699234 {space 3} {res} .06624029  
-{txt}        52{c |} {space 3} {res} .56415295 {space 3} {res} .39706243 {space 3} {res} .06627637  
-{txt}        53{c |} {space 3} {res} .51403516 {space 3} {res} .39712671 {space 3} {res} .06630937  
-{txt}        54{c |} {space 3} {res} .46836969 {space 3} {res} .39718564 {space 3} {res} .06633953  
-{txt}        55{c |} {space 3} {res} .42676102 {space 3} {res} .39723963 {space 3} {res}  .0663671  
-{txt}        56{c |} {space 3} {res} .38884875 {space 3} {res} .39728908 {space 3} {res} .06639228  
-{txt}        57{c |} {space 3} {res}  .3543045 {space 3} {res} .39733433 {space 3} {res} .06641528  
-{txt}        58{c |} {space 3} {res} .32282906 {space 3} {res} .39737574 {space 3} {res} .06643629  
-{txt}        59{c |} {space 3} {res} .29414982 {space 3} {res} .39741361 {space 3} {res} .06645547  
-{txt}        60{c |} {space 3} {res} .26801836 {space 3} {res} .39744823 {space 3} {res} .06647297  
-{txt}        61{c |} {space 3} {res} .24420835 {space 3} {res} .39747988 {space 3} {res} .06648895  
-{txt}        62{c |} {space 3} {res} .22251355 {space 3} {res}  .3975088 {space 3} {res} .06650353  
-{txt}        63{c |} {space 3} {res} .20274606 {space 3} {res} .39753522 {space 3} {res} .06651684  
+{txt}         1{c |} {space 3} {res} .47002812 {space 3} {res} .41012597 {space 3} {res} .06401609  ^
+{txt}         2{c |} {space 3} {res} .42827212 {space 3} {res} .40728618 {space 3} {res} .06307755  
+{txt}         3{c |} {space 3} {res}  .3902256 {space 3} {res} .40470048 {space 3} {res} .06225597  
+{txt}         4{c |} {space 3} {res} .35555903 {space 3} {res} .40236398 {space 3} {res} .06155117  
+{txt}         5{c |} {space 3} {res} .32397215 {space 3} {res} .40027036 {space 3} {res} .06096131  
+{txt}         6{c |} {space 3} {res} .29519136 {space 3} {res} .39841194 {space 3} {res} .06048296  
+{txt}         7{c |} {space 3} {res} .26896737 {space 3} {res} .39677969 {space 3} {res} .06011112  
+{txt}         8{c |} {space 3} {res} .24507305 {space 3} {res} .39536326 {space 3} {res} .05983949  
+{txt}         9{c |} {space 3} {res} .22330144 {space 3} {res} .39415121 {space 3} {res} .05966063  
+{txt}        10{c |} {space 3} {res} .20346395 {space 3} {res} .39313106 {space 3} {res} .05956626  
+{txt}        11{c |} {space 3} {res} .18538878 {space 3} {res} .39228957 {space 3} {res} .05954754  
+{txt}        12{c |} {space 3} {res} .16891935 {space 3} {res}  .3916129 {space 3} {res} .05959536  
+{txt}        13{c |} {space 3} {res} .15391302 {space 3} {res} .39108687 {space 3} {res} .05970059  
+{txt}        14{c |} {space 3} {res} .14023981 {space 3} {res} .39069715 {space 3} {res} .05985432  
+{txt}        15{c |} {space 3} {res} .12778129 {space 3} {res} .39042948 {space 3} {res} .06004803  
+{txt}        16{c |} {space 3} {res} .11642955 {space 3} {res}  .3902699 {space 3} {res} .06027379  
+{txt}        17{c |} {space 3} {res} .10608627 {space 3} {res} .39020487 {space 3} {res} .06052428  *
+{txt}        18{c |} {space 3} {res} .09666186 {space 3} {res}  .3902215 {space 3} {res} .06079293  
+{txt}        19{c |} {space 3} {res} .08807469 {space 3} {res}  .3903076 {space 3} {res}  .0610739  
+{txt}        20{c |} {space 3} {res} .08025038 {space 3} {res} .39045184 {space 3} {res} .06136209  
+{txt}        21{c |} {space 3} {res} .07312115 {space 3} {res} .39064375 {space 3} {res} .06165314  
+{txt}        22{c |} {space 3} {res} .06662527 {space 3} {res} .39087384 {space 3} {res} .06194337  
+{txt}        23{c |} {space 3} {res} .06070647 {space 3} {res} .39113356 {space 3} {res} .06222972  
+{txt}        24{c |} {space 3} {res} .05531347 {space 3} {res} .39141529 {space 3} {res} .06250972  
+{txt}        25{c |} {space 3} {res} .05039957 {space 3} {res} .39171237 {space 3} {res}  .0627814  
+{txt}        26{c |} {space 3} {res} .04592222 {space 3} {res} .39201899 {space 3} {res} .06304327  
+{txt}        27{c |} {space 3} {res} .04184261 {space 3} {res}  .3923302 {space 3} {res} .06329421  
+{txt}        28{c |} {space 3} {res} .03812543 {space 3} {res} .39264181 {space 3} {res} .06353346  
+{txt}        29{c |} {space 3} {res} .03473847 {space 3} {res} .39295034 {space 3} {res} .06376053  
+{txt}        30{c |} {space 3} {res}  .0316524 {space 3} {res} .39325295 {space 3} {res} .06397518  
+{txt}        31{c |} {space 3} {res} .02884049 {space 3} {res} .39354738 {space 3} {res} .06417738  
+{txt}        32{c |} {space 3} {res} .02627838 {space 3} {res} .39383186 {space 3} {res} .06436723  
+{txt}        33{c |} {space 3} {res} .02394388 {space 3} {res} .39410506 {space 3} {res} .06454499  
+{txt}        34{c |} {space 3} {res} .02181677 {space 3} {res} .39436605 {space 3} {res}   .064711  
+{txt}        35{c |} {space 3} {res} .01987863 {space 3} {res} .39461421 {space 3} {res} .06486568  
+{txt}        36{c |} {space 3} {res} .01811267 {space 3} {res} .39484918 {space 3} {res} .06500951  
+{txt}        37{c |} {space 3} {res} .01650359 {space 3} {res} .39507085 {space 3} {res} .06514299  
+{txt}        38{c |} {space 3} {res} .01503746 {space 3} {res} .39527928 {space 3} {res} .06526666  
+{txt}        39{c |} {space 3} {res} .01370157 {space 3} {res} .39547467 {space 3} {res} .06538108  
+{txt}        40{c |} {space 3} {res} .01248436 {space 3} {res} .39565737 {space 3} {res} .06548677  
+{txt}        41{c |} {space 3} {res} .01137528 {space 3} {res} .39582777 {space 3} {res}  .0655843  
+{txt}        42{c |} {space 3} {res} .01036473 {space 3} {res} .39598637 {space 3} {res} .06567418  
+{txt}        43{c |} {space 3} {res} .00944396 {space 3} {res}  .3961337 {space 3} {res} .06575692  
+{txt}        44{c |} {space 3} {res} .00860498 {space 3} {res} .39627031 {space 3} {res} .06583304  
+{txt}        45{c |} {space 3} {res} .00784054 {space 3} {res} .39639678 {space 3} {res} .06590299  
+{txt}        46{c |} {space 3} {res} .00714401 {space 3} {res} .39651369 {space 3} {res} .06596722  
+{txt}        47{c |} {space 3} {res} .00650936 {space 3} {res} .39662164 {space 3} {res} .06602617  
+{txt}        48{c |} {space 3} {res} .00593108 {space 3} {res} .39672117 {space 3} {res} .06608023  
+{txt}        49{c |} {space 3} {res} .00540418 {space 3} {res} .39681286 {space 3} {res} .06612978  
+{txt}        50{c |} {space 3} {res} .00492409 {space 3} {res} .39689723 {space 3} {res} .06617517  
+{txt}        51{c |} {space 3} {res} .00448665 {space 3} {res} .39697481 {space 3} {res} .06621673  
+{txt}        52{c |} {space 3} {res} .00408806 {space 3} {res} .39704608 {space 3} {res} .06625476  
+{txt}        53{c |} {space 3} {res} .00372489 {space 3} {res}  .3971115 {space 3} {res} .06628956  
+{txt}        54{c |} {space 3} {res} .00339398 {space 3} {res} .39717151 {space 3} {res} .06632139  
+{txt}        55{c |} {space 3} {res} .00309247 {space 3} {res} .39722654 {space 3} {res} .06635048  
+{txt}        56{c |} {space 3} {res} .00281774 {space 3} {res} .39727696 {space 3} {res} .06637707  
+{txt}        57{c |} {space 3} {res} .00256742 {space 3} {res} .39732314 {space 3} {res} .06640137  
+{txt}        58{c |} {space 3} {res} .00233934 {space 3} {res} .39736541 {space 3} {res} .06642356  
+{txt}        59{c |} {space 3} {res} .00213152 {space 3} {res} .39740409 {space 3} {res} .06644383  
+{txt}        60{c |} {space 3} {res} .00194216 {space 3} {res} .39743947 {space 3} {res} .06646234  
+{txt}        61{c |} {space 3} {res} .00176963 {space 3} {res} .39747182 {space 3} {res} .06647924  
+{txt}        62{c |} {space 3} {res} .00161242 {space 3} {res}  .3975014 {space 3} {res} .06649466  
+{txt}        63{c |} {space 3} {res} .00146917 {space 3} {res} .39752842 {space 3} {res} .06650873  
 {txt}* lopt = the lambda that minimizes MSPE.
   Run model: {stata cvlasso, lopt}
 {p 0 8 2}^ lse = largest lambda for which MSPE is within one standard error of the minimal MSPE.{p_end}
@@ -837,69 +836,69 @@ Fold {res}1 2 3 4 5 6 7 8 9 10
 Fold {res}1 2 3 4 5 6 7 8 9 10 
 {txt}          {c |} {space 3} {txt}    Lambda {space 3} {txt}      MSPE {space 3} {txt}  st. dev.
 {hline 10}{c +}{hline 45}
-{txt}         1{c |} {space 3} {res}  64.86388 {space 3} {res} .45197417 {space 3} {res}  .0804092  ^
-{txt}         2{c |} {space 3} {res} 59.101552 {space 3} {res} .44085099 {space 3} {res} .07690935  
-{txt}         3{c |} {space 3} {res} 53.851133 {space 3} {res} .43126598 {space 3} {res} .07371714  
-{txt}         4{c |} {space 3} {res} 49.067147 {space 3} {res} .42304571 {space 3} {res} .07081702  
-{txt}         5{c |} {space 3} {res} 44.708157 {space 3} {res}  .4160214 {space 3} {res} .06819127  
-{txt}         6{c |} {space 3} {res} 40.736407 {space 3} {res} .41003996 {space 3} {res} .06582163  
-{txt}         7{c |} {space 3} {res} 37.117497 {space 3} {res} .40496407 {space 3} {res} .06368968  
-{txt}         8{c |} {space 3} {res} 33.820081 {space 3} {res} .40067132 {space 3} {res} .06177706  
-{txt}         9{c |} {space 3} {res} 30.815598 {space 3} {res} .39783451 {space 3} {res} .06011591  
-{txt}        10{c |} {space 3} {res} 28.078025 {space 3} {res} .39626151 {space 3} {res} .05874874  
-{txt}        11{c |} {space 3} {res} 25.583651 {space 3} {res} .39590672 {space 3} {res} .05767039  *
-{txt}        12{c |} {space 3} {res}  23.31087 {space 3} {res} .39601584 {space 3} {res} .05679456  
-{txt}        13{c |} {space 3} {res} 21.239997 {space 3} {res} .39637069 {space 3} {res} .05610545  
-{txt}        14{c |} {space 3} {res} 19.353094 {space 3} {res} .39763708 {space 3} {res} .05588445  
-{txt}        15{c |} {space 3} {res} 17.633818 {space 3} {res} .39890064 {space 3} {res} .05595617  
-{txt}        16{c |} {space 3} {res} 16.067278 {space 3} {res} .39999881 {space 3} {res} .05623009  
-{txt}        17{c |} {space 3} {res} 14.639906 {space 3} {res} .40053602 {space 3} {res} .05648879  
-{txt}        18{c |} {space 3} {res} 13.339337 {space 3} {res} .40087587 {space 3} {res} .05672348  
-{txt}        19{c |} {space 3} {res} 12.154307 {space 3} {res} .40115198 {space 3} {res} .05713656  
-{txt}        20{c |} {space 3} {res} 11.074552 {space 3} {res}  .4010887 {space 3} {res} .05778302  
-{txt}        21{c |} {space 3} {res} 10.090719 {space 3} {res} .40122022 {space 3} {res} .05843085  
-{txt}        22{c |} {space 3} {res} 9.1942875 {space 3} {res} .40142979 {space 3} {res} .05903497  
-{txt}        23{c |} {space 3} {res} 8.3774923 {space 3} {res} .40146627 {space 3} {res} .05955892  
-{txt}        24{c |} {space 3} {res}  7.633259 {space 3} {res} .40105366 {space 3} {res}  .0599013  
-{txt}        25{c |} {space 3} {res} 6.9551413 {space 3} {res} .40029151 {space 3} {res} .06016993  
-{txt}        26{c |} {space 3} {res} 6.3372657 {space 3} {res} .39970659 {space 3} {res} .06046138  
-{txt}        27{c |} {space 3} {res} 5.7742805 {space 3} {res} .39926895 {space 3} {res}  .0607661  
-{txt}        28{c |} {space 3} {res} 5.2613093 {space 3} {res} .39895278 {space 3} {res} .06107651  
-{txt}        29{c |} {space 3} {res} 4.7939091 {space 3} {res} .39873604 {space 3} {res}  .0613867  
-{txt}        30{c |} {space 3} {res} 4.3680314 {space 3} {res} .39859995 {space 3} {res} .06169214  
-{txt}        31{c |} {space 3} {res} 3.9799876 {space 3} {res}  .3984858 {space 3} {res}  .0620006  
-{txt}        32{c |} {space 3} {res} 3.6264164 {space 3} {res} .39824552 {space 3} {res} .06234451  
-{txt}        33{c |} {space 3} {res} 3.3042556 {space 3} {res} .39804297 {space 3} {res} .06266598  
-{txt}        34{c |} {space 3} {res} 3.0107146 {space 3} {res} .39785176 {space 3} {res} .06296127  
-{txt}        35{c |} {space 3} {res}  2.743251 {space 3} {res} .39770428 {space 3} {res} .06324038  
-{txt}        36{c |} {space 3} {res} 2.4995482 {space 3} {res} .39759263 {space 3} {res} .06350303  
-{txt}        37{c |} {space 3} {res} 2.2774952 {space 3} {res} .39751014 {space 3} {res} .06374927  
-{txt}        38{c |} {space 3} {res} 2.0751688 {space 3} {res} .39745125 {space 3} {res} .06397937  
-{txt}        39{c |} {space 3} {res} 1.8908165 {space 3} {res} .39741135 {space 3} {res}  .0641938  
-{txt}        40{c |} {space 3} {res} 1.7228416 {space 3} {res} .39738659 {space 3} {res} .06439313  
-{txt}        41{c |} {space 3} {res} 1.5697891 {space 3} {res} .39737379 {space 3} {res} .06457804  
-{txt}        42{c |} {space 3} {res} 1.4303334 {space 3} {res} .39737034 {space 3} {res} .06474923  
-{txt}        43{c |} {space 3} {res} 1.3032665 {space 3} {res} .39737409 {space 3} {res} .06490748  
-{txt}        44{c |} {space 3} {res} 1.1874879 {space 3} {res} .39738331 {space 3} {res} .06505354  
-{txt}        45{c |} {space 3} {res} 1.0819947 {space 3} {res} .39739656 {space 3} {res} .06518817  
-{txt}        46{c |} {space 3} {res} .98587331 {space 3} {res}  .3974127 {space 3} {res} .06531214  
-{txt}        47{c |} {space 3} {res} .89829104 {space 3} {res} .39743082 {space 3} {res} .06542616  
-{txt}        48{c |} {space 3} {res} .81848934 {space 3} {res} .39745017 {space 3} {res} .06553094  
-{txt}        49{c |} {space 3} {res}   .745777 {space 3} {res} .39747018 {space 3} {res} .06562714  
-{txt}        50{c |} {space 3} {res} .67952423 {space 3} {res} .39749041 {space 3} {res} .06571542  
-{txt}        51{c |} {space 3} {res} .61915717 {space 3} {res}  .3975105 {space 3} {res} .06579635  
-{txt}        52{c |} {space 3} {res} .56415295 {space 3} {res} .39753019 {space 3} {res} .06587052  
-{txt}        53{c |} {space 3} {res} .51403516 {space 3} {res} .39754929 {space 3} {res} .06593845  
-{txt}        54{c |} {space 3} {res} .46836969 {space 3} {res} .39756766 {space 3} {res} .06600063  
-{txt}        55{c |} {space 3} {res} .42676102 {space 3} {res}  .3975852 {space 3} {res} .06605753  
-{txt}        56{c |} {space 3} {res} .38884875 {space 3} {res} .39760185 {space 3} {res} .06610957  
-{txt}        57{c |} {space 3} {res}  .3543045 {space 3} {res} .39761758 {space 3} {res} .06615716  
-{txt}        58{c |} {space 3} {res} .32282906 {space 3} {res} .39763238 {space 3} {res} .06620065  
-{txt}        59{c |} {space 3} {res} .29414982 {space 3} {res} .39764625 {space 3} {res}  .0662404  
-{txt}        60{c |} {space 3} {res} .26801836 {space 3} {res} .39765921 {space 3} {res} .06627671  
-{txt}        61{c |} {space 3} {res} .24420835 {space 3} {res} .39767128 {space 3} {res} .06630987  
-{txt}        62{c |} {space 3} {res} .22251355 {space 3} {res} .39768251 {space 3} {res} .06634015  
-{txt}        63{c |} {space 3} {res} .20274606 {space 3} {res} .39769292 {space 3} {res}  .0663678  
+{txt}         1{c |} {space 3} {res} .47002812 {space 3} {res} .44529989 {space 3} {res} .07882048  ^
+{txt}         2{c |} {space 3} {res} .42827212 {space 3} {res} .43541694 {space 3} {res} .07554672  
+{txt}         3{c |} {space 3} {res}  .3902256 {space 3} {res} .42687637 {space 3} {res} .07255057  
+{txt}         4{c |} {space 3} {res} .35555903 {space 3} {res} .41952353 {space 3} {res} .06981929  
+{txt}         5{c |} {space 3} {res} .32397215 {space 3} {res} .41321631 {space 3} {res} .06733883  
+{txt}         6{c |} {space 3} {res} .29519136 {space 3} {res} .40782529 {space 3} {res} .06509417  
+{txt}         7{c |} {space 3} {res} .26896737 {space 3} {res} .40323347 {space 3} {res} .06306964  
+{txt}         8{c |} {space 3} {res} .24507305 {space 3} {res} .40001487 {space 3} {res} .06128728  
+{txt}         9{c |} {space 3} {res} .22330144 {space 3} {res} .39808447 {space 3} {res} .05978981  
+{txt}        10{c |} {space 3} {res} .20346395 {space 3} {res} .39735749 {space 3} {res} .05857717  
+{txt}        11{c |} {space 3} {res} .18538878 {space 3} {res} .39719435 {space 3} {res} .05757831  *
+{txt}        12{c |} {space 3} {res} .16891935 {space 3} {res} .39732921 {space 3} {res} .05677394  
+{txt}        13{c |} {space 3} {res} .15391302 {space 3} {res} .39811974 {space 3} {res} .05635231  
+{txt}        14{c |} {space 3} {res} .14023981 {space 3} {res} .39919567 {space 3} {res} .05630205  
+{txt}        15{c |} {space 3} {res} .12778129 {space 3} {res} .40019299 {space 3} {res} .05646601  
+{txt}        16{c |} {space 3} {res} .11642955 {space 3} {res} .40073679 {space 3} {res} .05669463  
+{txt}        17{c |} {space 3} {res} .10608627 {space 3} {res} .40091483 {space 3} {res} .05685402  
+{txt}        18{c |} {space 3} {res} .09666186 {space 3} {res} .40114622 {space 3} {res} .05717764  
+{txt}        19{c |} {space 3} {res} .08807469 {space 3} {res} .40098742 {space 3} {res} .05776215  
+{txt}        20{c |} {space 3} {res} .08025038 {space 3} {res} .40099934 {space 3} {res} .05836479  
+{txt}        21{c |} {space 3} {res} .07312115 {space 3} {res} .40114941 {space 3} {res} .05897052  
+{txt}        22{c |} {space 3} {res} .06662527 {space 3} {res} .40114799 {space 3} {res} .05948742  
+{txt}        23{c |} {space 3} {res} .06070647 {space 3} {res} .40109615 {space 3} {res} .05994603  
+{txt}        24{c |} {space 3} {res} .05531347 {space 3} {res} .40028904 {space 3} {res}  .0601798  
+{txt}        25{c |} {space 3} {res} .05039957 {space 3} {res}  .3996653 {space 3} {res} .06044304  
+{txt}        26{c |} {space 3} {res} .04592222 {space 3} {res} .39919495 {space 3} {res} .06072542  
+{txt}        27{c |} {space 3} {res} .04184261 {space 3} {res} .39885197 {space 3} {res} .06101861  
+{txt}        28{c |} {space 3} {res} .03812543 {space 3} {res} .39861389 {space 3} {res} .06131593  
+{txt}        29{c |} {space 3} {res} .03473847 {space 3} {res} .39846146 {space 3} {res} .06161219  
+{txt}        30{c |} {space 3} {res}  .0316524 {space 3} {res} .39836032 {space 3} {res} .06190805  
+{txt}        31{c |} {space 3} {res} .02884049 {space 3} {res} .39808305 {space 3} {res} .06224123  
+{txt}        32{c |} {space 3} {res} .02627838 {space 3} {res} .39784061 {space 3} {res} .06255301  
+{txt}        33{c |} {space 3} {res} .02394388 {space 3} {res} .39765313 {space 3} {res} .06285056  
+{txt}        34{c |} {space 3} {res} .02181677 {space 3} {res} .39751086 {space 3} {res}  .0631329  
+{txt}        35{c |} {space 3} {res} .01987863 {space 3} {res} .39740558 {space 3} {res} .06339951  
+{txt}        36{c |} {space 3} {res} .01811267 {space 3} {res} .39733036 {space 3} {res} .06365023  
+{txt}        37{c |} {space 3} {res} .01650359 {space 3} {res}  .3972794 {space 3} {res} .06388516  
+{txt}        38{c |} {space 3} {res} .01503746 {space 3} {res} .39724785 {space 3} {res} .06410461  
+{txt}        39{c |} {space 3} {res} .01370157 {space 3} {res}  .3972317 {space 3} {res} .06430905  
+{txt}        40{c |} {space 3} {res} .01248436 {space 3} {res} .39722762 {space 3} {res} .06449906  
+{txt}        41{c |} {space 3} {res} .01137528 {space 3} {res} .39723286 {space 3} {res} .06467529  
+{txt}        42{c |} {space 3} {res} .01036473 {space 3} {res} .39724519 {space 3} {res} .06483845  
+{txt}        43{c |} {space 3} {res} .00944396 {space 3} {res} .39726277 {space 3} {res} .06498925  
+{txt}        44{c |} {space 3} {res} .00860498 {space 3} {res} .39728411 {space 3} {res} .06512844  
+{txt}        45{c |} {space 3} {res} .00784054 {space 3} {res} .39730804 {space 3} {res} .06525674  
+{txt}        46{c |} {space 3} {res} .00714401 {space 3} {res}  .3973336 {space 3} {res} .06537487  
+{txt}        47{c |} {space 3} {res} .00650936 {space 3} {res} .39736002 {space 3} {res} .06548353  
+{txt}        48{c |} {space 3} {res} .00593108 {space 3} {res} .39738673 {space 3} {res} .06558339  
+{txt}        49{c |} {space 3} {res} .00540418 {space 3} {res} .39741327 {space 3} {res} .06567507  
+{txt}        50{c |} {space 3} {res} .00492409 {space 3} {res} .39743928 {space 3} {res}  .0657592  
+{txt}        51{c |} {space 3} {res} .00448665 {space 3} {res} .39746453 {space 3} {res} .06583634  
+{txt}        52{c |} {space 3} {res} .00408806 {space 3} {res} .39748881 {space 3} {res} .06590703  
+{txt}        53{c |} {space 3} {res} .00372489 {space 3} {res} .39751201 {space 3} {res} .06597178  
+{txt}        54{c |} {space 3} {res} .00339398 {space 3} {res} .39753404 {space 3} {res} .06603105  
+{txt}        55{c |} {space 3} {res} .00309247 {space 3} {res} .39755485 {space 3} {res} .06608529  
+{txt}        56{c |} {space 3} {res} .00281774 {space 3} {res} .39757444 {space 3} {res}  .0661349  
+{txt}        57{c |} {space 3} {res} .00256742 {space 3} {res} .39759281 {space 3} {res} .06618027  
+{txt}        58{c |} {space 3} {res} .00233934 {space 3} {res} .39760997 {space 3} {res} .06622173  
+{txt}        59{c |} {space 3} {res} .00213152 {space 3} {res} .39762597 {space 3} {res} .06625963  
+{txt}        60{c |} {space 3} {res} .00194216 {space 3} {res} .39764084 {space 3} {res} .06629424  
+{txt}        61{c |} {space 3} {res} .00176963 {space 3} {res} .39765464 {space 3} {res} .06632586  
+{txt}        62{c |} {space 3} {res} .00161242 {space 3} {res} .39766743 {space 3} {res} .06635473  
+{txt}        63{c |} {space 3} {res} .00146917 {space 3} {res} .39767925 {space 3} {res} .06638109  
 {txt}* lopt = the lambda that minimizes MSPE.
   Run model: {stata cvlasso, lopt}
 {p 0 8 2}^ lse = largest lambda for which MSPE is within one standard error of the minimal MSPE.{p_end}
@@ -911,69 +910,69 @@ Fold {res}1 2 3 4 5 6 7 8 9 10
 Fold {res}1 2 3 4 5 6 7 8 9 10 
 {txt}          {c |} {space 3} {txt}    Lambda {space 3} {txt}      MSPE {space 3} {txt}  st. dev.
 {hline 10}{c +}{hline 45}
-{txt}         1{c |} {space 3} {res}  64.86388 {space 3} {res} .59804873 {space 3} {res} .12206642  
-{txt}         2{c |} {space 3} {res} 59.101552 {space 3} {res} .56625134 {space 3} {res} .11319815  
-{txt}         3{c |} {space 3} {res} 53.851133 {space 3} {res} .53909987 {space 3} {res} .10521207  
-{txt}         4{c |} {space 3} {res} 49.067147 {space 3} {res} .51645722 {space 3} {res} .09836826  
-{txt}         5{c |} {space 3} {res} 44.708157 {space 3} {res} .49798873 {space 3} {res} .09239705  
-{txt}         6{c |} {space 3} {res} 40.736407 {space 3} {res} .48288902 {space 3} {res} .08696001  
-{txt}         7{c |} {space 3} {res} 37.117497 {space 3} {res} .46898652 {space 3} {res} .08223208  
-{txt}         8{c |} {space 3} {res} 33.820081 {space 3} {res} .45625131 {space 3} {res} .07816374  
-{txt}         9{c |} {space 3} {res} 30.815598 {space 3} {res} .44378308 {space 3} {res} .07448935  ^
-{txt}        10{c |} {space 3} {res} 28.078025 {space 3} {res} .43306436 {space 3} {res} .07120481  
-{txt}        11{c |} {space 3} {res} 25.583651 {space 3} {res} .42400228 {space 3} {res} .06829651  
-{txt}        12{c |} {space 3} {res}  23.31087 {space 3} {res} .41622294 {space 3} {res} .06570924  
-{txt}        13{c |} {space 3} {res} 21.239997 {space 3} {res} .40982735 {space 3} {res} .06338929  
-{txt}        14{c |} {space 3} {res} 19.353094 {space 3} {res} .40456349 {space 3} {res} .06133936  
-{txt}        15{c |} {space 3} {res} 17.633818 {space 3} {res} .40019069 {space 3} {res} .05953338  
-{txt}        16{c |} {space 3} {res} 16.067278 {space 3} {res} .39656268 {space 3} {res} .05794383  
-{txt}        17{c |} {space 3} {res} 14.639906 {space 3} {res} .39456781 {space 3} {res} .05663335  
-{txt}        18{c |} {space 3} {res} 13.339337 {space 3} {res} .39390315 {space 3} {res} .05566324  *
-{txt}        19{c |} {space 3} {res} 12.154307 {space 3} {res} .39446129 {space 3} {res} .05501914  
-{txt}        20{c |} {space 3} {res} 11.074552 {space 3} {res} .39539674 {space 3} {res} .05456743  
-{txt}        21{c |} {space 3} {res} 10.090719 {space 3} {res} .39645147 {space 3} {res} .05430218  
-{txt}        22{c |} {space 3} {res} 9.1942875 {space 3} {res} .39850191 {space 3} {res} .05457168  
-{txt}        23{c |} {space 3} {res} 8.3774923 {space 3} {res} .40031908 {space 3} {res} .05507574  
-{txt}        24{c |} {space 3} {res}  7.633259 {space 3} {res} .40175339 {space 3} {res} .05572391  
-{txt}        25{c |} {space 3} {res} 6.9551413 {space 3} {res} .40273929 {space 3} {res} .05630224  
-{txt}        26{c |} {space 3} {res} 6.3372657 {space 3} {res} .40352456 {space 3} {res} .05681872  
-{txt}        27{c |} {space 3} {res} 5.7742805 {space 3} {res} .40382509 {space 3} {res} .05752624  
-{txt}        28{c |} {space 3} {res} 5.2613093 {space 3} {res} .40393352 {space 3} {res} .05833185  
-{txt}        29{c |} {space 3} {res} 4.7939091 {space 3} {res} .40419369 {space 3} {res} .05909249  
-{txt}        30{c |} {space 3} {res} 4.3680314 {space 3} {res} .40437805 {space 3} {res} .05970159  
-{txt}        31{c |} {space 3} {res} 3.9799876 {space 3} {res} .40433062 {space 3} {res} .06014873  
-{txt}        32{c |} {space 3} {res} 3.6264164 {space 3} {res} .40359096 {space 3} {res} .06038367  
-{txt}        33{c |} {space 3} {res} 3.3042556 {space 3} {res} .40279319 {space 3} {res} .06069778  
-{txt}        34{c |} {space 3} {res} 3.0107146 {space 3} {res} .40216628 {space 3} {res} .06101827  
-{txt}        35{c |} {space 3} {res}  2.743251 {space 3} {res} .40167892 {space 3} {res} .06133808  
-{txt}        36{c |} {space 3} {res} 2.4995482 {space 3} {res} .40127389 {space 3} {res} .06165999  
-{txt}        37{c |} {space 3} {res} 2.2774952 {space 3} {res} .40095657 {space 3} {res}  .0619733  
-{txt}        38{c |} {space 3} {res} 2.0751688 {space 3} {res} .40071745 {space 3} {res} .06227335  
-{txt}        39{c |} {space 3} {res} 1.8908165 {space 3} {res} .40039246 {space 3} {res} .06259593  
-{txt}        40{c |} {space 3} {res} 1.7228416 {space 3} {res} .40004458 {space 3} {res} .06292134  
-{txt}        41{c |} {space 3} {res} 1.5697891 {space 3} {res} .39975736 {space 3} {res} .06322567  
-{txt}        42{c |} {space 3} {res} 1.4303334 {space 3} {res}  .3995205 {space 3} {res} .06350932  
-{txt}        43{c |} {space 3} {res} 1.3032665 {space 3} {res}  .3993254 {space 3} {res} .06377298  
-{txt}        44{c |} {space 3} {res} 1.1874879 {space 3} {res} .39916492 {space 3} {res} .06401746  
-{txt}        45{c |} {space 3} {res} 1.0819947 {space 3} {res} .39898081 {space 3} {res} .06423345  
-{txt}        46{c |} {space 3} {res} .98587331 {space 3} {res} .39881555 {space 3} {res} .06443187  
-{txt}        47{c |} {space 3} {res} .89829104 {space 3} {res} .39867525 {space 3} {res} .06461561  
-{txt}        48{c |} {space 3} {res} .81848934 {space 3} {res} .39855599 {space 3} {res} .06478545  
-{txt}        49{c |} {space 3} {res}   .745777 {space 3} {res} .39845445 {space 3} {res} .06494218  
-{txt}        50{c |} {space 3} {res} .67952423 {space 3} {res} .39836787 {space 3} {res} .06508662  
-{txt}        51{c |} {space 3} {res} .61915717 {space 3} {res} .39829393 {space 3} {res} .06521957  
-{txt}        52{c |} {space 3} {res} .56415295 {space 3} {res} .39823066 {space 3} {res} .06534181  
-{txt}        53{c |} {space 3} {res} .51403516 {space 3} {res} .39817644 {space 3} {res} .06545411  
-{txt}        54{c |} {space 3} {res} .46836969 {space 3} {res} .39812988 {space 3} {res} .06555717  
-{txt}        55{c |} {space 3} {res} .42676102 {space 3} {res} .39808982 {space 3} {res}  .0656517  
-{txt}        56{c |} {space 3} {res} .38884875 {space 3} {res} .39805529 {space 3} {res} .06573834  
-{txt}        57{c |} {space 3} {res}  .3543045 {space 3} {res} .39802546 {space 3} {res}  .0658177  
-{txt}        58{c |} {space 3} {res} .32282906 {space 3} {res} .39799964 {space 3} {res} .06589036  
-{txt}        59{c |} {space 3} {res} .29414982 {space 3} {res} .39797724 {space 3} {res} .06595685  
-{txt}        60{c |} {space 3} {res} .26801836 {space 3} {res} .39795777 {space 3} {res} .06601767  
-{txt}        61{c |} {space 3} {res} .24420835 {space 3} {res} .39794082 {space 3} {res} .06607328  
-{txt}        62{c |} {space 3} {res} .22251355 {space 3} {res} .39792601 {space 3} {res} .06612412  
-{txt}        63{c |} {space 3} {res} .20274606 {space 3} {res} .39791306 {space 3} {res} .06617057  
+{txt}         1{c |} {space 3} {res} .47002812 {space 3} {res} .56478477 {space 3} {res} .11268272  
+{txt}         2{c |} {space 3} {res} .42827212 {space 3} {res} .53834409 {space 3} {res} .10494957  
+{txt}         3{c |} {space 3} {res}  .3902256 {space 3} {res} .51647335 {space 3} {res} .09837217  
+{txt}         4{c |} {space 3} {res} .35555903 {space 3} {res} .49844777 {space 3} {res} .09247087  
+{txt}         5{c |} {space 3} {res} .32397215 {space 3} {res} .48344329 {space 3} {res} .08707347  
+{txt}         6{c |} {space 3} {res} .29519136 {space 3} {res} .46920859 {space 3} {res} .08244563  
+{txt}         7{c |} {space 3} {res} .26896737 {space 3} {res} .45606914 {space 3} {res}   .078432  
+{txt}         8{c |} {space 3} {res} .24507305 {space 3} {res} .44348282 {space 3} {res} .07473117  ^
+{txt}         9{c |} {space 3} {res} .22330144 {space 3} {res} .43289941 {space 3} {res} .07144851  
+{txt}        10{c |} {space 3} {res} .20346395 {space 3} {res} .42377807 {space 3} {res} .06852391  
+{txt}        11{c |} {space 3} {res} .18538878 {space 3} {res}   .416121 {space 3} {res}  .0659115  
+{txt}        12{c |} {space 3} {res} .16891935 {space 3} {res} .40982415 {space 3} {res} .06357773  
+{txt}        13{c |} {space 3} {res} .15391302 {space 3} {res} .40459551 {space 3} {res} .06151615  
+{txt}        14{c |} {space 3} {res} .14023981 {space 3} {res} .40024536 {space 3} {res} .05969764  
+{txt}        15{c |} {space 3} {res} .12778129 {space 3} {res} .39663093 {space 3} {res} .05809528  
+{txt}        16{c |} {space 3} {res} .11642955 {space 3} {res} .39475363 {space 3} {res} .05678376  
+{txt}        17{c |} {space 3} {res} .10608627 {space 3} {res} .39420819 {space 3} {res} .05582604  *
+{txt}        18{c |} {space 3} {res} .09666186 {space 3} {res} .39475825 {space 3} {res} .05516119  
+{txt}        19{c |} {space 3} {res} .08807469 {space 3} {res} .39566183 {space 3} {res} .05469839  
+{txt}        20{c |} {space 3} {res} .08025038 {space 3} {res} .39662863 {space 3} {res} .05440645  
+{txt}        21{c |} {space 3} {res} .07312115 {space 3} {res} .39855638 {space 3} {res} .05466686  
+{txt}        22{c |} {space 3} {res} .06662527 {space 3} {res} .40034315 {space 3} {res} .05515023  
+{txt}        23{c |} {space 3} {res} .06070647 {space 3} {res} .40171035 {space 3} {res} .05578078  
+{txt}        24{c |} {space 3} {res} .05531347 {space 3} {res}  .4027468 {space 3} {res}  .0563652  
+{txt}        25{c |} {space 3} {res} .05039957 {space 3} {res} .40351716 {space 3} {res}  .0568747  
+{txt}        26{c |} {space 3} {res} .04592222 {space 3} {res} .40373416 {space 3} {res} .05759446  
+{txt}        27{c |} {space 3} {res} .04184261 {space 3} {res} .40383878 {space 3} {res} .05838472  
+{txt}        28{c |} {space 3} {res} .03812543 {space 3} {res} .40410598 {space 3} {res} .05913399  
+{txt}        29{c |} {space 3} {res} .03473847 {space 3} {res} .40426995 {space 3} {res} .05972735  
+{txt}        30{c |} {space 3} {res}  .0316524 {space 3} {res} .40421342 {space 3} {res} .06016101  
+{txt}        31{c |} {space 3} {res} .02884049 {space 3} {res} .40343107 {space 3} {res} .06040336  
+{txt}        32{c |} {space 3} {res} .02627838 {space 3} {res}  .4026502 {space 3} {res}  .0607131  
+{txt}        33{c |} {space 3} {res} .02394388 {space 3} {res} .40203757 {space 3} {res}  .0610298  
+{txt}        34{c |} {space 3} {res} .02181677 {space 3} {res} .40155988 {space 3} {res} .06134707  
+{txt}        35{c |} {space 3} {res} .01987863 {space 3} {res} .40115794 {space 3} {res} .06166821  
+{txt}        36{c |} {space 3} {res} .01811267 {space 3} {res}  .4008511 {space 3} {res} .06197901  
+{txt}        37{c |} {space 3} {res} .01650359 {space 3} {res} .40062127 {space 3} {res} .06227702  
+{txt}        38{c |} {space 3} {res} .01503746 {space 3} {res} .40028311 {space 3} {res}  .0626034  
+{txt}        39{c |} {space 3} {res} .01370157 {space 3} {res} .39994508 {space 3} {res} .06292698  
+{txt}        40{c |} {space 3} {res} .01248436 {space 3} {res} .39966671 {space 3} {res} .06322981  
+{txt}        41{c |} {space 3} {res} .01137528 {space 3} {res} .39943782 {space 3} {res} .06351225  
+{txt}        42{c |} {space 3} {res} .01036473 {space 3} {res} .39924995 {space 3} {res} .06377493  
+{txt}        43{c |} {space 3} {res} .00944396 {space 3} {res} .39908768 {space 3} {res} .06401694  
+{txt}        44{c |} {space 3} {res} .00860498 {space 3} {res} .39890069 {space 3} {res} .06423062  
+{txt}        45{c |} {space 3} {res} .00784054 {space 3} {res} .39874262 {space 3} {res} .06442897  
+{txt}        46{c |} {space 3} {res} .00714401 {space 3} {res} .39860883 {space 3} {res} .06461269  
+{txt}        47{c |} {space 3} {res} .00650936 {space 3} {res} .39849548 {space 3} {res} .06478256  
+{txt}        48{c |} {space 3} {res} .00593108 {space 3} {res} .39839932 {space 3} {res} .06493935  
+{txt}        49{c |} {space 3} {res} .00540418 {space 3} {res} .39831763 {space 3} {res} .06508388  
+{txt}        50{c |} {space 3} {res} .00492409 {space 3} {res} .39824813 {space 3} {res} .06521693  
+{txt}        51{c |} {space 3} {res} .00448665 {space 3} {res} .39818892 {space 3} {res} .06533929  
+{txt}        52{c |} {space 3} {res} .00408806 {space 3} {res} .39813838 {space 3} {res}  .0654517  
+{txt}        53{c |} {space 3} {res} .00372489 {space 3} {res} .39809518 {space 3} {res}  .0655549  
+{txt}        54{c |} {space 3} {res} .00339398 {space 3} {res} .39805819 {space 3} {res} .06564956  
+{txt}        55{c |} {space 3} {res} .00309247 {space 3} {res} .39802645 {space 3} {res} .06573633  
+{txt}        56{c |} {space 3} {res} .00281774 {space 3} {res} .39799916 {space 3} {res} .06581582  
+{txt}        57{c |} {space 3} {res} .00256742 {space 3} {res} .39797566 {space 3} {res}  .0658886  
+{txt}        58{c |} {space 3} {res} .00233934 {space 3} {res} .39795539 {space 3} {res} .06595521  
+{txt}        59{c |} {space 3} {res} .00213152 {space 3} {res} .39793785 {space 3} {res} .06601615  
+{txt}        60{c |} {space 3} {res} .00194216 {space 3} {res} .39792265 {space 3} {res} .06607188  
+{txt}        61{c |} {space 3} {res} .00176963 {space 3} {res} .39790945 {space 3} {res} .06612282  
+{txt}        62{c |} {space 3} {res} .00161242 {space 3} {res} .39789797 {space 3} {res} .06616937  
+{txt}        63{c |} {space 3} {res} .00146917 {space 3} {res} .39788795 {space 3} {res}  .0662119  
 {txt}* lopt = the lambda that minimizes MSPE.
   Run model: {stata cvlasso, lopt}
 {p 0 8 2}^ lse = largest lambda for which MSPE is within one standard error of the minimal MSPE.{p_end}
@@ -984,69 +983,69 @@ K-fold cross-validation with 10 folds. Elastic net with alpha=1.
 Fold {res}1 2 3 4 5 6 7 8 9 10 
 {txt}          {c |} {space 3} {txt}    Lambda {space 3} {txt}      MSPE {space 3} {txt}  st. dev.
 {hline 10}{c +}{hline 45}
-{txt}         1{c |} {space 3} {res}  64.86388 {space 3} {res} .71509992 {space 3} {res} .13557667  
-{txt}         2{c |} {space 3} {res} 59.101552 {space 3} {res} .69211629 {space 3} {res} .13736796  
-{txt}         3{c |} {space 3} {res} 53.851133 {space 3} {res} .65912234 {space 3} {res} .13753928  
-{txt}         4{c |} {space 3} {res} 49.067147 {space 3} {res} .61914297 {space 3} {res}  .1293188  
-{txt}         5{c |} {space 3} {res} 44.708157 {space 3} {res} .58076451 {space 3} {res} .11850258  
-{txt}         6{c |} {space 3} {res} 40.736407 {space 3} {res} .54884065 {space 3} {res} .10899495  
-{txt}         7{c |} {space 3} {res} 37.117497 {space 3} {res} .52228097 {space 3} {res} .10063833  
-{txt}         8{c |} {space 3} {res} 33.820081 {space 3} {res} .50059369 {space 3} {res} .09358173  
-{txt}         9{c |} {space 3} {res} 30.815598 {space 3} {res} .48326941 {space 3} {res} .08784782  
-{txt}        10{c |} {space 3} {res} 28.078025 {space 3} {res} .46935768 {space 3} {res} .08265231  
-{txt}        11{c |} {space 3} {res} 25.583651 {space 3} {res} .45784905 {space 3} {res} .07813885  
-{txt}        12{c |} {space 3} {res}  23.31087 {space 3} {res} .44700466 {space 3} {res} .07431458  ^
-{txt}        13{c |} {space 3} {res} 21.239997 {space 3} {res} .43734357 {space 3} {res} .07082821  
-{txt}        14{c |} {space 3} {res} 19.353094 {space 3} {res} .42782684 {space 3} {res} .06780403  
-{txt}        15{c |} {space 3} {res} 17.633818 {space 3} {res} .41964342 {space 3} {res} .06521807  
-{txt}        16{c |} {space 3} {res} 16.067278 {space 3} {res} .41287659 {space 3} {res} .06295527  
-{txt}        17{c |} {space 3} {res} 14.639906 {space 3} {res} .40704279 {space 3} {res} .06094835  
-{txt}        18{c |} {space 3} {res} 13.339337 {space 3} {res} .40212896 {space 3} {res} .05917828  
-{txt}        19{c |} {space 3} {res} 12.154307 {space 3} {res} .39809148 {space 3} {res} .05761017  
-{txt}        20{c |} {space 3} {res} 11.074552 {space 3} {res} .39522252 {space 3} {res} .05625254  
-{txt}        21{c |} {space 3} {res} 10.090719 {space 3} {res} .39390033 {space 3} {res} .05519467  *
-{txt}        22{c |} {space 3} {res} 9.1942875 {space 3} {res} .39411578 {space 3} {res} .05453726  
-{txt}        23{c |} {space 3} {res} 8.3774923 {space 3} {res} .39504537 {space 3} {res} .05410227  
-{txt}        24{c |} {space 3} {res}  7.633259 {space 3} {res} .39617939 {space 3} {res} .05386855  
-{txt}        25{c |} {space 3} {res} 6.9551413 {space 3} {res} .39798687 {space 3} {res} .05395513  
-{txt}        26{c |} {space 3} {res} 6.3372657 {space 3} {res} .39998435 {space 3} {res} .05451094  
-{txt}        27{c |} {space 3} {res} 5.7742805 {space 3} {res} .40184089 {space 3} {res} .05521393  
-{txt}        28{c |} {space 3} {res} 5.2613093 {space 3} {res} .40319804 {space 3} {res} .05600073  
-{txt}        29{c |} {space 3} {res} 4.7939091 {space 3} {res} .40393133 {space 3} {res} .05656784  
-{txt}        30{c |} {space 3} {res} 4.3680314 {space 3} {res}  .4046367 {space 3} {res} .05723753  
-{txt}        31{c |} {space 3} {res} 3.9799876 {space 3} {res} .40477753 {space 3} {res} .05807889  
-{txt}        32{c |} {space 3} {res} 3.6264164 {space 3} {res} .40498712 {space 3} {res} .05889816  
-{txt}        33{c |} {space 3} {res} 3.3042556 {space 3} {res} .40523215 {space 3} {res} .05961567  
-{txt}        34{c |} {space 3} {res} 3.0107146 {space 3} {res} .40536601 {space 3} {res} .06017162  
-{txt}        35{c |} {space 3} {res}  2.743251 {space 3} {res} .40477178 {space 3} {res} .06039654  
-{txt}        36{c |} {space 3} {res} 2.4995482 {space 3} {res} .40398644 {space 3} {res} .06069388  
-{txt}        37{c |} {space 3} {res} 2.2774952 {space 3} {res}   .403247 {space 3} {res} .06102068  
-{txt}        38{c |} {space 3} {res} 2.0751688 {space 3} {res}  .4026492 {space 3} {res} .06134492  
-{txt}        39{c |} {space 3} {res} 1.8908165 {space 3} {res} .40217933 {space 3} {res} .06166271  
-{txt}        40{c |} {space 3} {res} 1.7228416 {space 3} {res} .40180679 {space 3} {res} .06197189  
-{txt}        41{c |} {space 3} {res} 1.5697891 {space 3} {res} .40148636 {space 3} {res} .06227619  
-{txt}        42{c |} {space 3} {res} 1.4303334 {space 3} {res} .40119581 {space 3} {res} .06257533  
-{txt}        43{c |} {space 3} {res} 1.3032665 {space 3} {res}  .4007705 {space 3} {res} .06290603  
-{txt}        44{c |} {space 3} {res} 1.1874879 {space 3} {res} .40041431 {space 3} {res} .06321472  
-{txt}        45{c |} {space 3} {res} 1.0819947 {space 3} {res}  .4001158 {space 3} {res} .06350196  
-{txt}        46{c |} {space 3} {res} .98587331 {space 3} {res}  .3998654 {space 3} {res} .06376851  
-{txt}        47{c |} {space 3} {res} .89829104 {space 3} {res} .39965519 {space 3} {res}  .0640153  
-{txt}        48{c |} {space 3} {res} .81848934 {space 3} {res} .39947855 {space 3} {res} .06424336  
-{txt}        49{c |} {space 3} {res}   .745777 {space 3} {res} .39929635 {space 3} {res} .06444738  
-{txt}        50{c |} {space 3} {res} .67952423 {space 3} {res} .39911178 {space 3} {res}  .0646304  
-{txt}        51{c |} {space 3} {res} .61915717 {space 3} {res} .39895253 {space 3} {res}  .0647995  
-{txt}        52{c |} {space 3} {res} .56415295 {space 3} {res} .39881483 {space 3} {res} .06495549  
-{txt}        53{c |} {space 3} {res} .51403516 {space 3} {res}  .3986955 {space 3} {res} .06509918  
-{txt}        54{c |} {space 3} {res} .46836969 {space 3} {res} .39859189 {space 3} {res} .06523138  
-{txt}        55{c |} {space 3} {res} .42676102 {space 3} {res} .39850171 {space 3} {res} .06535289  
-{txt}        56{c |} {space 3} {res} .38884875 {space 3} {res} .39842306 {space 3} {res} .06546447  
-{txt}        57{c |} {space 3} {res}  .3543045 {space 3} {res} .39835432 {space 3} {res} .06556685  
-{txt}        58{c |} {space 3} {res} .32282906 {space 3} {res} .39829411 {space 3} {res} .06566071  
-{txt}        59{c |} {space 3} {res} .29414982 {space 3} {res} .39824126 {space 3} {res} .06574671  
-{txt}        60{c |} {space 3} {res} .26801836 {space 3} {res} .39819478 {space 3} {res} .06582547  
-{txt}        61{c |} {space 3} {res} .24420835 {space 3} {res} .39815381 {space 3} {res} .06589755  
-{txt}        62{c |} {space 3} {res} .22251355 {space 3} {res} .39811764 {space 3} {res}  .0659635  
-{txt}        63{c |} {space 3} {res} .20274606 {space 3} {res} .39808563 {space 3} {res} .06602382  
+{txt}         1{c |} {space 3} {res} .47002812 {space 3} {res} .68765443 {space 3} {res}  .1373409  
+{txt}         2{c |} {space 3} {res} .42827212 {space 3} {res} .65513813 {space 3} {res} .13755403  
+{txt}         3{c |} {space 3} {res}  .3902256 {space 3} {res} .61330573 {space 3} {res} .12760865  
+{txt}         4{c |} {space 3} {res} .35555903 {space 3} {res} .57588694 {space 3} {res} .11700443  
+{txt}         5{c |} {space 3} {res} .32397215 {space 3} {res} .54476261 {space 3} {res} .10768145  
+{txt}         6{c |} {space 3} {res} .29519136 {space 3} {res} .51886926 {space 3} {res} .09948626  
+{txt}         7{c |} {space 3} {res} .26896737 {space 3} {res} .49790373 {space 3} {res} .09268422  
+{txt}         8{c |} {space 3} {res} .24507305 {space 3} {res} .48106487 {space 3} {res} .08704268  
+{txt}         9{c |} {space 3} {res} .22330144 {space 3} {res} .46757902 {space 3} {res} .08192997  
+{txt}        10{c |} {space 3} {res} .20346395 {space 3} {res}  .4562232 {space 3} {res} .07754346  
+{txt}        11{c |} {space 3} {res} .18538878 {space 3} {res} .44550619 {space 3} {res} .07376981  ^
+{txt}        12{c |} {space 3} {res} .16891935 {space 3} {res} .43595363 {space 3} {res} .07036464  
+{txt}        13{c |} {space 3} {res} .15391302 {space 3} {res} .42657658 {space 3} {res} .06740889  
+{txt}        14{c |} {space 3} {res} .14023981 {space 3} {res} .41860881 {space 3} {res} .06487241  
+{txt}        15{c |} {space 3} {res} .12778129 {space 3} {res} .41202072 {space 3} {res} .06265271  
+{txt}        16{c |} {space 3} {res} .11642955 {space 3} {res} .40628874 {space 3} {res} .06067793  
+{txt}        17{c |} {space 3} {res} .10608627 {space 3} {res} .40150317 {space 3} {res} .05894068  
+{txt}        18{c |} {space 3} {res} .09666186 {space 3} {res} .39759331 {space 3} {res}  .0573977  
+{txt}        19{c |} {space 3} {res} .08807469 {space 3} {res} .39500474 {space 3} {res} .05608341  
+{txt}        20{c |} {space 3} {res} .08025038 {space 3} {res}  .3939009 {space 3} {res} .05507944  *
+{txt}        21{c |} {space 3} {res} .07312115 {space 3} {res} .39424725 {space 3} {res} .05446178  
+{txt}        22{c |} {space 3} {res} .06662527 {space 3} {res} .39521599 {space 3} {res} .05405737  
+{txt}        23{c |} {space 3} {res} .06070647 {space 3} {res} .39634974 {space 3} {res} .05384646  
+{txt}        24{c |} {space 3} {res} .05531347 {space 3} {res} .39813019 {space 3} {res} .05396025  
+{txt}        25{c |} {space 3} {res} .05039957 {space 3} {res} .40007771 {space 3} {res} .05454916  
+{txt}        26{c |} {space 3} {res} .04592222 {space 3} {res} .40183114 {space 3} {res} .05526845  
+{txt}        27{c |} {space 3} {res} .04184261 {space 3} {res} .40326722 {space 3} {res} .05607408  
+{txt}        28{c |} {space 3} {res} .03812543 {space 3} {res} .40401502 {space 3} {res} .05664212  
+{txt}        29{c |} {space 3} {res} .03473847 {space 3} {res} .40467183 {space 3} {res} .05734232  
+{txt}        30{c |} {space 3} {res}  .0316524 {space 3} {res} .40477347 {space 3} {res} .05819792  
+{txt}        31{c |} {space 3} {res} .02884049 {space 3} {res} .40500933 {space 3} {res} .05900882  
+{txt}        32{c |} {space 3} {res} .02627838 {space 3} {res} .40521778 {space 3} {res} .05969353  
+{txt}        33{c |} {space 3} {res} .02394388 {space 3} {res} .40534316 {space 3} {res} .06023307  
+{txt}        34{c |} {space 3} {res} .02181677 {space 3} {res}  .4046186 {space 3} {res}  .0604313  
+{txt}        35{c |} {space 3} {res} .01987863 {space 3} {res} .40384936 {space 3} {res} .06073578  
+{txt}        36{c |} {space 3} {res} .01811267 {space 3} {res} .40312431 {space 3} {res} .06106187  
+{txt}        37{c |} {space 3} {res} .01650359 {space 3} {res} .40254831 {space 3} {res} .06138569  
+{txt}        38{c |} {space 3} {res} .01503746 {space 3} {res} .40209645 {space 3} {res} .06170245  
+{txt}        39{c |} {space 3} {res} .01370157 {space 3} {res} .40173272 {space 3} {res}  .0620117  
+{txt}        40{c |} {space 3} {res} .01248436 {space 3} {res} .40142526 {space 3} {res} .06231409  
+{txt}        41{c |} {space 3} {res} .01137528 {space 3} {res} .40110867 {space 3} {res} .06262028  
+{txt}        42{c |} {space 3} {res} .01036473 {space 3} {res} .40069569 {space 3} {res} .06294802  
+{txt}        43{c |} {space 3} {res} .00944396 {space 3} {res} .40034997 {space 3} {res} .06325382  
+{txt}        44{c |} {space 3} {res} .00860498 {space 3} {res} .40006034 {space 3} {res} .06353825  
+{txt}        45{c |} {space 3} {res} .00784054 {space 3} {res}  .3998175 {space 3} {res} .06380212  
+{txt}        46{c |} {space 3} {res} .00714401 {space 3} {res} .39961373 {space 3} {res} .06404637  
+{txt}        47{c |} {space 3} {res} .00650936 {space 3} {res} .39944258 {space 3} {res} .06427203  
+{txt}        48{c |} {space 3} {res} .00593108 {space 3} {res} .39925579 {space 3} {res} .06447205  
+{txt}        49{c |} {space 3} {res} .00540418 {space 3} {res} .39907614 {space 3} {res} .06465322  
+{txt}        50{c |} {space 3} {res} .00492409 {space 3} {res} .39892114 {space 3} {res} .06482056  
+{txt}        51{c |} {space 3} {res} .00448665 {space 3} {res} .39878714 {space 3} {res}  .0649749  
+{txt}        52{c |} {space 3} {res} .00408806 {space 3} {res} .39867103 {space 3} {res} .06511705  
+{txt}        53{c |} {space 3} {res} .00372489 {space 3} {res} .39857021 {space 3} {res} .06524781  
+{txt}        54{c |} {space 3} {res} .00339398 {space 3} {res} .39848247 {space 3} {res} .06536799  
+{txt}        55{c |} {space 3} {res} .00309247 {space 3} {res} .39840596 {space 3} {res} .06547832  
+{txt}        56{c |} {space 3} {res} .00281774 {space 3} {res}  .3983391 {space 3} {res} .06557955  
+{txt}        57{c |} {space 3} {res} .00256742 {space 3} {res} .39828054 {space 3} {res} .06567235  
+{txt}        58{c |} {space 3} {res} .00233934 {space 3} {res} .39822914 {space 3} {res} .06575737  
+{txt}        59{c |} {space 3} {res} .00213152 {space 3} {res} .39818394 {space 3} {res} .06583523  
+{txt}        60{c |} {space 3} {res} .00194216 {space 3} {res} .39814411 {space 3} {res} .06590648  
+{txt}        61{c |} {space 3} {res} .00176963 {space 3} {res} .39810893 {space 3} {res} .06597167  
+{txt}        62{c |} {space 3} {res} .00161242 {space 3} {res} .39807782 {space 3} {res} .06603128  
+{txt}        63{c |} {space 3} {res} .00146917 {space 3} {res} .39805024 {space 3} {res} .06608578  
 {txt}* lopt = the lambda that minimizes MSPE.
   Run model: {stata cvlasso, lopt}
 {p 0 8 2}^ lse = largest lambda for which MSPE is within one standard error of the minimal MSPE.{p_end}
@@ -1055,66 +1054,66 @@ Fold {res}1 2 3 4 5 6 7 8 9 10
 Cross-validation over alpha (0 .3 .7 1).
 {col 10}alpha {c |} lopt*{col 30} Minimum MSPE
 {col 4}{hline 12}{c +}{hline 28}
-{res}{col 10}0.000{txt}{col 16}{c |}{res}{col 17} 16.067278{col 30} .38933388{txt}{col 42}#
-{res}{col 10}0.300{txt}{col 16}{c |}{res}{col 17} 25.583651{col 30} .39590672
-{col 10}0.700{txt}{col 16}{c |}{res}{col 17} 13.339337{col 30} .39390315
-{col 10}1.000{txt}{col 16}{c |}{res}{col 17} 10.090719{col 30} .39390033
+{res}{col 10}0.000{txt}{col 16}{c |}{res}{col 17} .10608627{col 30} .39020487{txt}{col 42}#
+{res}{col 10}0.300{txt}{col 16}{c |}{res}{col 17} .18538878{col 30} .39719435
+{col 10}0.700{txt}{col 16}{c |}{res}{col 17} .10608627{col 30} .39420819
+{col 10}1.000{txt}{col 16}{c |}{res}{col 17} .08025038{col 30}  .3939009
 {txt}* lambda value that minimizes MSPE for a given alpha
 # alpha value that minimizes MSPE
-Estimate lasso with lambda=64.864 (lse) and alpha=0.
-
-{hline 18}{c TT}{hline 32}
+Estimate lasso with lambda=.47 (lse) and alpha=0.
+{res}
+{txt}{hline 18}{c TT}{hline 32}
 {col 10}Selected {c |}           Ridge   Post-est OLS
 {hline 18}{c +}{hline 32}
-{space 11}lcavol {c |}{col 21}{res}      0.2321985      0.3897536
-{txt}{space 10}lweight {c |}{col 21}{res}      0.5274469      0.7911376
-{txt}{space 14}age {c |}{col 21}{res}     -0.0052194     -0.0203522
-{txt}{space 13}lbph {c |}{col 21}{res}      0.0804794      0.1026400
-{txt}{space 14}svi {c |}{col 21}{res}     -0.1159764     -0.2764415
-{txt}{space 14}lcp {c |}{col 21}{res}      0.0018973     -0.0959183
-{txt}{space 10}gleason {c |}{col 21}{res}      0.1439188      0.2326491
-{txt}{space 12}pgg45 {c |}{col 21}{res}      0.0020957      0.0026209
+{space 11}lcavol {c |}{col 21}{res}      0.2170410      0.3897536
+{txt}{space 10}lweight {c |}{col 21}{res}      0.4973051      0.7911376
+{txt}{space 14}age {c |}{col 21}{res}     -0.0039816     -0.0203522
+{txt}{space 13}lbph {c |}{col 21}{res}      0.0775598      0.1026400
+{txt}{space 14}svi {c |}{col 21}{res}     -0.0935545     -0.2764415
+{txt}{space 14}lcp {c |}{col 21}{res}      0.0076792     -0.0959183
+{txt}{space 10}gleason {c |}{col 21}{res}      0.1359352      0.2326491
+{txt}{space 12}pgg45 {c |}{col 21}{res}      0.0020570      0.0026209
 {txt}{hline 18}{c +}{hline 32}
 {col 4}Partialled-out{help lasso2##examples_partialling:*}{c |}
 {hline 18}{c +}{hline 32}
-{space 12}_cons {c |}{col 21}{res}     -0.8073752     -1.5876684
+{space 12}_cons {c |}{col 21}{res}     -0.7078928     -1.5876684
 {txt}{hline 18}{c BT}{hline 32}
-Use e(b) from previous lasso2 estimation (lambda=64.86388040195).
+Use e(b) from previous lasso2 estimation (lambda=.4700281188547001).
 (69 missing values generated)
-
-{hline 18}{c TT}{hline 32}
+{res}
+{txt}{hline 18}{c TT}{hline 32}
 {col 10}Selected {c |}           Ridge   Post-est OLS
 {hline 18}{c +}{hline 32}
-{space 11}lcavol {c |}{col 21}{res}      0.2321985      0.3897536
-{txt}{space 10}lweight {c |}{col 21}{res}      0.5274469      0.7911376
-{txt}{space 14}age {c |}{col 21}{res}     -0.0052194     -0.0203522
-{txt}{space 13}lbph {c |}{col 21}{res}      0.0804794      0.1026400
-{txt}{space 14}svi {c |}{col 21}{res}     -0.1159764     -0.2764415
-{txt}{space 14}lcp {c |}{col 21}{res}      0.0018973     -0.0959183
-{txt}{space 10}gleason {c |}{col 21}{res}      0.1439188      0.2326491
-{txt}{space 12}pgg45 {c |}{col 21}{res}      0.0020957      0.0026209
+{space 11}lcavol {c |}{col 21}{res}      0.2170410      0.3897536
+{txt}{space 10}lweight {c |}{col 21}{res}      0.4973051      0.7911376
+{txt}{space 14}age {c |}{col 21}{res}     -0.0039816     -0.0203522
+{txt}{space 13}lbph {c |}{col 21}{res}      0.0775598      0.1026400
+{txt}{space 14}svi {c |}{col 21}{res}     -0.0935545     -0.2764415
+{txt}{space 14}lcp {c |}{col 21}{res}      0.0076792     -0.0959183
+{txt}{space 10}gleason {c |}{col 21}{res}      0.1359352      0.2326491
+{txt}{space 12}pgg45 {c |}{col 21}{res}      0.0020570      0.0026209
 {txt}{hline 18}{c +}{hline 32}
 {col 4}Partialled-out{help lasso2##examples_partialling:*}{c |}
 {hline 18}{c +}{hline 32}
-{space 12}_cons {c |}{col 21}{res}     -0.8073752     -1.5876684
+{space 12}_cons {c |}{col 21}{res}     -0.7078928     -1.5876684
 {txt}{hline 18}{c BT}{hline 32}
-Use e(b) from previous lasso2 estimation (lambda=64.86388040195).
+Use e(b) from previous lasso2 estimation (lambda=.4700281188547001).
 (69 missing values generated)
 mreldif=0. tolerance = .01
 {res}
 {txt}__000000[1,9]
         lcavol     lweight         age        lbph         svi         lcp
-y1 {res}  .23219855    .5274469  -.00521937   .08047941  -.11597644    .0018973
+y1 {res}  .21704097    .4973051  -.00398162   .07755978  -.09355452   .00767922
 
 {txt}       gleason       pgg45       _cons
-y1 {res}  .14391884    .0020957  -.80737524
+y1 {res}   .1359352   .00205695  -.70789276
 {reset}{res}
 {txt}__000001[1,9]
         lcavol     lweight         age        lbph         svi         lcp
-y1 {res}  .23219855    .5274469  -.00521937   .08047941  -.11597644    .0018973
+y1 {res}  .21704097    .4973051  -.00398162   .07755978  -.09355452   .00767922
 
 {txt}       gleason       pgg45       _cons
-y1 {res}  .14391884    .0020957  -.80737524
+y1 {res}   .1359352   .00205695  -.70789276
 {reset}
 K-fold cross-validation with 10 folds. Elastic net with alpha=1.
 Fold {res}1 2 3 4 5 6 7 8 9 10 
@@ -1228,69 +1227,69 @@ K-fold cross-validation with 10 folds. Elastic net with alpha=0.
 Fold {res}1 2 3 4 5 6 7 8 9 10 
 {txt}          {c |} {space 3} {txt}    Lambda {space 3} {txt}      MSPE {space 3} {txt}  st. dev.
 {hline 10}{c +}{hline 45}
-{txt}         1{c |} {space 3} {res}  64.86388 {space 3} {res} .44281108 {space 3} {res} .06901627  ^
-{txt}         2{c |} {space 3} {res} 59.101552 {space 3} {res} .44157074 {space 3} {res} .06892982  
-{txt}         3{c |} {space 3} {res} 53.851133 {space 3} {res} .44058439 {space 3} {res} .06896985  
-{txt}         4{c |} {space 3} {res} 49.067147 {space 3} {res} .43984218 {space 3} {res} .06912572  
-{txt}         5{c |} {space 3} {res} 44.708157 {space 3} {res} .43933246 {space 3} {res} .06938615  
-{txt}         6{c |} {space 3} {res} 40.736407 {space 3} {res} .43904189 {space 3} {res} .06973945  
-{txt}         7{c |} {space 3} {res} 37.117497 {space 3} {res}  .4389556 {space 3} {res} .07017382  *
-{txt}         8{c |} {space 3} {res} 33.820081 {space 3} {res} .43905742 {space 3} {res} .07067749  
-{txt}         9{c |} {space 3} {res} 30.815598 {space 3} {res}  .4393302 {space 3} {res} .07123901  
-{txt}        10{c |} {space 3} {res} 28.078025 {space 3} {res} .43975607 {space 3} {res} .07184736  
-{txt}        11{c |} {space 3} {res} 25.583651 {space 3} {res} .44031679 {space 3} {res} .07249211  
-{txt}        12{c |} {space 3} {res}  23.31087 {space 3} {res}  .4409941 {space 3} {res} .07316354  
-{txt}        13{c |} {space 3} {res} 21.239997 {space 3} {res} .44176997 {space 3} {res} .07385275  
-{txt}        14{c |} {space 3} {res} 19.353094 {space 3} {res} .44262695 {space 3} {res} .07455164  
-{txt}        15{c |} {space 3} {res} 17.633818 {space 3} {res} .44354837 {space 3} {res} .07525299  
-{txt}        16{c |} {space 3} {res} 16.067278 {space 3} {res} .44451854 {space 3} {res} .07595047  
-{txt}        17{c |} {space 3} {res} 14.639906 {space 3} {res} .44552298 {space 3} {res} .07663858  
-{txt}        18{c |} {space 3} {res} 13.339337 {space 3} {res} .44654843 {space 3} {res} .07731267  
-{txt}        19{c |} {space 3} {res} 12.154307 {space 3} {res} .44758303 {space 3} {res} .07796884  
-{txt}        20{c |} {space 3} {res} 11.074552 {space 3} {res} .44861627 {space 3} {res} .07860396  
-{txt}        21{c |} {space 3} {res} 10.090719 {space 3} {res} .44963903 {space 3} {res} .07921553  
-{txt}        22{c |} {space 3} {res} 9.1942875 {space 3} {res} .45064352 {space 3} {res} .07980168  
-{txt}        23{c |} {space 3} {res} 8.3774923 {space 3} {res} .45162323 {space 3} {res} .08036108  
-{txt}        24{c |} {space 3} {res}  7.633259 {space 3} {res} .45257288 {space 3} {res} .08089289  
-{txt}        25{c |} {space 3} {res} 6.9551413 {space 3} {res} .45348826 {space 3} {res} .08139667  
-{txt}        26{c |} {space 3} {res} 6.3372657 {space 3} {res} .45436619 {space 3} {res} .08187234  
-{txt}        27{c |} {space 3} {res} 5.7742805 {space 3} {res} .45520438 {space 3} {res} .08232015  
-{txt}        28{c |} {space 3} {res} 5.2613093 {space 3} {res} .45600135 {space 3} {res} .08274057  
-{txt}        29{c |} {space 3} {res} 4.7939091 {space 3} {res}  .4567563 {space 3} {res} .08313428  
-{txt}        30{c |} {space 3} {res} 4.3680314 {space 3} {res} .45746901 {space 3} {res} .08350213  
-{txt}        31{c |} {space 3} {res} 3.9799876 {space 3} {res} .45813975 {space 3} {res}  .0838451  
-{txt}        32{c |} {space 3} {res} 3.6264164 {space 3} {res} .45876924 {space 3} {res} .08416425  
-{txt}        33{c |} {space 3} {res} 3.3042556 {space 3} {res} .45935847 {space 3} {res} .08446071  
-{txt}        34{c |} {space 3} {res} 3.0107146 {space 3} {res} .45990873 {space 3} {res} .08473563  
-{txt}        35{c |} {space 3} {res}  2.743251 {space 3} {res}  .4604215 {space 3} {res}  .0849902  
-{txt}        36{c |} {space 3} {res} 2.4995482 {space 3} {res} .46089839 {space 3} {res}  .0852256  
-{txt}        37{c |} {space 3} {res} 2.2774952 {space 3} {res} .46134112 {space 3} {res}   .085443  
-{txt}        38{c |} {space 3} {res} 2.0751688 {space 3} {res} .46175147 {space 3} {res} .08564354  
-{txt}        39{c |} {space 3} {res} 1.8908165 {space 3} {res} .46213123 {space 3} {res} .08582834  
-{txt}        40{c |} {space 3} {res} 1.7228416 {space 3} {res} .46248222 {space 3} {res} .08599846  
-{txt}        41{c |} {space 3} {res} 1.5697891 {space 3} {res}  .4628062 {space 3} {res} .08615493  
-{txt}        42{c |} {space 3} {res} 1.4303334 {space 3} {res} .46310491 {space 3} {res} .08629874  
-{txt}        43{c |} {space 3} {res} 1.3032665 {space 3} {res} .46338005 {space 3} {res}  .0864308  
-{txt}        44{c |} {space 3} {res} 1.1874879 {space 3} {res} .46363322 {space 3} {res} .08655199  
-{txt}        45{c |} {space 3} {res} 1.0819947 {space 3} {res} .46386598 {space 3} {res} .08666314  
-{txt}        46{c |} {space 3} {res} .98587331 {space 3} {res} .46407981 {space 3} {res} .08676503  
-{txt}        47{c |} {space 3} {res} .89829104 {space 3} {res} .46427611 {space 3} {res} .08685837  
-{txt}        48{c |} {space 3} {res} .81848934 {space 3} {res} .46445619 {space 3} {res} .08694384  
-{txt}        49{c |} {space 3} {res}   .745777 {space 3} {res} .46462129 {space 3} {res} .08702207  
-{txt}        50{c |} {space 3} {res} .67952423 {space 3} {res} .46477259 {space 3} {res} .08709365  
-{txt}        51{c |} {space 3} {res} .61915717 {space 3} {res} .46491115 {space 3} {res} .08715911  
-{txt}        52{c |} {space 3} {res} .56415295 {space 3} {res}   .465038 {space 3} {res} .08721897  
-{txt}        53{c |} {space 3} {res} .51403516 {space 3} {res} .46515409 {space 3} {res} .08727367  
-{txt}        54{c |} {space 3} {res} .46836969 {space 3} {res} .46526027 {space 3} {res} .08732367  
-{txt}        55{c |} {space 3} {res} .42676102 {space 3} {res} .46535737 {space 3} {res} .08736934  
-{txt}        56{c |} {space 3} {res} .38884875 {space 3} {res} .46544613 {space 3} {res} .08741105  
-{txt}        57{c |} {space 3} {res}  .3543045 {space 3} {res} .46552724 {space 3} {res} .08744914  
-{txt}        58{c |} {space 3} {res} .32282906 {space 3} {res} .46560135 {space 3} {res} .08748391  
-{txt}        59{c |} {space 3} {res} .29414982 {space 3} {res} .46566904 {space 3} {res} .08751565  
-{txt}        60{c |} {space 3} {res} .26801836 {space 3} {res} .46573086 {space 3} {res} .08754462  
-{txt}        61{c |} {space 3} {res} .24420835 {space 3} {res}  .4657873 {space 3} {res} .08757106  
-{txt}        62{c |} {space 3} {res} .22251355 {space 3} {res} .46583882 {space 3} {res} .08759518  
-{txt}        63{c |} {space 3} {res} .20274606 {space 3} {res} .46588584 {space 3} {res} .08761718  
+{txt}         1{c |} {space 3} {res} .47002812 {space 3} {res} .44726584 {space 3} {res} .07065653  ^
+{txt}         2{c |} {space 3} {res} .42827212 {space 3} {res} .44571884 {space 3} {res} .07036734  
+{txt}         3{c |} {space 3} {res}  .3902256 {space 3} {res} .44442816 {space 3} {res} .07021443  
+{txt}         4{c |} {space 3} {res} .35555903 {space 3} {res} .44338599 {space 3} {res} .07018872  
+{txt}         5{c |} {space 3} {res} .32397215 {space 3} {res} .44258269 {space 3} {res} .07028015  
+{txt}         6{c |} {space 3} {res} .29519136 {space 3} {res} .44200686 {space 3} {res} .07047791  
+{txt}         7{c |} {space 3} {res} .26896737 {space 3} {res} .44164545 {space 3} {res} .07077066  
+{txt}         8{c |} {space 3} {res} .24507305 {space 3} {res} .44148392 {space 3} {res} .07114681  *
+{txt}         9{c |} {space 3} {res} .22330144 {space 3} {res}  .4415065 {space 3} {res} .07159477  
+{txt}        10{c |} {space 3} {res} .20346395 {space 3} {res} .44169647 {space 3} {res} .07210312  
+{txt}        11{c |} {space 3} {res} .18538878 {space 3} {res} .44203645 {space 3} {res} .07266082  
+{txt}        12{c |} {space 3} {res} .16891935 {space 3} {res} .44250872 {space 3} {res} .07325742  
+{txt}        13{c |} {space 3} {res} .15391302 {space 3} {res} .44309556 {space 3} {res} .07388311  
+{txt}        14{c |} {space 3} {res} .14023981 {space 3} {res} .44377954 {space 3} {res} .07452885  
+{txt}        15{c |} {space 3} {res} .12778129 {space 3} {res} .44454376 {space 3} {res} .07518646  
+{txt}        16{c |} {space 3} {res} .11642955 {space 3} {res} .44537212 {space 3} {res} .07584861  
+{txt}        17{c |} {space 3} {res} .10608627 {space 3} {res} .44624952 {space 3} {res} .07650884  
+{txt}        18{c |} {space 3} {res} .09666186 {space 3} {res} .44716196 {space 3} {res} .07716156  
+{txt}        19{c |} {space 3} {res} .08807469 {space 3} {res}  .4480967 {space 3} {res} .07780203  
+{txt}        20{c |} {space 3} {res} .08025038 {space 3} {res} .44904233 {space 3} {res} .07842629  
+{txt}        21{c |} {space 3} {res} .07312115 {space 3} {res} .44998873 {space 3} {res} .07903111  
+{txt}        22{c |} {space 3} {res} .06662527 {space 3} {res} .45092712 {space 3} {res} .07961396  
+{txt}        23{c |} {space 3} {res} .06070647 {space 3} {res} .45185003 {space 3} {res}  .0801729  
+{txt}        24{c |} {space 3} {res} .05531347 {space 3} {res} .45275119 {space 3} {res} .08070656  
+{txt}        25{c |} {space 3} {res} .05039957 {space 3} {res} .45362549 {space 3} {res} .08121404  
+{txt}        26{c |} {space 3} {res} .04592222 {space 3} {res} .45446888 {space 3} {res} .08169486  
+{txt}        27{c |} {space 3} {res} .04184261 {space 3} {res} .45527827 {space 3} {res} .08214892  
+{txt}        28{c |} {space 3} {res} .03812543 {space 3} {res} .45605143 {space 3} {res} .08257639  
+{txt}        29{c |} {space 3} {res} .03473847 {space 3} {res} .45678687 {space 3} {res} .08297771  
+{txt}        30{c |} {space 3} {res}  .0316524 {space 3} {res} .45748378 {space 3} {res} .08335353  
+{txt}        31{c |} {space 3} {res} .02884049 {space 3} {res}  .4581419 {space 3} {res} .08370464  
+{txt}        32{c |} {space 3} {res} .02627838 {space 3} {res} .45876142 {space 3} {res} .08403197  
+{txt}        33{c |} {space 3} {res} .02394388 {space 3} {res} .45934295 {space 3} {res} .08433652  
+{txt}        34{c |} {space 3} {res} .02181677 {space 3} {res} .45988739 {space 3} {res} .08461939  
+{txt}        35{c |} {space 3} {res} .01987863 {space 3} {res} .46039589 {space 3} {res} .08488168  
+{txt}        36{c |} {space 3} {res} .01811267 {space 3} {res} .46086981 {space 3} {res} .08512452  
+{txt}        37{c |} {space 3} {res} .01650359 {space 3} {res} .46131061 {space 3} {res} .08534904  
+{txt}        38{c |} {space 3} {res} .01503746 {space 3} {res} .46171988 {space 3} {res} .08555637  
+{txt}        39{c |} {space 3} {res} .01370157 {space 3} {res} .46209924 {space 3} {res}  .0857476  
+{txt}        40{c |} {space 3} {res} .01248436 {space 3} {res} .46245034 {space 3} {res} .08592379  
+{txt}        41{c |} {space 3} {res} .01137528 {space 3} {res} .46277486 {space 3} {res} .08608598  
+{txt}        42{c |} {space 3} {res} .01036473 {space 3} {res} .46307442 {space 3} {res} .08623513  
+{txt}        43{c |} {space 3} {res} .00944396 {space 3} {res} .46335063 {space 3} {res} .08637219  
+{txt}        44{c |} {space 3} {res} .00860498 {space 3} {res} .46360504 {space 3} {res} .08649805  
+{txt}        45{c |} {space 3} {res} .00784054 {space 3} {res} .46383915 {space 3} {res} .08661354  
+{txt}        46{c |} {space 3} {res} .00714401 {space 3} {res}  .4640544 {space 3} {res} .08671945  
+{txt}        47{c |} {space 3} {res} .00650936 {space 3} {res} .46425214 {space 3} {res} .08681652  
+{txt}        48{c |} {space 3} {res} .00593108 {space 3} {res} .46443367 {space 3} {res} .08690544  
+{txt}        49{c |} {space 3} {res} .00540418 {space 3} {res}  .4646002 {space 3} {res} .08698686  
+{txt}        50{c |} {space 3} {res} .00492409 {space 3} {res} .46475289 {space 3} {res} .08706138  
+{txt}        51{c |} {space 3} {res} .00448665 {space 3} {res} .46489281 {space 3} {res} .08712956  
+{txt}        52{c |} {space 3} {res} .00408806 {space 3} {res} .46502096 {space 3} {res} .08719191  
+{txt}        53{c |} {space 3} {res} .00372489 {space 3} {res} .46513828 {space 3} {res} .08724892  
+{txt}        54{c |} {space 3} {res} .00339398 {space 3} {res} .46524564 {space 3} {res} .08730102  
+{txt}        55{c |} {space 3} {res} .00309247 {space 3} {res} .46534384 {space 3} {res} .08734863  
+{txt}        56{c |} {space 3} {res} .00281774 {space 3} {res} .46543364 {space 3} {res} .08739212  
+{txt}        57{c |} {space 3} {res} .00256742 {space 3} {res} .46551573 {space 3} {res} .08743184  
+{txt}        58{c |} {space 3} {res} .00233934 {space 3} {res} .46559075 {space 3} {res} .08746811  
+{txt}        59{c |} {space 3} {res} .00213152 {space 3} {res} .46565929 {space 3} {res} .08750122  
+{txt}        60{c |} {space 3} {res} .00194216 {space 3} {res} .46572189 {space 3} {res} .08753144  
+{txt}        61{c |} {space 3} {res} .00176963 {space 3} {res} .46577906 {space 3} {res} .08755902  
+{txt}        62{c |} {space 3} {res} .00161242 {space 3} {res} .46583126 {space 3} {res} .08758419  
+{txt}        63{c |} {space 3} {res} .00146917 {space 3} {res} .46587891 {space 3} {res} .08760715  
 {txt}* lopt = the lambda that minimizes MSPE.
   Run model: {stata cvlasso, lopt}
 {p 0 8 2}^ lse = largest lambda for which MSPE is within one standard error of the minimal MSPE.{p_end}
@@ -1302,69 +1301,69 @@ Fold {res}1 2 3 4 5 6 7 8 9 10
 Fold {res}1 2 3 4 5 6 7 8 9 10 
 {txt}          {c |} {space 3} {txt}    Lambda {space 3} {txt}      MSPE {space 3} {txt}  st. dev.
 {hline 10}{c +}{hline 45}
-{txt}         1{c |} {space 3} {res}  64.86388 {space 3} {res}  .4869323 {space 3} {res} .08679392  ^
-{txt}         2{c |} {space 3} {res} 59.101552 {space 3} {res} .47748984 {space 3} {res} .08246976  
-{txt}         3{c |} {space 3} {res} 53.851133 {space 3} {res} .46955124 {space 3} {res} .07867846  
-{txt}         4{c |} {space 3} {res} 49.067147 {space 3} {res} .46291838 {space 3} {res} .07541064  
-{txt}         5{c |} {space 3} {res} 44.708157 {space 3} {res} .45741604 {space 3} {res} .07264857  
-{txt}         6{c |} {space 3} {res} 40.736407 {space 3} {res} .45288943 {space 3} {res} .07036601  
-{txt}         7{c |} {space 3} {res} 37.117497 {space 3} {res}  .4492002 {space 3} {res} .06852962  
-{txt}         8{c |} {space 3} {res} 33.820081 {space 3} {res}  .4462255 {space 3} {res} .06710021  
-{txt}         9{c |} {space 3} {res} 30.815598 {space 3} {res}  .4444728 {space 3} {res} .06621065  
-{txt}        10{c |} {space 3} {res} 28.078025 {space 3} {res} .44349427 {space 3} {res} .06570267  
-{txt}        11{c |} {space 3} {res} 25.583651 {space 3} {res} .44292313 {space 3} {res}  .0654398  *
-{txt}        12{c |} {space 3} {res}  23.31087 {space 3} {res} .44302772 {space 3} {res}  .0653831  
-{txt}        13{c |} {space 3} {res} 21.239997 {space 3} {res} .44372962 {space 3} {res} .06559731  
-{txt}        14{c |} {space 3} {res} 19.353094 {space 3} {res} .44447423 {space 3} {res} .06611789  
-{txt}        15{c |} {space 3} {res} 17.633818 {space 3} {res} .44530459 {space 3} {res} .06678324  
-{txt}        16{c |} {space 3} {res} 16.067278 {space 3} {res} .44630467 {space 3} {res} .06752289  
-{txt}        17{c |} {space 3} {res} 14.639906 {space 3} {res}  .4466282 {space 3} {res} .06817245  
-{txt}        18{c |} {space 3} {res} 13.339337 {space 3} {res} .44695289 {space 3} {res} .06875543  
-{txt}        19{c |} {space 3} {res} 12.154307 {space 3} {res} .44824079 {space 3} {res} .06971831  
-{txt}        20{c |} {space 3} {res} 11.074552 {space 3} {res} .44961458 {space 3} {res} .07076419  
-{txt}        21{c |} {space 3} {res} 10.090719 {space 3} {res} .45086442 {space 3} {res} .07196261  
-{txt}        22{c |} {space 3} {res} 9.1942875 {space 3} {res} .45132035 {space 3} {res}  .0727935  
-{txt}        23{c |} {space 3} {res} 8.3774923 {space 3} {res} .45180439 {space 3} {res} .07364401  
-{txt}        24{c |} {space 3} {res}  7.633259 {space 3} {res} .45227101 {space 3} {res} .07454284  
-{txt}        25{c |} {space 3} {res} 6.9551413 {space 3} {res} .45272875 {space 3} {res} .07546856  
-{txt}        26{c |} {space 3} {res} 6.3372657 {space 3} {res} .45328027 {space 3} {res} .07636154  
-{txt}        27{c |} {space 3} {res} 5.7742805 {space 3} {res} .45389935 {space 3} {res} .07721672  
-{txt}        28{c |} {space 3} {res} 5.2613093 {space 3} {res} .45456416 {space 3} {res} .07803072  
-{txt}        29{c |} {space 3} {res} 4.7939091 {space 3} {res} .45525664 {space 3} {res} .07880156  
-{txt}        30{c |} {space 3} {res} 4.3680314 {space 3} {res} .45596207 {space 3} {res} .07952832  
-{txt}        31{c |} {space 3} {res} 3.9799876 {space 3} {res} .45666859 {space 3} {res} .08021092  
-{txt}        32{c |} {space 3} {res} 3.6264164 {space 3} {res}  .4573668 {space 3} {res} .08084994  
-{txt}        33{c |} {space 3} {res} 3.3042556 {space 3} {res} .45804938 {space 3} {res} .08144644  
-{txt}        34{c |} {space 3} {res} 3.0107146 {space 3} {res} .45871075 {space 3} {res} .08200185  
-{txt}        35{c |} {space 3} {res}  2.743251 {space 3} {res} .45934684 {space 3} {res} .08251786  
-{txt}        36{c |} {space 3} {res} 2.4995482 {space 3} {res} .45995475 {space 3} {res} .08299632  
-{txt}        37{c |} {space 3} {res} 2.2774952 {space 3} {res} .46050826 {space 3} {res} .08343091  
-{txt}        38{c |} {space 3} {res} 2.0751688 {space 3} {res} .46092949 {space 3} {res} .08379732  
-{txt}        39{c |} {space 3} {res} 1.8908165 {space 3} {res} .46132941 {space 3} {res} .08413545  
-{txt}        40{c |} {space 3} {res} 1.7228416 {space 3} {res} .46170737 {space 3} {res} .08444712  
-{txt}        41{c |} {space 3} {res} 1.5697891 {space 3} {res} .46206317 {space 3} {res} .08473407  
-{txt}        42{c |} {space 3} {res} 1.4303334 {space 3} {res} .46239695 {space 3} {res} .08499801  
-{txt}        43{c |} {space 3} {res} 1.3032665 {space 3} {res} .46270912 {space 3} {res} .08524057  
-{txt}        44{c |} {space 3} {res} 1.1874879 {space 3} {res} .46300031 {space 3} {res} .08546332  
-{txt}        45{c |} {space 3} {res} 1.0819947 {space 3} {res} .46327129 {space 3} {res} .08566771  
-{txt}        46{c |} {space 3} {res} .98587331 {space 3} {res} .46352292 {space 3} {res} .08585514  
-{txt}        47{c |} {space 3} {res} .89829104 {space 3} {res} .46375616 {space 3} {res} .08602692  
-{txt}        48{c |} {space 3} {res} .81848934 {space 3} {res} .46397199 {space 3} {res} .08618427  
-{txt}        49{c |} {space 3} {res}   .745777 {space 3} {res} .46417141 {space 3} {res} .08632834  
-{txt}        50{c |} {space 3} {res} .67952423 {space 3} {res} .46435542 {space 3} {res} .08646018  
-{txt}        51{c |} {space 3} {res} .61915717 {space 3} {res} .46452501 {space 3} {res} .08658078  
-{txt}        52{c |} {space 3} {res} .56415295 {space 3} {res} .46468114 {space 3} {res} .08669108  
-{txt}        53{c |} {space 3} {res} .51403516 {space 3} {res} .46482474 {space 3} {res}  .0867919  
-{txt}        54{c |} {space 3} {res} .46836969 {space 3} {res}  .4649567 {space 3} {res} .08688404  
-{txt}        55{c |} {space 3} {res} .42676102 {space 3} {res} .46507787 {space 3} {res} .08696823  
-{txt}        56{c |} {space 3} {res} .38884875 {space 3} {res} .46518905 {space 3} {res} .08704513  
-{txt}        57{c |} {space 3} {res}  .3543045 {space 3} {res}   .465291 {space 3} {res} .08711535  
-{txt}        58{c |} {space 3} {res} .32282906 {space 3} {res} .46538443 {space 3} {res} .08717947  
-{txt}        59{c |} {space 3} {res} .29414982 {space 3} {res} .46547001 {space 3} {res} .08723801  
-{txt}        60{c |} {space 3} {res} .26801836 {space 3} {res} .46554836 {space 3} {res} .08729143  
-{txt}        61{c |} {space 3} {res} .24420835 {space 3} {res} .46562005 {space 3} {res} .08734018  
-{txt}        62{c |} {space 3} {res} .22251355 {space 3} {res} .46568564 {space 3} {res} .08738467  
-{txt}        63{c |} {space 3} {res} .20274606 {space 3} {res} .46574561 {space 3} {res} .08742525  
+{txt}         1{c |} {space 3} {res} .47002812 {space 3} {res}  .4807686 {space 3} {res} .08462549  ^
+{txt}         2{c |} {space 3} {res} .42827212 {space 3} {res} .47256051 {space 3} {res} .08070791  
+{txt}         3{c |} {space 3} {res}  .3902256 {space 3} {res} .46563366 {space 3} {res} .07728267  
+{txt}         4{c |} {space 3} {res} .35555903 {space 3} {res} .45983105 {space 3} {res}  .0743409  
+{txt}         5{c |} {space 3} {res} .32397215 {space 3} {res} .45500889 {space 3} {res} .07186538  
+{txt}         6{c |} {space 3} {res} .29519136 {space 3} {res} .45103664 {space 3} {res} .06983106  
+{txt}         7{c |} {space 3} {res} .26896737 {space 3} {res} .44779678 {space 3} {res} .06820608  
+{txt}         8{c |} {space 3} {res} .24507305 {space 3} {res} .44568547 {space 3} {res} .06710056  
+{txt}         9{c |} {space 3} {res} .22330144 {space 3} {res} .44446595 {space 3} {res} .06642088  
+{txt}        10{c |} {space 3} {res} .20346395 {space 3} {res} .44367255 {space 3} {res} .06600318  
+{txt}        11{c |} {space 3} {res} .18538878 {space 3} {res} .44354984 {space 3} {res} .06580573  *
+{txt}        12{c |} {space 3} {res} .16891935 {space 3} {res} .44409278 {space 3} {res} .06585495  
+{txt}        13{c |} {space 3} {res} .15391302 {space 3} {res} .44466433 {space 3} {res} .06626105  
+{txt}        14{c |} {space 3} {res} .14023981 {space 3} {res} .44536206 {space 3} {res}  .0668258  
+{txt}        15{c |} {space 3} {res} .12778129 {space 3} {res} .44628011 {space 3} {res} .06748795  
+{txt}        16{c |} {space 3} {res} .11642955 {space 3} {res} .44675365 {space 3} {res} .06818043  
+{txt}        17{c |} {space 3} {res} .10608627 {space 3} {res} .44710255 {space 3} {res} .06876427  
+{txt}        18{c |} {space 3} {res} .09666186 {space 3} {res} .44828134 {space 3} {res} .06965561  
+{txt}        19{c |} {space 3} {res} .08807469 {space 3} {res} .44959762 {space 3} {res} .07062134  
+{txt}        20{c |} {space 3} {res} .08025038 {space 3} {res} .45068917 {space 3} {res}   .071747  
+{txt}        21{c |} {space 3} {res} .07312115 {space 3} {res} .45114911 {space 3} {res} .07260245  
+{txt}        22{c |} {space 3} {res} .06662527 {space 3} {res} .45154277 {space 3} {res} .07344089  
+{txt}        23{c |} {space 3} {res} .06070647 {space 3} {res} .45201081 {space 3} {res} .07430661  
+{txt}        24{c |} {space 3} {res} .05531347 {space 3} {res} .45244205 {space 3} {res} .07521906  
+{txt}        25{c |} {space 3} {res} .05039957 {space 3} {res} .45297301 {space 3} {res} .07610437  
+{txt}        26{c |} {space 3} {res} .04592222 {space 3} {res} .45357727 {space 3} {res} .07695654  
+{txt}        27{c |} {space 3} {res} .04184261 {space 3} {res} .45423254 {space 3} {res} .07777138  
+{txt}        28{c |} {space 3} {res} .03812543 {space 3} {res} .45492028 {space 3} {res} .07854614  
+{txt}        29{c |} {space 3} {res} .03473847 {space 3} {res} .45562517 {space 3} {res} .07927923  
+{txt}        30{c |} {space 3} {res}  .0316524 {space 3} {res} .45633475 {space 3} {res}    .07997  
+{txt}        31{c |} {space 3} {res} .02884049 {space 3} {res} .45703904 {space 3} {res} .08061856  
+{txt}        32{c |} {space 3} {res} .02627838 {space 3} {res} .45773015 {space 3} {res} .08122555  
+{txt}        33{c |} {space 3} {res} .02394388 {space 3} {res}   .458402 {space 3} {res} .08179206  
+{txt}        34{c |} {space 3} {res} .02181677 {space 3} {res} .45905006 {space 3} {res} .08231951  
+{txt}        35{c |} {space 3} {res} .01987863 {space 3} {res} .45967102 {space 3} {res} .08280952  
+{txt}        36{c |} {space 3} {res} .01811267 {space 3} {res} .46024884 {space 3} {res} .08325919  
+{txt}        37{c |} {space 3} {res} .01650359 {space 3} {res} .46068402 {space 3} {res} .08363694  
+{txt}        38{c |} {space 3} {res} .01503746 {space 3} {res} .46109797 {space 3} {res} .08398602  
+{txt}        39{c |} {space 3} {res} .01370157 {space 3} {res} .46148987 {space 3} {res} .08430819  
+{txt}        40{c |} {space 3} {res} .01248436 {space 3} {res} .46185936 {space 3} {res} .08460516  
+{txt}        41{c |} {space 3} {res} .01137528 {space 3} {res} .46220647 {space 3} {res}  .0848786  
+{txt}        42{c |} {space 3} {res} .01036473 {space 3} {res} .46253153 {space 3} {res} .08513014  
+{txt}        43{c |} {space 3} {res} .00944396 {space 3} {res} .46283508 {space 3} {res} .08536133  
+{txt}        44{c |} {space 3} {res} .00860498 {space 3} {res} .46311785 {space 3} {res} .08557364  
+{txt}        45{c |} {space 3} {res} .00784054 {space 3} {res} .46338069 {space 3} {res} .08576847  
+{txt}        46{c |} {space 3} {res} .00714401 {space 3} {res} .46362452 {space 3} {res} .08594716  
+{txt}        47{c |} {space 3} {res} .00650936 {space 3} {res} .46385033 {space 3} {res} .08611093  
+{txt}        48{c |} {space 3} {res} .00593108 {space 3} {res} .46405911 {space 3} {res} .08626095  
+{txt}        49{c |} {space 3} {res} .00540418 {space 3} {res} .46425189 {space 3} {res} .08639831  
+{txt}        50{c |} {space 3} {res} .00492409 {space 3} {res} .46442967 {space 3} {res} .08652403  
+{txt}        51{c |} {space 3} {res} .00448665 {space 3} {res} .46459342 {space 3} {res} .08663904  
+{txt}        52{c |} {space 3} {res} .00408806 {space 3} {res} .46474411 {space 3} {res} .08674422  
+{txt}        53{c |} {space 3} {res} .00372489 {space 3} {res} .46488264 {space 3} {res} .08684037  
+{txt}        54{c |} {space 3} {res} .00339398 {space 3} {res}  .4650099 {space 3} {res} .08692825  
+{txt}        55{c |} {space 3} {res} .00309247 {space 3} {res}  .4651267 {space 3} {res} .08700855  
+{txt}        56{c |} {space 3} {res} .00281774 {space 3} {res} .46523385 {space 3} {res}  .0870819  
+{txt}        57{c |} {space 3} {res} .00256742 {space 3} {res} .46533207 {space 3} {res} .08714888  
+{txt}        58{c |} {space 3} {res} .00233934 {space 3} {res} .46542205 {space 3} {res} .08721004  
+{txt}        59{c |} {space 3} {res} .00213152 {space 3} {res} .46550446 {space 3} {res} .08726587  
+{txt}        60{c |} {space 3} {res} .00194216 {space 3} {res} .46557989 {space 3} {res} .08731683  
+{txt}        61{c |} {space 3} {res} .00176963 {space 3} {res}  .4656489 {space 3} {res} .08736334  
+{txt}        62{c |} {space 3} {res} .00161242 {space 3} {res} .46571203 {space 3} {res} .08740578  
+{txt}        63{c |} {space 3} {res} .00146917 {space 3} {res} .46576974 {space 3} {res}  .0874445  
 {txt}* lopt = the lambda that minimizes MSPE.
   Run model: {stata cvlasso, lopt}
 {p 0 8 2}^ lse = largest lambda for which MSPE is within one standard error of the minimal MSPE.{p_end}
@@ -1376,69 +1375,69 @@ Fold {res}1 2 3 4 5 6 7 8 9 10
 Fold {res}1 2 3 4 5 6 7 8 9 10 
 {txt}          {c |} {space 3} {txt}    Lambda {space 3} {txt}      MSPE {space 3} {txt}  st. dev.
 {hline 10}{c +}{hline 45}
-{txt}         1{c |} {space 3} {res}  64.86388 {space 3} {res} .61908325 {space 3} {res} .14007728  
-{txt}         2{c |} {space 3} {res} 59.101552 {space 3} {res} .58768457 {space 3} {res} .12895516  
-{txt}         3{c |} {space 3} {res} 53.851133 {space 3} {res} .56180475 {space 3} {res} .11880805  
-{txt}         4{c |} {space 3} {res} 49.067147 {space 3} {res} .54022603 {space 3} {res} .10995919  
-{txt}         5{c |} {space 3} {res} 44.708157 {space 3} {res} .52385289 {space 3} {res}  .1025955  
-{txt}         6{c |} {space 3} {res} 40.736407 {space 3} {res} .51089075 {space 3} {res} .09596056  ^
-{txt}         7{c |} {space 3} {res} 37.117497 {space 3} {res} .49980854 {space 3} {res} .09023074  
-{txt}         8{c |} {space 3} {res} 33.820081 {space 3} {res} .49058885 {space 3} {res} .08522388  
-{txt}         9{c |} {space 3} {res} 30.815598 {space 3} {res} .48198502 {space 3} {res} .08106536  
-{txt}        10{c |} {space 3} {res} 28.078025 {space 3} {res} .47464126 {space 3} {res}  .0776364  
-{txt}        11{c |} {space 3} {res} 25.583651 {space 3} {res} .46874879 {space 3} {res} .07480098  
-{txt}        12{c |} {space 3} {res}  23.31087 {space 3} {res} .46373077 {space 3} {res} .07227668  
-{txt}        13{c |} {space 3} {res} 21.239997 {space 3} {res} .45976766 {space 3} {res} .07031213  
-{txt}        14{c |} {space 3} {res} 19.353094 {space 3} {res} .45667062 {space 3} {res} .06883941  
-{txt}        15{c |} {space 3} {res} 17.633818 {space 3} {res} .45399967 {space 3} {res} .06771037  
-{txt}        16{c |} {space 3} {res} 16.067278 {space 3} {res} .45142364 {space 3} {res} .06680078  
-{txt}        17{c |} {space 3} {res} 14.639906 {space 3} {res} .44963884 {space 3} {res} .06625339  
-{txt}        18{c |} {space 3} {res} 13.339337 {space 3} {res} .44877026 {space 3} {res} .06606881  
-{txt}        19{c |} {space 3} {res} 12.154307 {space 3} {res} .44835159 {space 3} {res} .06609829  *
-{txt}        20{c |} {space 3} {res} 11.074552 {space 3} {res} .44867726 {space 3} {res} .06631856  
-{txt}        21{c |} {space 3} {res} 10.090719 {space 3} {res} .44965465 {space 3} {res} .06684646  
-{txt}        22{c |} {space 3} {res} 9.1942875 {space 3} {res} .45061083 {space 3} {res} .06761583  
-{txt}        23{c |} {space 3} {res} 8.3774923 {space 3} {res} .45150574 {space 3} {res} .06845715  
-{txt}        24{c |} {space 3} {res}  7.633259 {space 3} {res} .45270365 {space 3} {res}  .0694032  
-{txt}        25{c |} {space 3} {res} 6.9551413 {space 3} {res} .45267636 {space 3} {res}  .0700133  
-{txt}        26{c |} {space 3} {res} 6.3372657 {space 3} {res}  .4525081 {space 3} {res} .07052514  
-{txt}        27{c |} {space 3} {res} 5.7742805 {space 3} {res} .45329734 {space 3} {res} .07140489  
-{txt}        28{c |} {space 3} {res} 5.2613093 {space 3} {res} .45448018 {space 3} {res} .07262912  
-{txt}        29{c |} {space 3} {res} 4.7939091 {space 3} {res}  .4554019 {space 3} {res} .07376223  
-{txt}        30{c |} {space 3} {res} 4.3680314 {space 3} {res} .45592571 {space 3} {res} .07462943  
-{txt}        31{c |} {space 3} {res} 3.9799876 {space 3} {res} .45658036 {space 3} {res} .07547675  
-{txt}        32{c |} {space 3} {res} 3.6264164 {space 3} {res} .45706861 {space 3} {res} .07636434  
-{txt}        33{c |} {space 3} {res} 3.3042556 {space 3} {res}  .4574991 {space 3} {res} .07724039  
-{txt}        34{c |} {space 3} {res} 3.0107146 {space 3} {res} .45786396 {space 3} {res} .07808121  
-{txt}        35{c |} {space 3} {res}  2.743251 {space 3} {res} .45824796 {space 3} {res} .07888572  
-{txt}        36{c |} {space 3} {res} 2.4995482 {space 3} {res} .45868108 {space 3} {res} .07963897  
-{txt}        37{c |} {space 3} {res} 2.2774952 {space 3} {res} .45914542 {space 3} {res} .08034165  
-{txt}        38{c |} {space 3} {res} 2.0751688 {space 3} {res} .45962684 {space 3} {res} .08099518  
-{txt}        39{c |} {space 3} {res} 1.8908165 {space 3} {res} .46011428 {space 3} {res} .08160143  
-{txt}        40{c |} {space 3} {res} 1.7228416 {space 3} {res} .46059918 {space 3} {res} .08216261  
-{txt}        41{c |} {space 3} {res} 1.5697891 {space 3} {res} .46107507 {space 3} {res} .08268111  
-{txt}        42{c |} {space 3} {res} 1.4303334 {space 3} {res}  .4615371 {space 3} {res} .08315941  
-{txt}        43{c |} {space 3} {res} 1.3032665 {space 3} {res} .46198182 {space 3} {res} .08360002  
-{txt}        44{c |} {space 3} {res} 1.1874879 {space 3} {res} .46240681 {space 3} {res} .08400541  
-{txt}        45{c |} {space 3} {res} 1.0819947 {space 3} {res} .46275325 {space 3} {res} .08435814  
-{txt}        46{c |} {space 3} {res} .98587331 {space 3} {res} .46300833 {space 3} {res} .08465632  
-{txt}        47{c |} {space 3} {res} .89829104 {space 3} {res}  .4632519 {space 3} {res} .08493001  
-{txt}        48{c |} {space 3} {res} .81848934 {space 3} {res} .46348313 {space 3} {res} .08518104  
-{txt}        49{c |} {space 3} {res}   .745777 {space 3} {res} .46370156 {space 3} {res} .08541113  
-{txt}        50{c |} {space 3} {res} .67952423 {space 3} {res} .46390702 {space 3} {res}  .0856219  
-{txt}        51{c |} {space 3} {res} .61915717 {space 3} {res}  .4640996 {space 3} {res} .08581488  
-{txt}        52{c |} {space 3} {res} .56415295 {space 3} {res} .46427952 {space 3} {res} .08599148  
-{txt}        53{c |} {space 3} {res} .51403516 {space 3} {res} .46444718 {space 3} {res} .08615302  
-{txt}        54{c |} {space 3} {res} .46836969 {space 3} {res} .46460303 {space 3} {res} .08630074  
-{txt}        55{c |} {space 3} {res} .42676102 {space 3} {res}  .4647476 {space 3} {res} .08643578  
-{txt}        56{c |} {space 3} {res} .38884875 {space 3} {res} .46488146 {space 3} {res} .08655917  
-{txt}        57{c |} {space 3} {res}  .3543045 {space 3} {res}  .4650052 {space 3} {res} .08667191  
-{txt}        58{c |} {space 3} {res} .32282906 {space 3} {res} .46511943 {space 3} {res} .08677487  
-{txt}        59{c |} {space 3} {res} .29414982 {space 3} {res} .46522473 {space 3} {res} .08686889  
-{txt}        60{c |} {space 3} {res} .26801836 {space 3} {res}  .4653217 {space 3} {res} .08695473  
-{txt}        61{c |} {space 3} {res} .24420835 {space 3} {res}  .4654109 {space 3} {res} .08703308  
-{txt}        62{c |} {space 3} {res} .22251355 {space 3} {res} .46549288 {space 3} {res} .08710459  
-{txt}        63{c |} {space 3} {res} .20274606 {space 3} {res} .46556817 {space 3} {res} .08716984  
+{txt}         1{c |} {space 3} {res} .47002812 {space 3} {res} .58619016 {space 3} {res} .12810454  
+{txt}         2{c |} {space 3} {res} .42827212 {space 3} {res} .56107624 {space 3} {res} .11832598  
+{txt}         3{c |} {space 3} {res}  .3902256 {space 3} {res} .54039885 {space 3} {res} .10991634  
+{txt}         4{c |} {space 3} {res} .35555903 {space 3} {res} .52456909 {space 3} {res} .10265959  
+{txt}         5{c |} {space 3} {res} .32397215 {space 3} {res} .51165111 {space 3} {res}  .0961521  ^
+{txt}         6{c |} {space 3} {res} .29519136 {space 3} {res} .50061598 {space 3} {res} .09049654  
+{txt}         7{c |} {space 3} {res} .26896737 {space 3} {res} .49111134 {space 3} {res} .08554142  
+{txt}         8{c |} {space 3} {res} .24507305 {space 3} {res} .48239203 {space 3} {res}  .0814258  
+{txt}         9{c |} {space 3} {res} .22330144 {space 3} {res} .47510973 {space 3} {res}  .0779965  
+{txt}        10{c |} {space 3} {res} .20346395 {space 3} {res} .46904459 {space 3} {res} .07499795  
+{txt}        11{c |} {space 3} {res} .18538878 {space 3} {res} .46405149 {space 3} {res} .07247272  
+{txt}        12{c |} {space 3} {res} .16891935 {space 3} {res} .46009631 {space 3} {res} .07050059  
+{txt}        13{c |} {space 3} {res} .15391302 {space 3} {res} .45699556 {space 3} {res} .06901584  
+{txt}        14{c |} {space 3} {res} .14023981 {space 3} {res} .45397225 {space 3} {res} .06777763  
+{txt}        15{c |} {space 3} {res} .12778129 {space 3} {res} .45120778 {space 3} {res} .06680757  
+{txt}        16{c |} {space 3} {res} .11642955 {space 3} {res} .44953485 {space 3} {res} .06628193  
+{txt}        17{c |} {space 3} {res} .10608627 {space 3} {res} .44871007 {space 3} {res} .06610389  
+{txt}        18{c |} {space 3} {res} .09666186 {space 3} {res} .44833137 {space 3} {res} .06613475  *
+{txt}        19{c |} {space 3} {res} .08807469 {space 3} {res} .44869745 {space 3} {res}  .0663539  
+{txt}        20{c |} {space 3} {res} .08025038 {space 3} {res} .44970847 {space 3} {res} .06688917  
+{txt}        21{c |} {space 3} {res} .07312115 {space 3} {res} .45065363 {space 3} {res} .06765046  
+{txt}        22{c |} {space 3} {res} .06662527 {space 3} {res} .45153455 {space 3} {res} .06848568  
+{txt}        23{c |} {space 3} {res} .06070647 {space 3} {res} .45271177 {space 3} {res} .06942702  
+{txt}        24{c |} {space 3} {res} .05531347 {space 3} {res} .45257275 {space 3} {res} .07000925  
+{txt}        25{c |} {space 3} {res} .05039957 {space 3} {res} .45243613 {space 3} {res}  .0705241  
+{txt}        26{c |} {space 3} {res} .04592222 {space 3} {res} .45338008 {space 3} {res} .07147215  
+{txt}        27{c |} {space 3} {res} .04184261 {space 3} {res} .45455376 {space 3} {res} .07269662  
+{txt}        28{c |} {space 3} {res} .03812543 {space 3} {res} .45540524 {space 3} {res} .07378965  
+{txt}        29{c |} {space 3} {res} .03473847 {space 3} {res}  .4559352 {space 3} {res} .07465225  
+{txt}        30{c |} {space 3} {res}  .0316524 {space 3} {res} .45658653 {space 3} {res} .07549777  
+{txt}        31{c |} {space 3} {res} .02884049 {space 3} {res} .45704894 {space 3} {res} .07638579  
+{txt}        32{c |} {space 3} {res} .02627838 {space 3} {res} .45744487 {space 3} {res} .07725548  
+{txt}        33{c |} {space 3} {res} .02394388 {space 3} {res} .45779308 {space 3} {res} .07809994  
+{txt}        34{c |} {space 3} {res} .02181677 {space 3} {res} .45818688 {space 3} {res} .07890063  
+{txt}        35{c |} {space 3} {res} .01987863 {space 3} {res} .45862789 {space 3} {res} .07965063  
+{txt}        36{c |} {space 3} {res} .01811267 {space 3} {res} .45909868 {space 3} {res}  .0803506  
+{txt}        37{c |} {space 3} {res} .01650359 {space 3} {res} .45958543 {space 3} {res} .08100187  
+{txt}        38{c |} {space 3} {res} .01503746 {space 3} {res} .46007733 {space 3} {res} .08160628  
+{txt}        39{c |} {space 3} {res} .01370157 {space 3} {res} .46056602 {space 3} {res} .08216596  
+{txt}        40{c |} {space 3} {res} .01248436 {space 3} {res} .46104515 {space 3} {res} .08268324  
+{txt}        41{c |} {space 3} {res} .01137528 {space 3} {res} .46151001 {space 3} {res} .08316058  
+{txt}        42{c |} {space 3} {res} .01036473 {space 3} {res}  .4619572 {space 3} {res} .08360042  
+{txt}        43{c |} {space 3} {res} .00944396 {space 3} {res} .46238438 {space 3} {res} .08400522  
+{txt}        44{c |} {space 3} {res} .00860498 {space 3} {res} .46271952 {space 3} {res} .08435291  
+{txt}        45{c |} {space 3} {res} .00784054 {space 3} {res} .46297764 {space 3} {res} .08465122  
+{txt}        46{c |} {space 3} {res} .00714401 {space 3} {res} .46322396 {space 3} {res} .08492508  
+{txt}        47{c |} {space 3} {res} .00650936 {space 3} {res} .46345767 {space 3} {res} .08517631  
+{txt}        48{c |} {space 3} {res} .00593108 {space 3} {res} .46367834 {space 3} {res} .08540661  
+{txt}        49{c |} {space 3} {res} .00540418 {space 3} {res} .46388585 {space 3} {res} .08561762  
+{txt}        50{c |} {space 3} {res} .00492409 {space 3} {res} .46408028 {space 3} {res} .08581084  
+{txt}        51{c |} {space 3} {res} .00448665 {space 3} {res} .46426189 {space 3} {res} .08598768  
+{txt}        52{c |} {space 3} {res} .00408806 {space 3} {res} .46443109 {space 3} {res} .08614946  
+{txt}        53{c |} {space 3} {res} .00372489 {space 3} {res} .46458834 {space 3} {res} .08629742  
+{txt}        54{c |} {space 3} {res} .00339398 {space 3} {res} .46473419 {space 3} {res} .08643268  
+{txt}        55{c |} {space 3} {res} .00309247 {space 3} {res} .46486922 {space 3} {res} .08655629  
+{txt}        56{c |} {space 3} {res} .00281774 {space 3} {res} .46499403 {space 3} {res} .08666923  
+{txt}        57{c |} {space 3} {res} .00256742 {space 3} {res} .46510923 {space 3} {res} .08677239  
+{txt}        58{c |} {space 3} {res} .00233934 {space 3} {res} .46521543 {space 3} {res}  .0868666  
+{txt}        59{c |} {space 3} {res} .00213152 {space 3} {res} .46531321 {space 3} {res} .08695262  
+{txt}        60{c |} {space 3} {res} .00194216 {space 3} {res} .46540316 {space 3} {res} .08703113  
+{txt}        61{c |} {space 3} {res} .00176963 {space 3} {res} .46548581 {space 3} {res}  .0871028  
+{txt}        62{c |} {space 3} {res} .00161242 {space 3} {res} .46556172 {space 3} {res} .08716819  
+{txt}        63{c |} {space 3} {res} .00146917 {space 3} {res} .46563136 {space 3} {res} .08722786  
 {txt}* lopt = the lambda that minimizes MSPE.
   Run model: {stata cvlasso, lopt}
 {p 0 8 2}^ lse = largest lambda for which MSPE is within one standard error of the minimal MSPE.{p_end}
@@ -1449,69 +1448,69 @@ K-fold cross-validation with 10 folds. Elastic net with alpha=1.
 Fold {res}1 2 3 4 5 6 7 8 9 10 
 {txt}          {c |} {space 3} {txt}    Lambda {space 3} {txt}      MSPE {space 3} {txt}  st. dev.
 {hline 10}{c +}{hline 45}
-{txt}         1{c |} {space 3} {res}  64.86388 {space 3} {res} .71826991 {space 3} {res} .15027898  
-{txt}         2{c |} {space 3} {res} 59.101552 {space 3} {res}  .7017569 {space 3} {res} .15174323  
-{txt}         3{c |} {space 3} {res} 53.851133 {space 3} {res}  .6734222 {space 3} {res} .15141824  
-{txt}         4{c |} {space 3} {res} 49.067147 {space 3} {res} .64310127 {space 3} {res} .14976061  
-{txt}         5{c |} {space 3} {res} 44.708157 {space 3} {res} .60479302 {space 3} {res} .13626295  
-{txt}         6{c |} {space 3} {res} 40.736407 {space 3} {res} .57281759 {space 3} {res} .12432963  
-{txt}         7{c |} {space 3} {res} 37.117497 {space 3} {res} .54743119 {space 3} {res} .11368317  
-{txt}         8{c |} {space 3} {res} 33.820081 {space 3} {res}    .52676 {space 3} {res}  .1044928  
-{txt}         9{c |} {space 3} {res} 30.815598 {space 3} {res} .51117725 {space 3} {res} .09740443  ^
-{txt}        10{c |} {space 3} {res} 28.078025 {space 3} {res} .49959732 {space 3} {res} .09110491  
-{txt}        11{c |} {space 3} {res} 25.583651 {space 3} {res}  .4904423 {space 3} {res} .08570847  
-{txt}        12{c |} {space 3} {res}  23.31087 {space 3} {res} .48294823 {space 3} {res} .08119264  
-{txt}        13{c |} {space 3} {res} 21.239997 {space 3} {res} .47653268 {space 3} {res} .07736227  
-{txt}        14{c |} {space 3} {res} 19.353094 {space 3} {res} .47093259 {space 3} {res} .07441875  
-{txt}        15{c |} {space 3} {res} 17.633818 {space 3} {res} .46587429 {space 3} {res} .07212743  
-{txt}        16{c |} {space 3} {res} 16.067278 {space 3} {res} .46191477 {space 3} {res} .07037382  
-{txt}        17{c |} {space 3} {res} 14.639906 {space 3} {res} .45850018 {space 3} {res} .06884241  
-{txt}        18{c |} {space 3} {res} 13.339337 {space 3} {res} .45587172 {space 3} {res} .06776415  
-{txt}        19{c |} {space 3} {res} 12.154307 {space 3} {res} .45387051 {space 3} {res} .06705988  
-{txt}        20{c |} {space 3} {res} 11.074552 {space 3} {res} .45237398 {space 3} {res} .06666243  
-{txt}        21{c |} {space 3} {res} 10.090719 {space 3} {res} .45155286 {space 3} {res}  .0665075  
-{txt}        22{c |} {space 3} {res} 9.1942875 {space 3} {res} .45104001 {space 3} {res} .06653322  
-{txt}        23{c |} {space 3} {res} 8.3774923 {space 3} {res} .45082081 {space 3} {res} .06666169  *
-{txt}        24{c |} {space 3} {res}  7.633259 {space 3} {res}  .4515464 {space 3} {res} .06702063  
-{txt}        25{c |} {space 3} {res} 6.9551413 {space 3} {res} .45235585 {space 3} {res} .06774026  
-{txt}        26{c |} {space 3} {res} 6.3372657 {space 3} {res} .45329014 {space 3} {res} .06856772  
-{txt}        27{c |} {space 3} {res} 5.7742805 {space 3} {res} .45433215 {space 3} {res} .06950456  
-{txt}        28{c |} {space 3} {res} 5.2613093 {space 3} {res} .45514309 {space 3} {res} .07040594  
-{txt}        29{c |} {space 3} {res} 4.7939091 {space 3} {res} .45458938 {space 3} {res} .07087588  
-{txt}        30{c |} {space 3} {res} 4.3680314 {space 3} {res} .45444132 {space 3} {res} .07141817  
-{txt}        31{c |} {space 3} {res} 3.9799876 {space 3} {res} .45546838 {space 3} {res} .07252397  
-{txt}        32{c |} {space 3} {res} 3.6264164 {space 3} {res} .45657184 {space 3} {res} .07379852  
-{txt}        33{c |} {space 3} {res} 3.3042556 {space 3} {res} .45705609 {space 3} {res} .07471615  
-{txt}        34{c |} {space 3} {res} 3.0107146 {space 3} {res}  .4575917 {space 3} {res} .07556721  
-{txt}        35{c |} {space 3} {res}  2.743251 {space 3} {res} .45811726 {space 3} {res} .07643671  
-{txt}        36{c |} {space 3} {res} 2.4995482 {space 3} {res} .45857126 {space 3} {res} .07729199  
-{txt}        37{c |} {space 3} {res} 2.2774952 {space 3} {res}  .4590032 {space 3} {res} .07813456  
-{txt}        38{c |} {space 3} {res} 2.0751688 {space 3} {res} .45934737 {space 3} {res} .07892682  
-{txt}        39{c |} {space 3} {res} 1.8908165 {space 3} {res} .45966979 {space 3} {res} .07968782  
-{txt}        40{c |} {space 3} {res} 1.7228416 {space 3} {res} .46003744 {space 3} {res} .08039613  
-{txt}        41{c |} {space 3} {res} 1.5697891 {space 3} {res} .46043375 {space 3} {res} .08105344  
-{txt}        42{c |} {space 3} {res} 1.4303334 {space 3} {res} .46084577 {space 3} {res} .08166195  
-{txt}        43{c |} {space 3} {res} 1.3032665 {space 3} {res} .46126345 {space 3} {res} .08222411  
-{txt}        44{c |} {space 3} {res} 1.1874879 {space 3} {res} .46167911 {space 3} {res} .08274256  
-{txt}        45{c |} {space 3} {res} 1.0819947 {space 3} {res} .46208698 {space 3} {res} .08321999  
-{txt}        46{c |} {space 3} {res} .98587331 {space 3} {res} .46248281 {space 3} {res} .08365911  
-{txt}        47{c |} {space 3} {res} .89829104 {space 3} {res} .46286355 {space 3} {res} .08406253  
-{txt}        48{c |} {space 3} {res} .81848934 {space 3} {res} .46322714 {space 3} {res} .08443283  
-{txt}        49{c |} {space 3} {res}   .745777 {space 3} {res} .46344987 {space 3} {res} .08472977  
-{txt}        50{c |} {space 3} {res} .67952423 {space 3} {res} .46365402 {space 3} {res} .08499849  
-{txt}        51{c |} {space 3} {res} .61915717 {space 3} {res} .46384945 {space 3} {res} .08524474  
-{txt}        52{c |} {space 3} {res} .56415295 {space 3} {res} .46403534 {space 3} {res} .08547027  
-{txt}        53{c |} {space 3} {res} .51403516 {space 3} {res} .46421122 {space 3} {res} .08567671  
-{txt}        54{c |} {space 3} {res} .46836969 {space 3} {res} .46437686 {space 3} {res} .08586559  
-{txt}        55{c |} {space 3} {res} .42676102 {space 3} {res} .46453227 {space 3} {res} .08603833  
-{txt}        56{c |} {space 3} {res} .38884875 {space 3} {res} .46467758 {space 3} {res} .08619625  
-{txt}        57{c |} {space 3} {res}  .3543045 {space 3} {res} .46481307 {space 3} {res} .08634058  
-{txt}        58{c |} {space 3} {res} .32282906 {space 3} {res} .46493909 {space 3} {res} .08647245  
-{txt}        59{c |} {space 3} {res} .29414982 {space 3} {res} .46505604 {space 3} {res} .08659291  
-{txt}        60{c |} {space 3} {res} .26801836 {space 3} {res} .46516436 {space 3} {res}  .0867029  
-{txt}        61{c |} {space 3} {res} .24420835 {space 3} {res} .46526453 {space 3} {res} .08680333  
-{txt}        62{c |} {space 3} {res} .22251355 {space 3} {res} .46535702 {space 3} {res} .08689501  
-{txt}        63{c |} {space 3} {res} .20274606 {space 3} {res}  .4654423 {space 3} {res} .08697868  
+{txt}         1{c |} {space 3} {res} .47002812 {space 3} {res} .69815481 {space 3} {res} .15163127  
+{txt}         2{c |} {space 3} {res} .42827212 {space 3} {res} .66932957 {space 3} {res} .15135765  
+{txt}         3{c |} {space 3} {res}  .3902256 {space 3} {res}  .6375022 {space 3} {res} .14767754  
+{txt}         4{c |} {space 3} {res} .35555903 {space 3} {res} .60003182 {space 3} {res} .13432424  
+{txt}         5{c |} {space 3} {res} .32397215 {space 3} {res} .56894123 {space 3} {res} .12262063  
+{txt}         6{c |} {space 3} {res} .29519136 {space 3} {res} .54436246 {space 3} {res} .11216636  
+{txt}         7{c |} {space 3} {res} .26896737 {space 3} {res}  .5244468 {space 3} {res} .10333925  
+{txt}         8{c |} {space 3} {res} .24507305 {space 3} {res} .50941128 {space 3} {res} .09638042  ^
+{txt}         9{c |} {space 3} {res} .22330144 {space 3} {res} .49830776 {space 3} {res} .09020357  
+{txt}        10{c |} {space 3} {res} .20346395 {space 3} {res} .48935447 {space 3} {res} .08495596  
+{txt}        11{c |} {space 3} {res} .18538878 {space 3} {res} .48204675 {space 3} {res} .08053992  
+{txt}        12{c |} {space 3} {res} .16891935 {space 3} {res} .47586911 {space 3} {res} .07683111  
+{txt}        13{c |} {space 3} {res} .15391302 {space 3} {res} .47030912 {space 3} {res} .07399968  
+{txt}        14{c |} {space 3} {res} .14023981 {space 3} {res} .46538509 {space 3} {res} .07179493  
+{txt}        15{c |} {space 3} {res} .12778129 {space 3} {res} .46149035 {space 3} {res} .07007257  
+{txt}        16{c |} {space 3} {res} .11642955 {space 3} {res} .45819543 {space 3} {res} .06862152  
+{txt}        17{c |} {space 3} {res} .10608627 {space 3} {res} .45565501 {space 3} {res} .06760599  
+{txt}        18{c |} {space 3} {res} .09666186 {space 3} {res} .45372367 {space 3} {res} .06695403  
+{txt}        19{c |} {space 3} {res} .08807469 {space 3} {res} .45232684 {space 3} {res}  .0666063  
+{txt}        20{c |} {space 3} {res} .08025038 {space 3} {res} .45154331 {space 3} {res}  .0664764  
+{txt}        21{c |} {space 3} {res} .07312115 {space 3} {res} .45103659 {space 3} {res} .06652145  
+{txt}        22{c |} {space 3} {res} .06662527 {space 3} {res}  .4509109 {space 3} {res} .06667515  *
+{txt}        23{c |} {space 3} {res} .06070647 {space 3} {res} .45178675 {space 3} {res} .06707184  
+{txt}        24{c |} {space 3} {res} .05531347 {space 3} {res} .45258315 {space 3} {res}  .0678345  
+{txt}        25{c |} {space 3} {res} .05039957 {space 3} {res} .45348951 {space 3} {res} .06867401  
+{txt}        26{c |} {space 3} {res} .04592222 {space 3} {res} .45460175 {space 3} {res} .06962724  
+{txt}        27{c |} {space 3} {res} .04184261 {space 3} {res} .45508972 {space 3} {res} .07045032  
+{txt}        28{c |} {space 3} {res} .03812543 {space 3} {res} .45458988 {space 3} {res} .07093927  
+{txt}        29{c |} {space 3} {res} .03473847 {space 3} {res} .45447797 {space 3} {res} .07149219  
+{txt}        30{c |} {space 3} {res}  .0316524 {space 3} {res} .45566263 {space 3} {res} .07270131  
+{txt}        31{c |} {space 3} {res} .02884049 {space 3} {res} .45675066 {space 3} {res} .07396821  
+{txt}        32{c |} {space 3} {res} .02627838 {space 3} {res}  .4571526 {space 3} {res} .07483705  
+{txt}        33{c |} {space 3} {res} .02394388 {space 3} {res} .45770467 {space 3} {res} .07568529  
+{txt}        34{c |} {space 3} {res} .02181677 {space 3} {res} .45820848 {space 3} {res} .07656181  
+{txt}        35{c |} {space 3} {res} .01987863 {space 3} {res} .45865808 {space 3} {res}  .0774122  
+{txt}        36{c |} {space 3} {res} .01811267 {space 3} {res} .45907697 {space 3} {res} .07825024  
+{txt}        37{c |} {space 3} {res} .01650359 {space 3} {res}  .4594059 {space 3} {res} .07903985  
+{txt}        38{c |} {space 3} {res} .01503746 {space 3} {res} .45973484 {space 3} {res} .07979336  
+{txt}        39{c |} {space 3} {res} .01370157 {space 3} {res} .46010643 {space 3} {res} .08049433  
+{txt}        40{c |} {space 3} {res} .01248436 {space 3} {res} .46050468 {space 3} {res} .08114456  
+{txt}        41{c |} {space 3} {res} .01137528 {space 3} {res} .46091709 {space 3} {res} .08174629  
+{txt}        42{c |} {space 3} {res} .01036473 {space 3} {res}   .461334 {space 3} {res} .08230202  
+{txt}        43{c |} {space 3} {res} .00944396 {space 3} {res} .46174801 {space 3} {res} .08281441  
+{txt}        44{c |} {space 3} {res} .00860498 {space 3} {res}  .4621536 {space 3} {res} .08328616  
+{txt}        45{c |} {space 3} {res} .00784054 {space 3} {res} .46254669 {space 3} {res} .08371996  
+{txt}        46{c |} {space 3} {res} .00714401 {space 3} {res}  .4629244 {space 3} {res} .08411845  
+{txt}        47{c |} {space 3} {res} .00650936 {space 3} {res} .46327511 {space 3} {res} .08448079  
+{txt}        48{c |} {space 3} {res} .00593108 {space 3} {res} .46348523 {space 3} {res} .08477022  
+{txt}        49{c |} {space 3} {res} .00540418 {space 3} {res} .46368773 {space 3} {res} .08503559  
+{txt}        50{c |} {space 3} {res} .00492409 {space 3} {res} .46388141 {space 3} {res} .08527874  
+{txt}        51{c |} {space 3} {res} .00448665 {space 3} {res}  .4640655 {space 3} {res} .08550141  
+{txt}        52{c |} {space 3} {res} .00408806 {space 3} {res} .46423955 {space 3} {res} .08570521  
+{txt}        53{c |} {space 3} {res} .00372489 {space 3} {res} .46440338 {space 3} {res} .08589167  
+{txt}        54{c |} {space 3} {res} .00339398 {space 3} {res} .46455702 {space 3} {res} .08606219  
+{txt}        55{c |} {space 3} {res} .00309247 {space 3} {res} .46470063 {space 3} {res} .08621806  
+{txt}        56{c |} {space 3} {res} .00281774 {space 3} {res} .46483448 {space 3} {res} .08636052  
+{txt}        57{c |} {space 3} {res} .00256742 {space 3} {res} .46495893 {space 3} {res} .08649067  
+{txt}        58{c |} {space 3} {res} .00233934 {space 3} {res} .46507439 {space 3} {res} .08660955  
+{txt}        59{c |} {space 3} {res} .00213152 {space 3} {res} .46518132 {space 3} {res}  .0867181  
+{txt}        60{c |} {space 3} {res} .00194216 {space 3} {res} .46528017 {space 3} {res} .08681721  
+{txt}        61{c |} {space 3} {res} .00176963 {space 3} {res} .46537143 {space 3} {res} .08690767  
+{txt}        62{c |} {space 3} {res} .00161242 {space 3} {res} .46545556 {space 3} {res} .08699024  
+{txt}        63{c |} {space 3} {res} .00146917 {space 3} {res} .46553304 {space 3} {res} .08706558  
 {txt}* lopt = the lambda that minimizes MSPE.
   Run model: {stata cvlasso, lopt}
 {p 0 8 2}^ lse = largest lambda for which MSPE is within one standard error of the minimal MSPE.{p_end}
@@ -1520,67 +1519,67 @@ Fold {res}1 2 3 4 5 6 7 8 9 10
 Cross-validation over alpha (0 .3 .7 1).
 {col 10}alpha {c |} lopt*{col 30} Minimum MSPE
 {col 4}{hline 12}{c +}{hline 28}
-{res}{col 10}0.000{txt}{col 16}{c |}{res}{col 17} 37.117497{col 30}  .4389556{txt}{col 42}#
-{res}{col 10}0.300{txt}{col 16}{c |}{res}{col 17} 25.583651{col 30} .44292313
-{col 10}0.700{txt}{col 16}{c |}{res}{col 17} 12.154307{col 30} .44835159
-{col 10}1.000{txt}{col 16}{c |}{res}{col 17} 8.3774923{col 30} .45082081
+{res}{col 10}0.000{txt}{col 16}{c |}{res}{col 17} .24507305{col 30} .44148392{txt}{col 42}#
+{res}{col 10}0.300{txt}{col 16}{c |}{res}{col 17} .18538878{col 30} .44354984
+{col 10}0.700{txt}{col 16}{c |}{res}{col 17} .09666186{col 30} .44833137
+{col 10}1.000{txt}{col 16}{c |}{res}{col 17} .06662527{col 30}  .4509109
 {txt}* lambda value that minimizes MSPE for a given alpha
 # alpha value that minimizes MSPE
-Estimate lasso with lambda=64.864 (lse) and alpha=0.
-
-{hline 18}{c TT}{hline 32}
+Estimate lasso with lambda=.47 (lse) and alpha=0.
+{res}
+{txt}{hline 18}{c TT}{hline 32}
 {col 10}Selected {c |}           Ridge   Post-est OLS
 {hline 18}{c +}{hline 32}
-{space 11}lcavol {c |}{col 21}{res}      0.2321985      0.3897536
-{txt}{space 10}lweight {c |}{col 21}{res}      0.5274469      0.7911376
-{txt}{space 14}age {c |}{col 21}{res}     -0.0052194     -0.0203522
-{txt}{space 13}lbph {c |}{col 21}{res}      0.0804794      0.1026400
-{txt}{space 14}svi {c |}{col 21}{res}     -0.1159764     -0.2764415
-{txt}{space 14}lcp {c |}{col 21}{res}      0.0018973     -0.0959183
-{txt}{space 10}gleason {c |}{col 21}{res}      0.1439188      0.2326491
-{txt}{space 12}pgg45 {c |}{col 21}{res}      0.0020957      0.0026209
+{space 11}lcavol {c |}{col 21}{res}      0.2170410      0.3897536
+{txt}{space 10}lweight {c |}{col 21}{res}      0.4973051      0.7911376
+{txt}{space 14}age {c |}{col 21}{res}     -0.0039816     -0.0203522
+{txt}{space 13}lbph {c |}{col 21}{res}      0.0775598      0.1026400
+{txt}{space 14}svi {c |}{col 21}{res}     -0.0935545     -0.2764415
+{txt}{space 14}lcp {c |}{col 21}{res}      0.0076792     -0.0959183
+{txt}{space 10}gleason {c |}{col 21}{res}      0.1359352      0.2326491
+{txt}{space 12}pgg45 {c |}{col 21}{res}      0.0020570      0.0026209
 {txt}{hline 18}{c +}{hline 32}
 {col 4}Partialled-out{help lasso2##examples_partialling:*}{c |}
 {hline 18}{c +}{hline 32}
-{space 12}_cons {c |}{col 21}{res}     -0.8073752     -1.5876684
+{space 12}_cons {c |}{col 21}{res}     -0.7078928     -1.5876684
 {txt}{hline 18}{c BT}{hline 32}
-Use e(b) from previous lasso2 estimation (lambda=64.86388040195).
+Use e(b) from previous lasso2 estimation (lambda=.4700281188547001).
 (69 missing values generated)
-
-{hline 18}{c TT}{hline 32}
+{res}
+{txt}{hline 18}{c TT}{hline 32}
 {col 10}Selected {c |}           Ridge   Post-est OLS
 {hline 18}{c +}{hline 32}
-{space 11}lcavol {c |}{col 21}{res}      0.2321985      0.3897536
-{txt}{space 10}lweight {c |}{col 21}{res}      0.5274469      0.7911376
-{txt}{space 14}age {c |}{col 21}{res}     -0.0052194     -0.0203522
-{txt}{space 13}lbph {c |}{col 21}{res}      0.0804794      0.1026400
-{txt}{space 14}svi {c |}{col 21}{res}     -0.1159764     -0.2764415
-{txt}{space 14}lcp {c |}{col 21}{res}      0.0018973     -0.0959183
-{txt}{space 10}gleason {c |}{col 21}{res}      0.1439188      0.2326491
-{txt}{space 12}pgg45 {c |}{col 21}{res}      0.0020957      0.0026209
+{space 11}lcavol {c |}{col 21}{res}      0.2170410      0.3897536
+{txt}{space 10}lweight {c |}{col 21}{res}      0.4973051      0.7911376
+{txt}{space 14}age {c |}{col 21}{res}     -0.0039816     -0.0203522
+{txt}{space 13}lbph {c |}{col 21}{res}      0.0775598      0.1026400
+{txt}{space 14}svi {c |}{col 21}{res}     -0.0935545     -0.2764415
+{txt}{space 14}lcp {c |}{col 21}{res}      0.0076792     -0.0959183
+{txt}{space 10}gleason {c |}{col 21}{res}      0.1359352      0.2326491
+{txt}{space 12}pgg45 {c |}{col 21}{res}      0.0020570      0.0026209
 {txt}{hline 18}{c +}{hline 32}
 {col 4}Partialled-out{help lasso2##examples_partialling:*}{c |}
 {hline 18}{c +}{hline 32}
-{space 12}_cons {c |}{col 21}{res}     -0.8073752     -1.5876684
+{space 12}_cons {c |}{col 21}{res}     -0.7078928     -1.5876684
 {txt}{hline 18}{c BT}{hline 32}
-Use e(b) from previous lasso2 estimation (lambda=64.86388040195).
+Use e(b) from previous lasso2 estimation (lambda=.4700281188547001).
 (69 missing values generated)
 mreldif=0. tolerance = .01
 {res}
 {txt}__000000[1,9]
         lcavol     lweight         age        lbph         svi         lcp
-y1 {res}  .23219855    .5274469  -.00521937   .08047941  -.11597644    .0018973
+y1 {res}  .21704097    .4973051  -.00398162   .07755978  -.09355452   .00767922
 
 {txt}       gleason       pgg45       _cons
-y1 {res}  .14391884    .0020957  -.80737524
+y1 {res}   .1359352   .00205695  -.70789276
 {reset}{res}
 {txt}__000001[1,9]
         lcavol     lweight         age        lbph         svi         lcp
-y1 {res}  .23219855    .5274469  -.00521937   .08047941  -.11597644    .0018973
+y1 {res}  .21704097    .4973051  -.00398162   .07755978  -.09355452   .00767922
 
 {txt}       gleason       pgg45       _cons
-y1 {res}  .14391884    .0020957  -.80737524
-{reset}r; t=4.12 18:21:06
+y1 {res}   .1359352   .00205695  -.70789276
+{reset}r; t=5.86 20:21:56
 
 {com}. *
 . 
@@ -1592,7 +1591,7 @@ y1 {res}  .14391884    .0020957  -.80737524
 . * load example data
 . insheet using "$prostate", tab clear
 {txt}(11 vars, 97 obs)
-r; t=0.19 18:21:06
+r; t=0.61 20:21:56
 
 {com}. 
 . cvlasso $model, partial(svi) saveest(m)
@@ -1670,16 +1669,16 @@ Fold {res}1 2 3 4 5 6 7 8 9 10
 {p 0 8 2}^ lse = largest lambda for which MSPE is within one standard error of the minimal MSPE.{p_end}
   Run model: {stata cvlasso, lse}
 {err}Warning: lopt is at the limit of the lambda range.
-{txt}r; t=0.82 18:21:07
+{txt}r; t=1.08 20:21:57
 
 {com}. 
 . // make sure that partial works
 . estimates restore m1
 {txt}(results {stata estimates replay m1:m1} are active now)
-r; t=0.01 18:21:07
+r; t=0.01 20:21:57
 
 {com}. assert "`e(partial)'"=="svi"
-{txt}r; t=0.00 18:21:07
+{txt}r; t=0.00 20:21:57
 
 {com}. 
 . 
@@ -1766,7 +1765,7 @@ Fold {res}1 2 3 4 5 6 7 8 9 10
   Run model: {stata cvlasso, lopt}
 {p 0 8 2}^ lse = largest lambda for which MSPE is within one standard error of the minimal MSPE.{p_end}
   Run model: {stata cvlasso, lse}
-r; t=0.46 18:21:08
+r; t=0.51 20:21:58
 
 {com}. 
 . ********************************************************************************
@@ -1776,7 +1775,7 @@ r; t=0.46 18:21:08
 . * load example data
 . insheet using "$prostate", tab clear
 {txt}(11 vars, 97 obs)
-r; t=0.21 18:21:08
+r; t=0.19 20:21:58
 
 {com}. 
 . cvlasso $model, plotcv
@@ -1857,7 +1856,7 @@ Fold {res}1 2 3 4 5 6 7 8 9 10
   Run model: {stata cvlasso, lopt}
 {p 0 8 2}^ lse = largest lambda for which MSPE is within one standard error of the minimal MSPE.{p_end}
   Run model: {stata cvlasso, lse}
-{res}{txt}r; t=1.77 18:21:10
+{res}{txt}r; t=3.02 20:22:01
 
 {com}. 
 . ********************************************************************************
@@ -1866,7 +1865,7 @@ Fold {res}1 2 3 4 5 6 7 8 9 10
 . 
 . webuse air2, clear
 {txt}(TIMESLAB: Airline passengers)
-r; t=0.48 18:21:10
+r; t=1.27 20:22:02
 
 {com}.  
 . cvlasso air L(1/12).air, rolling origin(130)
@@ -1977,11 +1976,11 @@ Training from-to (validation point): {res}13-130 (131), 13-131 (132), 13-132 (13
   Run model: {stata cvlasso, lopt}
 {p 0 8 2}^ lse = largest lambda for which MSPE is within one standard error of the minimal MSPE.{p_end}
   Run model: {stata cvlasso, lse}
-r; t=13.30 18:21:24
+r; t=21.59 20:22:24
 
 {com}. // we should have 144-130=14 folds
 . assert 14==`e(nfolds)'
-{txt}r; t=0.00 18:21:24
+{txt}r; t=0.00 20:22:24
 
 {com}. 
 . cvlasso air L(1/12).air, rolling origin(130) h(2)
@@ -2092,11 +2091,11 @@ Training from-to (validation point): {res}13-130 (132), 13-131 (133), 13-132 (13
   Run model: {stata cvlasso, lopt}
 {p 0 8 2}^ lse = largest lambda for which MSPE is within one standard error of the minimal MSPE.{p_end}
   Run model: {stata cvlasso, lse}
-r; t=12.56 18:21:36
+r; t=20.27 20:22:44
 
 {com}. // we should have 144-130-1=14 folds
 . assert 13==`e(nfolds)'
-{txt}r; t=0.00 18:21:36
+{txt}r; t=0.00 20:22:44
 
 {com}. 
 . cvlasso air L(1/12).air, rolling origin(130) fixedwin
@@ -2207,10 +2206,10 @@ Training from-to (validation point): {res}13-130 (131), 14-131 (132), 15-132 (13
   Run model: {stata cvlasso, lopt}
 {p 0 8 2}^ lse = largest lambda for which MSPE is within one standard error of the minimal MSPE.{p_end}
   Run model: {stata cvlasso, lse}
-r; t=13.68 18:21:50
+r; t=21.95 20:23:06
 
 {com}. assert 14==`e(nfolds)'
-{txt}r; t=0.00 18:21:50
+{txt}r; t=0.00 20:23:06
 
 {com}. 
 . ********************************************************************************
@@ -2219,7 +2218,7 @@ r; t=13.68 18:21:50
 . 
 . use "http://fmwww.bc.edu/ec-p/data/macro/abdata.dta", clear
 {txt}(Layard & Nickell, Unemployment in Britain, Economica 53, 1986 from Ox dist)
-r; t=0.79 18:21:51
+r; t=0.84 20:23:07
 
 {com}. 
 . // FE and noftools options
@@ -2297,13 +2296,13 @@ Fold {res}1 2 3 4 5 6 7 8 9 10
   Run model: {stata cvlasso, lopt}
 {p 0 8 2}^ lse = largest lambda for which MSPE is within one standard error of the minimal MSPE.{p_end}
   Run model: {stata cvlasso, lse}
-r; t=1.13 18:21:52
+r; t=1.54 20:23:09
 
 {com}. savedresults save ftools e()
-{txt}r; t=0.01 18:21:52
+{txt}r; t=0.01 20:23:09
 
 {com}. cap noi assert "`e(noftools)'"==""  // will be error if ftools not installed
-{txt}r; t=0.00 18:21:52
+{txt}r; t=0.00 20:23:09
 
 {com}. cvlasso ys l(0/3).k l(0/3).n, fe seed(123) noftools
 
@@ -2379,13 +2378,13 @@ Fold {res}1 2 3 4 5 6 7 8 9 10
   Run model: {stata cvlasso, lopt}
 {p 0 8 2}^ lse = largest lambda for which MSPE is within one standard error of the minimal MSPE.{p_end}
   Run model: {stata cvlasso, lse}
-r; t=0.74 18:21:52
+r; t=0.99 20:23:10
 
 {com}. assert "`e(noftools)'"=="noftools"
-{txt}r; t=0.00 18:21:52
+{txt}r; t=0.00 20:23:10
 
 {com}. savedresults comp ftools e(), exclude(macros: lasso2opt)
-{txt}r; t=0.00 18:21:52
+{txt}r; t=0.00 20:23:10
 
 {com}. 
 . ********************************************************************************
@@ -2393,16 +2392,16 @@ r; t=0.74 18:21:52
 . ********************************************************************************
 .                 
 . clear
-{txt}r; t=0.00 18:21:52
+{txt}r; t=0.00 20:23:10
 
 {com}. use https://www.stata-press.com/data/r16/nlswork
 {txt}(National Longitudinal Survey.  Young Women 14-26 years of age in 1968)
-r; t=3.43 18:21:56
+r; t=2.75 20:23:12
 
 {com}. 
 . replace ln_w = . if year == 80
 {txt}(1,847 real changes made, 1,847 to missing)
-r; t=0.00 18:21:56
+r; t=0.00 20:23:12
 
 {com}. 
 . cvlasso ln_w grade age c.age#c.age ttl_exp c.ttl_exp#c.ttl_exp tenure ///
@@ -2494,7 +2493,7 @@ Fold {res}1 2 3 4 5 6 7 8 9 10
 {p 0 8 2}^ lse = largest lambda for which MSPE is within one standard error of the minimal MSPE.{p_end}
   Run model: {stata cvlasso, lse}
 {err}Warning: lopt is at the limit of the lambda range.
-{txt}r; t=12.81 18:22:09
+{txt}r; t=19.73 20:23:32
 
 {com}. cvlasso, lse postres ols        
 {txt}Estimate lasso with lambda=11.334 (lse).
@@ -2514,15 +2513,15 @@ c.tenure#c.tenure {c |}{col 21}{res}     -0.0019053     -0.0019142
 {space 9}not_smsa {c |}{col 21}{res}     -0.0892079     -0.0899220
 {txt}{space 12}south {c |}{col 21}{res}     -0.0597044     -0.0605564
 {txt}{hline 18}{c BT}{hline 32}
-r; t=0.20 18:22:09
+r; t=0.34 20:23:32
 
 {com}.                 
 . local sel = e(selected)
-{txt}r; t=0.00 18:22:09
+{txt}r; t=0.00 20:23:32
 
 {com}. di "`sel'"
 {res}age c.age#c.age ttl_exp tenure c.tenure#c.tenure not_smsa south
-{txt}r; t=0.00 18:22:09
+{txt}r; t=0.00 20:23:32
 
 {com}. 
 . predict double uehat  , ue noi  
@@ -2536,7 +2535,7 @@ y1 {res}   .0330033  -.00068058   .03728278    .0357082  -.00191421  -.08992203
 {txt}               
          south
 y1 {res} -.06055644
-{reset}r; t=0.05 18:22:09
+{reset}r; t=0.08 20:23:32
 
 {com}. predict double ehat  , e noi  
 {txt}Use e(b) from previous lasso2 estimation (lambda=11.33424642913).
@@ -2549,7 +2548,7 @@ y1 {res}   .0330033  -.00068058   .03728278    .0357082  -.00191421  -.08992203
 {txt}               
          south
 y1 {res} -.06055644
-{reset}r; t=0.07 18:22:09
+{reset}r; t=0.10 20:23:33
 
 {com}. predict double xbhat  , xb noi  
 {txt}Use e(b) from previous lasso2 estimation (lambda=11.33424642913).
@@ -2562,7 +2561,7 @@ y1 {res}   .0330033  -.00068058   .03728278    .0357082  -.00191421  -.08992203
 {txt}               
          south
 y1 {res} -.06055644
-{reset}r; t=0.06 18:22:09
+{reset}r; t=0.07 20:23:33
 
 {com}. predict double xbuhat  , xbu noi  
 {txt}Use e(b) from previous lasso2 estimation (lambda=11.33424642913).
@@ -2575,7 +2574,7 @@ y1 {res}   .0330033  -.00068058   .03728278    .0357082  -.00191421  -.08992203
 {txt}               
          south
 y1 {res} -.06055644
-{reset}r; t=0.07 18:22:09
+{reset}r; t=0.10 20:23:33
 
 {com}. predict double uhat  , u noi  
 {txt}Use e(b) from previous lasso2 estimation (lambda=11.33424642913).
@@ -2588,7 +2587,7 @@ y1 {res}   .0330033  -.00068058   .03728278    .0357082  -.00191421  -.08992203
 {txt}               
          south
 y1 {res} -.06055644
-{reset}r; t=0.07 18:22:09
+{reset}r; t=0.10 20:23:33
 
 {com}. 
 . xtreg ln_w `sel' if e(sample), fe 
@@ -2626,47 +2625,47 @@ y1 {res} -.06055644
          {txt}rho {c |} {res} .59956903{txt}   (fraction of variance due to u_i)
 {hline 13}{c BT}{hline 64}
 F test that all u_i=0: F({res}4685{txt}, {res}21586{txt}) = {res}6.23{col 62}{txt}Prob > F = {res}0.0000
-{txt}r; t=0.74 18:22:10
+{txt}r; t=1.22 20:23:34
 
 {com}. mat bxtreg = e(b)
-{txt}r; t=0.00 18:22:10
+{txt}r; t=0.01 20:23:34
 
 {com}. 
 . predict double uehat_xtreg   , ue  
 {txt}(2,253 missing values generated)
-r; t=0.01 18:22:10
+r; t=0.02 20:23:34
 
 {com}. predict double ehat_xtreg   , e 
 {txt}(2,255 missing values generated)
-r; t=0.09 18:22:10
+r; t=0.15 20:23:34
 
 {com}. predict double xbhat_xtreg  , xb
 {txt}(441 missing values generated)
-r; t=0.01 18:22:10
+r; t=0.01 20:23:34
 
 {com}. predict double xbuhat_xtreg  , xbu
 {txt}(2,255 missing values generated)
-r; t=0.08 18:22:10
+r; t=0.13 20:23:34
 
 {com}. predict double uhat_xtreg  , u
 {txt}(2,255 missing values generated)
-r; t=0.09 18:22:10
+r; t=0.13 20:23:35
 
 {com}. 
 . assert abs(ehat_xtreg-ehat)<10e-8 | (missing(ehat_xtreg) | missing(ehat))
-{txt}r; t=0.00 18:22:10
+{txt}r; t=0.01 20:23:35
 
 {com}. assert abs(uehat_xtreg-uehat)<10e-8 | (missing(uehat_xtreg) | missing(uehat)) 
-{txt}r; t=0.00 18:22:10
+{txt}r; t=0.01 20:23:35
 
 {com}. assert abs(xbhat_xtreg-xbhat)<10e-8 | (missing(xbhat_xtreg) | missing(xbhat))
-{txt}r; t=0.00 18:22:10
+{txt}r; t=0.01 20:23:35
 
 {com}. assert abs(xbuhat_xtreg-xbuhat)<10e-8 | (missing(xbuhat_xtreg) | missing(xbuhat))
-{txt}r; t=0.00 18:22:10
+{txt}r; t=0.01 20:23:35
 
 {com}. assert abs(uhat_xtreg-uhat)<10e-8 | (missing(uhat_xtreg) | missing(uhat))
-{txt}r; t=0.00 18:22:10
+{txt}r; t=0.01 20:23:35
 
 {com}. 
 . 

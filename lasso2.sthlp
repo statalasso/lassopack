@@ -1,7 +1,7 @@
 {smcl}
-{* *! version 1.0.14  31july2020}{...}
+{* *! version 1.0.15  27sept2020}{...}
 {hline}
-{cmd:help lasso2}{right: lassopack v1.4.0}
+{cmd:help lasso2}{right: lassopack v1.4.1}
 {hline}
 
 {title:Title}
@@ -29,6 +29,7 @@
 {cmdab:lc:ount}{cmd:(}{it:integer}{cmd:)}
 {cmdab:lminr:atio}{cmd:(}{it:real}{cmd:)}
 {cmdab:lmax:}{cmd:(}{it:real}{cmd:)}
+{cmd:lglmnet}
 {cmdab:notp:en(}{it:varlist}{cmd:)}
 {cmdab:par:tial(}{it:varlist}{cmd:)}
 {cmd:psolver(}{it:string}{cmd:)}
@@ -145,6 +146,9 @@ The default choice is {it:xi}=1-log(n)/(2*log(p)).
 {synopt:{cmdab:postres:ults}} Used in combination with {cmd:lic()}. 
 Stores estimation results of the model selected by information criterion in {cmd:e()}.
 {p_end}
+{synopt:{cmd:lglmnet}}
+Use the parameterizations for lambda, alpha, standardization, etc. employed by {it:glmnet} by Friedman et al. ({helpb lasso2##Friedman2010:2010}).
+{p_end}
 {synoptline}
 {p2colreset}{...}
 {pstd}
@@ -171,6 +175,7 @@ The size of the vector should equal the number of predictors (excluding partiall
 {p_end}
 {synopt:{cmdab:unitl:oadings}}
 penalty loadings set to a vector of ones; overrides the default standardization loadings (in the case of the lasso, =sqrt(avg(x^2)).
+{opt nostd} is a synonym for {opt unitloadings}.
 {p_end}
 {synopt:{cmdab:pres:td}}
 dependent variable and predictors are standardized prior to estimation 
@@ -179,8 +184,10 @@ See {help lasso2##standardization:here} for more details.
 By default the coefficient estimates are un-standardized (i.e., returned in original units). 
 {p_end}
 {synopt:{cmdab:stdc:oef}}
-return coefficients in standard deviation units, i.e., don't un-standardize. 
-Only supported with {cmd:prestd} option.
+return coefficients in standard deviation units, i.e., don't un-standardize.
+{p_end}
+{synopt:{cmd:stdall}}
+return all results (coefficients, information criteria, norms, etc.) in standardized units.
 {p_end}
 {synoptline}
 {p2colreset}{...}
@@ -420,6 +427,7 @@ All varlists may contain time-series operators or factor variables; see help var
 {phang}{help lasso2##standardization:Standardization of variables}{p_end}
 {phang}{help lasso2##informationcriteria:Information criteria}{p_end}
 {phang}{help lasso2##estimators:Estimators}{p_end}
+{phang}{help lasso2##lglmnet:lasso2 vs. Friedman et al.'s {it:glmnet} and StataCorp's lasso}{p_end}
 {phang}{help lasso2##examples:Examples and demonstration}{p_end}
 {phang}{help lasso2##examples_data:--Data set}{p_end}
 {phang}{help lasso2##examples_general:--General demonstration}{p_end}
@@ -430,6 +438,7 @@ All varlists may contain time-series operators or factor variables; see help var
 {phang}{help lasso2##examples_penalty:--Penalty loadings and notpen()}{p_end}
 {phang}{help lasso2##examples_partialling:--Partialling vs penalization}{p_end}
 {phang}{help lasso2##examples_adaptive:--Adaptive lasso}{p_end}
+{phang}{help lasso2##examples_replication:--Replication of glmnet and StataCorp's lasso}{p_end}
 {phang}{help lasso2##saved_results:Saved results}{p_end}
 {phang}{help lasso2##references:References}{p_end}
 {phang}{help lasso2##website:Website}{p_end}
@@ -474,10 +483,11 @@ number of observations
 {p2colreset}{...}
 
 {pstd}
-Note: the above lambda differs from the definition used in parts of the lasso and elastic net literature; 
-see for example the R package {it:glmnet} by Friedman et al. ({helpb lasso2##Friedman2010:2010}).
+Note: the above lambda and alpha differ from the definitions used in parts of the lasso and elastic net literature,
+e.g., the R package {it:glmnet} by Friedman et al. ({helpb lasso2##Friedman2010:2010}).
 We have here adopted an objective function following Belloni et al. ({helpb lasso2##Belloni2012:2012}).
-Specifically, {it:lambda=2*N*lambda(GN)} where {it:lambda(GN)} is the penalty level used by {it:glmnet}.
+See {help lasso2##lglmnet:below} and {help lasso2##examples_replication:below} for more discussion
+and examples of how to use the {opt lglmnet} option to replicate {it:glmnet} output.
 
 {pstd}
 In addition, if the option {cmd:sqrt} is specified, {opt lasso2} estimates the square-root lasso (sqrt-lasso) estimator, which is defined as the solution to the following objective function:
@@ -708,6 +718,35 @@ respectively.
 To change the default display, use the {cmd:ic(}{it:string}{cmd:)} option. 
 {cmd:noic} suppresses the calculation of information criteria,
 which leads to a speed gain if alpha<1.
+
+{marker lglmnet}{...}
+{title:lasso2 vs. Hastie et al.'s (2010) {it:glmnet} and StataCorp's lasso}
+
+{pstd}
+The parameterization used by {opt lasso2} differs from StataCorp's {helpb lasso} in only one respect:
+{it:lambda(StataCorp)} = (1/2N)*{it:lambda(lasso2)}.
+The elastic net parameter {it:alpha} is the same in both parameterizations.
+See {help lasso2##examples_replication:below} for examples.
+
+{pstd}
+The parameterization used by Hastie et al.'s (2010) {it:glmnet}
+uses the same convention as StataCorp for lambda:
+{it:lambda(glmnet)} = (1/2N)*{it:lambda(lasso2)}.
+However, the {it:glmnet} treatment of the elastic net parameter alpha
+differs from both {opt lasso2} and StataCorp's {helpb lasso}.
+The {it:glmnet} objective function is defined such that
+the dependent variable is assumed already to have been standardized.
+Because the L2 norm is nonlinear, this affects the interpretation of alpha.
+Specifically, the default {opt lasso2} and StataCorp's {helpb lasso} parameterization
+means that alpha is not invariant changes in the scale of the dependent variable.
+The {it:glmnet} parameterization of alpha, however, is scale-invariant - a useful feature.
+
+{pstd}
+{opt lasso2} provides an {opt lglmnet} option that enables the user
+to employ the {it:glmnet} parameterization for alpha and lambda.
+See {help lasso2##examples_replication:below} for examples of its usage and how to replicate {it:glmnet} output.
+We recommend the use of the {opt lglmnet} option
+in particular with cross-validation over alpha (see {helpb cvlasso}).
 
 {marker examples}{...}
 {title:Example using prostate cancer data (Stamey et al., {helpb lasso2##Stamey1989:1989})}
@@ -1028,6 +1067,93 @@ can be changed using the {cmd:adatheta()} option.{p_end}
 {phang2}. {stata "lasso2 lpsa lcavol lweight age lbph svi lcp gleason pgg45, adaptive adaloadings(bhat_ridge)"}{p_end}
 {phang2}. {stata "mat list e(Psi)"}{p_end}
 
+{marker examples_replication}{...}
+{pstd}
+{ul:Replication of glmnet and StataCorp's lasso}
+
+{pstd}Use Stata's auto dataset with missing data dropped.
+The variable price1000 is used to illustrate scaling effects.{p_end}
+{phang2}. {stata "sysuse auto, clear"}{p_end}
+{phang2}. {stata "drop if rep78==."}{p_end}
+{phang2}. {stata "gen double price1000 = price/1000"}{p_end}
+
+{pstd}To load the data into R for comparison with glmnet, use the following commands.
+The packages haven and tidyr need to be installed.{p_end}
+{phang2}{res:auto <- haven::read_dta("http://www.stata-press.com/data/r9/auto.dta")}{p_end}
+{phang2}{res:auto <- tidyr::drop_na()}{p_end}
+{phang2}{res:n <- nrow(auto)}{p_end}
+{phang2}{res:price <- auto$price}{p_end}
+{phang2}{res:X <- auto[, c("mpg", "rep78", "headroom", "trunk", "weight", "length", "turn", "displacement", "gear_ratio", "foreign")]}{p_end}
+{phang2}{res:X$foreign <- as.integer(X$foreign)}{p_end}
+{phang2}{res:X <- as.matrix(X)}{p_end}
+
+{pstd}Replication of StataCorp's {helpb lasso} and {helpb elasticnet}
+requires only the rescaling of lambda by 2N.
+N=69 so the {opt lasso2} lambda becomes 138000/(2*69) = 1000{p_end}
+
+{phang2}. {stata "lasso2 price mpg-foreign, lambda(138000)"}{p_end}
+{phang2}. {stata "lasso linear price mpg-foreign, grid(1, min(1000))"}{p_end}
+{phang2}. {stata "lassoselect lambda = 1000"}{p_end}
+{phang2}. {stata "lassocoef, display(coef, penalized)"}{p_end}
+
+{phang2}. {stata "lasso2 price mpg-foreign, alpha(0.6) lambda(138000)"}{p_end}
+{phang2}. {stata "elasticnet linear price mpg-foreign, alphas(0.6) grid(1, min(1000))"}{p_end}
+{phang2}. {stata "lassoselect alpha = 0.6 lambda = 1000"}{p_end}
+{phang2}. {stata "lassocoef, display(coef, penalized)"}{p_end}
+
+{pstd}{it:glmnet} uses the same definition of the lasso L0 penalty as StataCorp's {helpb lasso},
+so {opt lasso2}'s default parameterization again requires only rescaling by 2N.
+When the {opt lglmnet} option is used with the {opt lglmnet} option,
+the L0 penalty should be provided using the glmnet definition.
+To estimate in R, load glmnet with library("glmnet") and use the following command:{p_end}
+{phang2}{res:r<-glmnet(X,price,alpha=1,lambda=1000,thresh=1e-15)}{p_end}
+
+{phang2}. {stata "lasso2 price mpg-foreign, lambda(138000)"}{p_end}
+{phang2}. {stata "lasso2 price mpg-foreign, lambda(1000) lglmnet"}{p_end}
+
+{pstd}The R code below uses {it:glmnet} to estimate an elastic net model.
+{opt lasso2} with the {opt lglmnet} option will replicate it.{p_end}
+{phang2}{res:r<-glmnet(X,price,alpha=0.6,lambda=1000,thresh=1e-15)}{p_end}
+
+{phang2}. {stata "lasso2 price mpg-foreign, alpha(0.6) lambda(1000) lglmnet"}{p_end}
+
+{pstd}{opt lasso2}'s default parameterization of the elastic net (like StataCorp's {helpb elasticnet})
+is {res:not} invariant to scaling:{p_end}
+
+{phang2}. {stata "lasso2 price mpg-foreign, alpha(0.6) lambda(138000)"}{p_end}
+{phang2}. {stata "lasso2 price1000 mpg-foreign, alpha(0.6) lambda(138)"}{p_end}
+
+{pstd}When {opt lasso2} uses the glmnet parameterization of the elastic net via the {opt glmnet} options,
+results {res:are} invariant to scaling:
+the only difference is that the coefficients change by the same factor of proportionality as the dependent variable.{p_end}
+
+{phang2}. {stata "lasso2 price mpg-foreign, alpha(0.6) lambda(1000) lglmnet"}{p_end}
+{phang2}. {stata "lasso2 price1000 mpg-foreign, alpha(0.6) lambda(1) lglmnet"}{p_end}
+
+{pstd}The reason that the default {opt lasso2}/StataCorp parameterization
+is not invariant to scaling is because the penalty on L2 norm is influenced by scaling,
+and this in turn affects the relative weights on the L1 and L2 penalties.
+The example below shows how to reparameterize so that the default {opt lasso2} parameterization
+for the elastic net replicates the {it:glmnet} parameterization.
+The example using the scaling above, where the dependent variable is price1000
+and the {it:glmnet} lambda=1.{p_end}
+
+{pstd}The large-sample standard deviation of price1000 = 2.8912586.{p_end}
+{phang2}. {stata "qui sum price1000"}{p_end}
+{phang2}. {stata "di r(sd) * 1/sqrt( r(N)/(r(N)-1))"}{p_end}
+
+{pstd}The {opt lasso2} alpha = alpha(lglmnet)*SD(y) / (1-alpha(glmnet) + alpha(glmnet)*SD(y)).
+In this example, alpha = (0.6*2.8912586)/( 1-0.6 + 0.6*2.89125856) = 0.81262488. {p_end}
+{phang2}. {stata "di (0.6*2.8912586)/( 1-0.6 + 0.6*2.8912586)"}{p_end}
+
+{pstd}The {opt lasso2} lambda = 2N*lambda(lglmnet) * (alpha(lglmnet) + (1-alpha(lglmnet))/SD(y)).
+In this example, lambda = 2*69*1 * (0.6 + (1-0.6)/2.8912586) = 101.89203.{p_end}
+{phang2}. {stata "di 2*69*( 0.6 + (1-0.6)/2.8912586)"}{p_end}
+
+{pstd}{opt lasso2} using the {it:glmnet} and then replicated using the {opt lasso2}/StataCorp parameterization:{p_end}
+{phang2}. {stata "lasso2 price1000 mpg-foreign, alpha(0.6) lambda(1) lglmnet"}{p_end}
+{phang2}. {stata "lasso2 price1000 mpg-foreign, alpha(.81262488) lambda(101.89203)"}{p_end}
+
 {marker saved_results}{...}
 {title:Saved results}
 
@@ -1061,8 +1187,7 @@ The set of returned e-class objects depends on whether lambda is a scalar or a l
 {synopt:{cmd:e(r2)}}R-sq for lasso estimation{p_end}
 {synopt:{cmd:e(rmse)}}root mean squared error{p_end}
 {synopt:{cmd:e(rmseOLS)}}root mean squared error of post-estimation OLS{p_end}
-{synopt:{cmd:e(pmse)}}minimized objective function (penalized mse, lasso/elastic net/ridge only){p_end}
-{synopt:{cmd:e(prmse)}}minimized objective function (penalized rmse, sqrt-lasso only){p_end}
+{synopt:{cmd:e(objfn)}}minimized objective function{p_end}
 {synopt:{cmd:e(k)}}number of selected and unpenalized/partialled-out regressors including constant
 (if present){p_end}
 {synopt:{cmd:e(s)}}number of selected regressors{p_end}
@@ -1106,19 +1231,16 @@ The set of returned e-class objects depends on whether lambda is a scalar or a l
 {synopt:{cmd:e(lambdamat0)}}full initial vector of lambdas (includes lambdas not used for estimation){p_end}
 {synopt:{cmd:e(l1norm)}}column vector of L1 norms for each lambda value (excludes the intercept){p_end}
 {synopt:{cmd:e(wl1norm)}}column vector of weighted L1 norms for each lambda value (excludes the intercept), see {cmd:wnorm}{p_end}
-{synopt:{cmd:e(dof)}}column vector of L0 norm for each lambda value (excludes the intercept){p_end}
 {synopt:{cmd:e(betas)}}matrix of estimates, where each row corresponds to one lambda value. The intercept is stored in the last column.{p_end}
+{synopt:{cmd:e(IC)}}matrix of information criteria (AIC, AICC, BIC, EEBIC) for each lambda value{p_end}
+{p 6 6 2}(NB: All the matrices above but in standardized units are also saved with the same name preceded by "s".){p_end}
+{synopt:{cmd:e(dof)}}column vector of L0 norm for each lambda value (excludes the intercept){p_end}
 {synopt:{cmd:e(ess)}}column vector of explained sum of squares for each lambda value{p_end}
 {synopt:{cmd:e(rss)}}column vector of residual sum of squares for each lambda value{p_end}
-{synopt:{cmd:e(ebic)}}column vector of EBIC for each lambda value{p_end}
-{synopt:{cmd:e(bic)}}column vector of BIC for each lambda value{p_end}
-{synopt:{cmd:e(aic)}}column vector of AIC for each lambda value{p_end}
-{synopt:{cmd:e(aicc)}}column vector of AICc for each lambda value{p_end}
 {synopt:{cmd:e(rsq)}}column vector of R-squared for each lambda value{p_end}
 
 {synoptset 19 tabbed}{...}
 {p2col 5 19 23 2: matrices (only if lambda is a scalar)}{p_end}
-{synopt:{cmd:e(b)}}posted coefficient vector (see {cmd:postall} and {cmd:displayall}). Used for prediction.{p_end}
 {synopt:{cmd:e(beta)}}coefficient vector{p_end}
 {synopt:{cmd:e(betaOLS)}}coefficient vector of post-estimation OLS{p_end}
 {synopt:{cmd:e(betaAll)}}full coefficient vector including omitted, 
@@ -1126,6 +1248,8 @@ factor base variables, etc.
 {p_end}
 {synopt:{cmd:e(betaAllOLS)}}full post-estimation OLS coefficient vector including omitted, 
 factor base variables, etc. {p_end}
+{p 6 6 2}(NB: All the matrices above but in standardized units are also saved with the same name preceded by "s".){p_end}
+{synopt:{cmd:e(b)}}posted coefficient vector (see {cmd:postall} and {cmd:displayall}). Used for prediction.{p_end}
 
 {synoptset 19 tabbed}{...}
 {p2col 5 19 23 2: functions}{p_end}

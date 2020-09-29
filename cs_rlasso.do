@@ -1,5 +1,5 @@
 * certification script for 
-* lassopack package 1.2.01 25july2020, MS
+* lassopack package 1.2.01XX 19aug2020, MS
 
 cscript rlasso adofile rlasso
 clear all
@@ -80,7 +80,7 @@ assert reldif(lambda,e(lambda0))<1e-8
 // Also needs looser tolerance
 rlasso lrprice larea cbd intst lintst y81ldist lintstsq y81nrinc one,	///
 	lalt corrnum(0) tolzero(1e-10) tolpsi(1e-10) tolopt(1e-8)			///
-	maxiter(10000) nocons pnotpen(one) maxpsiiter(10) c0(0.55) solver(chol)
+	maxiter(10000) nocons pnotpen(one) maxpsiiter(10) c0(0.55) psolver(chol)
 mat b=e(b)
 mat beta=e(beta)
 mat betaOLS=e(betaOLS)

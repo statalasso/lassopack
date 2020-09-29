@@ -1,7 +1,7 @@
 {smcl}
-{* *! version 1.0.10  31july2020}{...}
+{* *! version 1.0.11  27sept2020}{...}
 {hline}
-{cmd:help cvlasso}{right: lassopack v1.4.0}
+{cmd:help cvlasso}{right: lassopack v1.4.1}
 {hline}
 
 {title:Title}
@@ -32,6 +32,7 @@
 {cmdab:lmax:}{cmd:(}{it:real}{cmd:)}
 {cmd:lopt}
 {cmd:lse}
+{cmd:lglmnet}
 {cmdab:notp:en(}{it:varlist}{cmd:)}
 {cmdab:par:tial(}{it:varlist}{cmd:)}
 {cmd:psolver(}{it:string}{cmd:)}
@@ -129,6 +130,9 @@ after cross-validation, estimate model with lambda that minimized the mean-squar
 {p_end}
 {synopt:{cmd:lse}}
 after cross-validation, estimate model with largest lambda that is within one standard deviation from lopt
+{p_end}
+{synopt:{cmd:lglmnet}}
+use the parameterizations for lambda, alpha, standardization, etc. employed by {it:glmnet} by Friedman et al. ({helpb lasso2##Friedman2010:2010}).
 {p_end}
 {synoptline}
 {p2colreset}{...}
@@ -360,6 +364,7 @@ displays beta used for prediction.
 {phang}{help cvlasso##description:Description}{p_end}
 {phang}{help cvlasso##folds:Partitioning of folds}{p_end}
 {phang}{help cvlasso##transform:Data transformations in cross-validation}{p_end}
+{phang}{help cvlasso##lglmnet:cvlasso vs. Friedman et al.'s {it:glmnet} and StataCorp's lasso}{p_end}
 {phang}{help cvlasso##examples:Examples of usage}{p_end}
 {phang}{help cvlasso##examples_general:--General demonstration}{p_end}
 {phang}{help cvlasso##examples_rolling1:--Rolling cross-validation with time-series data}{p_end}
@@ -563,6 +568,35 @@ Similarly, the projection coefficients used to "partial out" variables
 are estimated using only the training data and are applied
 to both the training dataset and the validation dataset.
 
+{marker lglmnet}{...}
+{title:cvlasso vs. Hastie et al.'s (2010) {it:glmnet} and StataCorp's lasso}
+
+{pstd}
+The parameterization used by {opt cvlasso} and {opt lasso2} differs from StataCorp's {helpb lasso} in only one respect:
+{it:lambda(StataCorp)} = (1/2N)*{it:lambda(lasso2)}.
+The elastic net parameter {it:alpha} is the same in both parameterizations.
+See the {help lasso2##examples_replication:lasso2 help file} for examples.
+
+{pstd}
+The parameterization used by Hastie et al.'s (2010) {it:glmnet}
+uses the same convention as StataCorp for lambda:
+{it:lambda(glmnet)} = (1/2N)*{it:lambda(lasso2)}.
+However, the {it:glmnet} treatment of the elastic net parameter alpha
+differs from both {opt cvlasso}/{helpb lasso2} and StataCorp's {helpb lasso}.
+The {it:glmnet} objective function is defined such that
+the dependent variable is assumed already to have been standardized.
+Because the L2 norm is nonlinear, this affects the interpretation of alpha.
+Specifically, the default {opt cvlasso}/{helpb lasso2} and StataCorp's {helpb lasso} parameterization
+means that alpha is not invariant changes in the scale of the dependent variable.
+The {it:glmnet} parameterization of alpha, however, is scale-invariant - a useful feature.
+
+{pstd}
+{opt cvlasso} and {opt lasso2} provide an {opt lglmnet} option that enables the user
+to employ the {it:glmnet} parameterization for alpha and lambda.
+See the {help lasso2##examples_replication:lasso2 help file} for examples of its usage and how to replicate {it:glmnet} output.
+We recommend the use of the {opt lglmnet} option
+in particular with cross-validation over alpha; see below for an example.
+
 {marker examples}{...}
 {title:General introduction using K-fold cross-validation}
 
@@ -629,12 +663,15 @@ We use {cmd:seed(123)} throughout this demonstration for replicability of folds.
 {pstd}{cmd:alpha()} can be a scalar or list of elastic net parameters. 
 Each alpha value must lie in the interval [0,1]. 
 If {cmd:alpha()} is a list longer than 1, {cmd:cvlasso} cross-validates over lambda and alpha.
-The table at the end of the output indicates the alpha value that minimizes the empirical MSPE.{p_end}
-{phang2}. {stata "cvlasso lpsa lcavol lweight age lbph svi lcp gleason pgg45, alpha(0 0.1 0.5 1) lc(10) seed(123)"}{p_end}
+The table at the end of the output indicates the alpha value that minimizes the empirical MSPE.
+We recommend using the {it:glmnet} parameterization of the elastic net
+because alpha in this parameterization is invariant to scaling (see {help cvlasso##lglmnet:above} for discussion
+and the {help lasso2##examples_replication:lasso2 help file} for illustrative examples).{p_end}
+{phang2}. {stata "cvlasso lpsa lcavol lweight age lbph svi lcp gleason pgg45, alpha(0 0.1 0.5 1) lc(10) lglmnet seed(123)"}{p_end}
 
 {pstd}Alternatively, the {cmd:alphacount()} option can be used 
 to control the number of alpha values used for cross-validation.{p_end}
-{phang2}. {stata "cvlasso lpsa lcavol lweight age lbph svi lcp gleason pgg45, alphac(3) lc(10) seed(123)"}{p_end}
+{phang2}. {stata "cvlasso lpsa lcavol lweight age lbph svi lcp gleason pgg45, alphac(3) lc(10) lglmnet seed(123)"}{p_end}
 
 {pstd}
 {ul:Plotting}
