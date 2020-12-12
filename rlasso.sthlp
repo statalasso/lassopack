@@ -1,7 +1,7 @@
 {smcl}
 {* *! version 1.0.17  31july2020}{...}
 {hline}
-{cmd:help rlasso}{right: lassopack v1.4.0}
+{cmd:help rlasso}{right: lassopack v1.4.1}
 {hline}
 
 {title:Title}
