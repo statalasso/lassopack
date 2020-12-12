@@ -1,5 +1,5 @@
 *! cvlassologit 
-*! part of lassopack v1.4
+*! part of lassopack v1.4.1
 *! last edited: 6may2019
 *! authors: aa/ms
 
