@@ -1,4 +1,4 @@
-*! lassoutils 1.2.03 27sept2020
+*! lassoutils 1.2.04 8dec2020
 *! lassopack package 1.4.1
 *! authors aa/cbh/ms
 
@@ -139,6 +139,7 @@
 *         lassopath code takes stdall option - indicates that provided lambdas are in the standardized metric
 *         Fixed bug in reporting of value of maximized obj fn for elastic net/ridge (missing 1/2 on L2 norm).
 *         EBIC now excludes omitted/base variables when calculating model size p.
+* 1.2.04  Bug fix to SD calculation for special case of lglmnet with unit loadings (=not prestandardized)
 
 
 program lassoutils, rclass sortpreserve
@@ -945,7 +946,7 @@ program define _lassopath, rclass sortpreserve
 		tempvar tY
 		tempname stdy stdx
 		qui sum `varY' if `toest'
-		local sdY			= r(sd) * sqrt(r(N)/(r(N)+1))
+		local sdY			= r(sd) * sqrt((r(N)-1)/r(N))
 		local mY			= r(mean)
 		if `consflag' {
 			gen double `tY'	= `mY' + (`varY' -`mY') * 1/`sdY'  if `toest'
