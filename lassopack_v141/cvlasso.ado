@@ -1,4 +1,4 @@
-*! cvlasso 1.0.11 27sept2020
+*! cvlasso 1.0.12 02feb2021
 *! lassopack package 1.4.1
 *! authors aa/ms
 
@@ -29,6 +29,9 @@
 *         dev crit for path (nodevcrit = use full lambda list, no exiting path early).
 * 1.0.11  (27sept2020)
 *         added nopath option to calls to lasso2
+* 1.0.12  (03feb2021)
+*         Updated so that lambda grid is adjusted for non-unit alpha (grid will vary with multiple alphas).
+*         Separate lambda grids are saved as e(lambdamat_1), e(lmabdamat_2), ...
 
 program cvlasso, eclass sortpreserve
 	version 13
@@ -248,26 +251,7 @@ program _cvlasso, eclass sortpreserve
 		}	
 	}
 	*
-	
-	*** get lambda **************************************************************
-	if ("`lambda'"=="") {
-		qui lasso2 `varlist' if `touse', `options'							///
-					lcount(`lcount') lminratio(`lminratio') lmax(`lmax')
-		tempname lambdamat0
-		mat `lambdamat0'=e(lambdamat)'
-	}
-	else {
-		local lcount	: word count `lambda'
-		tempname lambdamat0
-		mat `lambdamat0'	= J(1,`lcount',.)
-		local j = 1
-		foreach lami of local lambda {
-			mat `lambdamat0'[1,`j'] = `lami'  
-			local j=`j'+1
-		}
-	}
-	*
-	
+
 	************* loop over alpha ***********************************************
 	
 	*** alpha list
@@ -293,7 +277,7 @@ program _cvlasso, eclass sortpreserve
 		mat `mminlam' = J(1,`acount',.)
 	}
 	*
-
+	
 	*** loop over alpha
 	local aid = 1
 	foreach alphai of numlist `alpha' {
@@ -302,6 +286,29 @@ program _cvlasso, eclass sortpreserve
 			exit 198
 		}
 		
+		*** get lambda
+		// do this here because the grid will vary with alpha
+		tempname lambdamat0
+		if ("`lambda'"=="") {
+			qui lasso2 `varlist' if `touse', `options' alpha(`alphai')		///
+					lcount(`lcount') lminratio(`lminratio') lmax(`lmax')
+			mat `lambdamat0'=e(lambdamat)'
+		}
+		else {
+			local lcount	: word count `lambda'
+			tempname lambdamat0
+			mat `lambdamat0'	= J(1,`lcount',.)
+			local j = 1
+			foreach lami of local lambda {
+				mat `lambdamat0'[1,`j'] = `lami'  
+				local j=`j'+1
+			}
+		}
+		// multiple lambdamat0s if >1 alpha
+		tempname lambdamat0_`aid'
+		mat `lambdamat0_`aid'' = `lambdamat0'
+		*
+
 		* generate fold id variable
 		tempvar training
 		tempvar validation
@@ -586,8 +593,6 @@ program _cvlasso, eclass sortpreserve
 	ereturn scalar notpen_ct	=`notpen_ct'
 	ereturn scalar partial_ct	=`partial_ct'
 	ereturn scalar prestd 		= `prestdflag'
-	mat `lambdamat0' 			= `lambdamat0''
-	ereturn matrix lambdamat 	= `lambdamat0'
 	ereturn scalar nalpha 		= `acount'
 	ereturn scalar p 			= `pcount'
 	ereturn local noftools		`noftools'
@@ -617,6 +622,9 @@ program _cvlasso, eclass sortpreserve
 		ereturn matrix cvsd 	=`cvsd0'
 		ereturn matrix cvupper 	=`cvup0'
 		ereturn matrix cvlower 	=`cvlo0'
+		// transpose
+		mat `lambdamat0' 			= `lambdamat0''
+		ereturn matrix lambdamat 	= `lambdamat0'
 	}
 	else {	
 		ereturn local alphalist `alpha'
@@ -625,6 +633,12 @@ program _cvlasso, eclass sortpreserve
 		ereturn scalar alphamin 	= `alphamin'
 		ereturn scalar mspemin		=`mspemin'
 		ereturn matrix mspeminmat 	= `mminmat'
+		// multiple lambdamats
+		forvalues i=1/`acount' {
+			// transpose
+			mat `lambdamat0_`i'' 			= `lambdamat0_`i'''
+			ereturn matrix lambdamat_`i' 	= `lambdamat0_`i''
+		}
 	}
 	if ("`rolling'"!="") {
 		ereturn scalar h = `h'

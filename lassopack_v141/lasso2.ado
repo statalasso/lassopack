@@ -1,4 +1,4 @@
-*! lasso2 1.0.12 27sept2020
+*! lasso2 1.0.13 02feb2021
 *! lassopack package 1.4.1
 *! authors aa/ms
 
@@ -68,6 +68,8 @@
 *         Added stdall option - standardized lambda, L1, ICs, as well as coefficients. stdall=>stdcoef.
 *         Fixed bug in display in partialled-out vs factor variables.
 *         e(objfn) replaces e(pmse) and e(prmse).
+* 1.1.13  (02feb2021)
+*         fixed bug with cvlasso+lglmnet option - was unnecessarily adjusting lambda by n ("lfac")
 * note in help file that "adaloadings" actually means ada coefs
 
 
@@ -808,13 +810,13 @@ program _lasso2, eclass sortpreserve
 	// optional adjustment using undocumented lfactor option used for CV
 	if "`lambda'`lambdamat'"!="" {
 		tempname lambdamat0
-		getlambdamat, lscalar(`lambda') lmatrix(`lambdamat') lfactor(`lfactor')
+		getlambdamat, lscalar(`lambda') lmatrix(`lambdamat') lfactor(`lfactor') lglmnetflag(`lglmnetflag')
 		mat `lambdamat0'	= r(lambdamat)
 	}
 	// optional L2 norma lambda
 	if "`lambda2'`lambda2mat'"!="" {
 		tempname lambda2mat0
-		getlambdamat, lscalar(`lambda2') lmatrix(`lambda2mat') lfactor(`lfactor')
+		getlambdamat, lscalar(`lambda2') lmatrix(`lambda2mat') lfactor(`lfactor') lglmnetflag(`lglmnetflag')
 		mat `lambda2mat0'	= r(lambdamat)
 	}
 	*
@@ -1878,6 +1880,7 @@ prog define getlambdamat, rclass
 	lscalar(string)				///
 	lmatrix(string)				///
 	lfactor(real 1)				///
+	lglmnetflag(real 0)			///
 	]
 
 	tempname lambdamat
@@ -1896,8 +1899,10 @@ prog define getlambdamat, rclass
 		exit 198
 	}
 	// optional adjustment using undocumented lfactor option
-	// used for CV
-	mat `lambdamat'			= `lambdamat' * `lfactor'
+	// used for CV unless lglmnet metric is used
+	if `lglmnetflag'==0 {
+		mat `lambdamat'			= `lambdamat' * `lfactor'
+	}
 	return matrix lambdamat	= `lambdamat'
 	
 end
