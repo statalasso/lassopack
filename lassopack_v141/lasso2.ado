@@ -813,7 +813,7 @@ program _lasso2, eclass sortpreserve
 		getlambdamat, lscalar(`lambda') lmatrix(`lambdamat') lfactor(`lfactor') lglmnetflag(`lglmnetflag')
 		mat `lambdamat0'	= r(lambdamat)
 	}
-	// optional L2 norma lambda
+	// optional L2 norm lambda
 	if "`lambda2'`lambda2mat'"!="" {
 		tempname lambda2mat0
 		getlambdamat, lscalar(`lambda2') lmatrix(`lambda2mat') lfactor(`lfactor') lglmnetflag(`lglmnetflag')
@@ -1117,7 +1117,7 @@ program _lasso2, eclass sortpreserve
 	
 	}
 	else if (`lcount'>1) { //------- list of lambdas -------------------------------------------------//
-	
+
 		*** Create macros etc.
 		local nobs		=r(N)
 		local lcount	=r(lcount)

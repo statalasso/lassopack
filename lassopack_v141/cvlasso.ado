@@ -1,4 +1,4 @@
-*! cvlasso 1.0.12 02feb2021
+*! cvlasso 1.0.12 06feb2021
 *! lassopack package 1.4.1
 *! authors aa/ms
 
@@ -29,9 +29,10 @@
 *         dev crit for path (nodevcrit = use full lambda list, no exiting path early).
 * 1.0.11  (27sept2020)
 *         added nopath option to calls to lasso2
-* 1.0.12  (03feb2021)
+* 1.0.12  (06feb2021)
 *         Updated so that lambda grid is adjusted for non-unit alpha (grid will vary with multiple alphas).
 *         Separate lambda grids are saved as e(lambdamat_1), e(lmabdamat_2), ...
+*         Added norandom option (uses data in existing order)
 
 program cvlasso, eclass sortpreserve
 	version 13
@@ -46,7 +47,8 @@ program cvlasso, eclass sortpreserve
 			/// list all cvlasso options that do not apply to lasso2
 			NFolds(integer -1)						/// number of folds
 			FOLDVar(varlist numeric max=1)			/// alternatively: user-specified fold variable
-			SAVEFoldvar(string)						/// if string is supplied fold var is saved 
+			SAVEFoldvar(string)						/// if string is supplied fold var is saved
+			NORANDOM								/// use existing order of data before splitting into folds
 			ROLLing 								/// rolling CV
 			seed(int 0)								///
 			ALPHACount(int -1) 						///	
@@ -57,7 +59,7 @@ program cvlasso, eclass sortpreserve
 			* 										///
 			]
 
-	local lversion 1.0.11
+	local lversion 1.0.12
 	local pversion 1.1.01
 
 	if "`version'" != "" {							//  Report program version number, then exit.
@@ -80,6 +82,7 @@ program cvlasso, eclass sortpreserve
 						nfolds(`nfolds') 			///
 						foldvar(`foldvar') 			///
 						savefoldvar(`savefoldvar') 	///
+						`norandom'					///
 						`rolling' 					///
 						seed(`seed') 				///
  						alphacount(`alphacount') 	///
@@ -169,7 +172,8 @@ program _cvlasso, eclass sortpreserve
 		Lambda(numlist >0 min=2 descending)			 /// overwrite default lambda
 		NFolds(integer -1)							 /// number of folds
 		FOLDVar(varlist numeric max=1)				 /// alternatively: user-specified fold variable
-		SAVEFoldvar(string)							 /// if string is supplied fold var is saved 
+		SAVEFoldvar(string)							 /// if string is supplied fold var is saved
+		NORANDOM									 /// use existing order of data before splitting into folds
 		ROLLing 									 /// rolling CV
 		Verbose VVerbose 							 ///
 		debug 										 /// 
@@ -230,17 +234,24 @@ program _cvlasso, eclass sortpreserve
 		di as err "nfolds=1 is not allowed. Use default nfolds=10."
 				local nfolds =10
 		}
-		* random assignment of folds
+		* random assignment of folds (unless overridden by norandom)
 		tempvar uni cuni
 		if (`seed'>0) {
 			set seed `seed'
 		}
 		qui { 
 			tempvar foldvar
-			gen `uni'=runiform()  if `touse'
-			cumul `uni' if `touse', gen(`cuni')
-			replace `cuni'  = `cuni'*`nfolds'
-			gen `foldvar' = ceil(`cuni') if `touse'  
+			if "`norandom'"=="" {
+				qui gen `uni'=runiform() if `touse'
+				cumul `uni' if `touse', gen(`cuni')
+				qui replace `cuni'  = `cuni'*`nfolds'
+				qui gen `foldvar' = ceil(`cuni') if `touse'  
+			}
+			else {
+				// behavior mimics sklearn - last fold is smallest
+				qui gen `cuni' = (_N-_n+1)/_N*`nfolds'
+				qui gen `foldvar' = `nfolds' - ceil(`cuni') + 1
+			}
 		}
 		if ("`savefoldvar'"!="") & ("`rolling'"!="") {
 			di as err "Saving of fold IDs not supported after rolling CV."
@@ -362,7 +373,7 @@ program _cvlasso, eclass sortpreserve
 										verb norecover			///
 										nodevcrit				/// force use of full lambda list
 										nopath					///
-										`options' 	
+										`options'
 
 				if ("`saveest'"!="") {
 					estimates store `saveest'`rsam'
@@ -438,7 +449,7 @@ program _cvlasso, eclass sortpreserve
 				// adjust lambda 
 				sum `training', meanonly
 				local smpladjust = r(sum)/`N'	
-				
+
 				* lasso estimation (for given lambda and specific fold)
 				qui lasso2 `varlist' if `touse', 				///
 										lambdamat(`lambdamat0') ///
@@ -490,7 +501,7 @@ program _cvlasso, eclass sortpreserve
 		local prestdflag	= e(prestd)
 		local pcount		= e(p)
 		local noftools		`e(noftools)'
-		
+	
 		*** display and get lopt/lse
 		mata: ReturnCVResults2("`Mspe'", 		///
 							   "`lambdamat0'", 	///

@@ -1,4 +1,4 @@
-*! lassoutils 1.2.04 8dec2020
+*! lassoutils 1.2.05 07feb2021
 *! lassopack package 1.4.1
 *! authors aa/cbh/ms
 
@@ -139,7 +139,8 @@
 *         lassopath code takes stdall option - indicates that provided lambdas are in the standardized metric
 *         Fixed bug in reporting of value of maximized obj fn for elastic net/ridge (missing 1/2 on L2 norm).
 *         EBIC now excludes omitted/base variables when calculating model size p.
-* 1.2.04  Bug fix to SD calculation for special case of lglmnet with unit loadings (=not prestandardized)
+* 1.2.04  (08dec2020) Bug fix to SD calculation for special case of lglmnet with unit loadings (=not prestandardized)
+* 1.2.05  (07feb2021) Bug fix to bug fix to SD calculation for special case of lglmnet with unit loadings (=not prestandardized)
 
 
 program lassoutils, rclass sortpreserve
@@ -949,10 +950,10 @@ program define _lassopath, rclass sortpreserve
 		local sdY			= r(sd) * sqrt((r(N)-1)/r(N))
 		local mY			= r(mean)
 		if `consflag' {
-			gen double `tY'	= `mY' + (`varY' -`mY') * 1/`sdY'  if `toest'
+			gen double `tY'	= `mY' + (`varY' -`mY') * 1/`sdY' /* if `toest' */
 		}
 		else {
-			gen double `tY'	= `varY' * 1/`sdY'  if `toest'
+			gen double `tY'	= `varY' * 1/`sdY' /* if `toest' */
 		}
 		local varY			`tY'
 		mat `stdy'			= `sdY'
@@ -1055,7 +1056,7 @@ program define _lassopath, rclass sortpreserve
 					)
 
 	if (`r(lcount)'>1) { //------- #lambda > 1 -----------------------------------------------//
-	
+
 		tempname Psi betas sbetas dof lambdamat0 lambdamat slambdamat0 slambdamat
 		tempname l1norm sl1norm wl1norm swl1norm stdvec shat shat0
 		mat `Psi' 			= r(Psi)
@@ -4986,14 +4987,15 @@ void getMSPE(struct outputStructPath scalar t,
 								string scalar varX, 
 								string scalar holdout, // marks validation data set
 								struct dataStruct scalar d)
-{		
+{
+
 		// get beta matrix
 		bhat=t.betas 		// lcount by p	
-	
+
 		// get validation data
 		st_view(y0,.,varY,holdout)
 		st_view(X0,.,varX,holdout) 	// n by p
-		
+	
 		// predicted values
 		X0B=quadcross(X0',bhat') 	// n by lcount
 
