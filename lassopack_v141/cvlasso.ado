@@ -249,8 +249,10 @@ program _cvlasso, eclass sortpreserve
 			}
 			else {
 				// behavior mimics sklearn - last fold is smallest
-				qui gen `cuni' = (_N-_n+1)/_N*`nfolds'
-				qui gen `foldvar' = `nfolds' - ceil(`cuni') + 1
+				tempvar obnum
+				qui gen `obnum' = sum(`touse') if `touse'
+				qui gen `cuni' = (`N'-`obnum'+1)/`N'*`nfolds' if `touse'
+				qui gen `foldvar' = `nfolds' - ceil(`cuni') + 1 if `touse'
 			}
 		}
 		if ("`savefoldvar'"!="") & ("`rolling'"!="") {

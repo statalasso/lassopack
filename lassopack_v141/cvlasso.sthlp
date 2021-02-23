@@ -48,6 +48,7 @@
 {cmdab:nf:olds}{cmd:(}{it:int}{cmd:)}
 {cmdab:foldv:ar}{cmd:(}{it:varname}{cmd:)}
 {cmdab:savef:oldvar}{cmd:(}{it:varname}{cmd:)}
+{cmd:norandom}
 {cmdab:roll:ing}
 {cmd:h}{cmd:(}{it:int}{cmd:)}
 {cmdab:or:igin}{cmd:(}{it:int}{cmd:)}
@@ -215,6 +216,9 @@ If not specified, fold IDs are randomly generated such that each fold is of appr
 saves the fold ID variable.
 Not supported in combination with {cmd:rolling}.
 {p_end}
+{synopt:{cmd:norandom}}
+Do not randomize before splitting into folds; use existing order of observations.
+{p_end}
 {synopt:{cmdab:roll:ing}}
 uses rolling {it:h}-step ahead cross-validation. Requires the data to be tsset.
 {p_end}
@@ -369,6 +373,7 @@ displays beta used for prediction.
 {phang}{help cvlasso##examples_general:--General demonstration}{p_end}
 {phang}{help cvlasso##examples_rolling1:--Rolling cross-validation with time-series data}{p_end}
 {phang}{help cvlasso##examples_rolling2:--Rolling cross-validation with panel data}{p_end}
+{phang}{help cvlasso##examples_replication:--Replication of cv.glmnet}{p_end}
 {phang}{help cvlasso##saved_results:Saved results}{p_end}
 {phang}{help cvlasso##references:References}{p_end}
 {phang}{help cvlasso##website:Website}{p_end}
@@ -593,7 +598,9 @@ The {it:glmnet} parameterization of alpha, however, is scale-invariant - a usefu
 {pstd}
 {opt cvlasso} and {opt lasso2} provide an {opt lglmnet} option that enables the user
 to employ the {it:glmnet} parameterization for alpha and lambda.
-See the {help lasso2##examples_replication:lasso2 help file} for examples of its usage and how to replicate {it:glmnet} output.
+See {help cvlasso##examples_replication:below} for a {opt cvlasso}-{it:glmnet} replication example.
+Also see the {help lasso2##examples_replication:lasso2 help file}
+for examples of the {opt lglmnet} option usage and how to replicate {it:glmnet} output.
 We recommend the use of the {opt lglmnet} option
 in particular with cross-validation over alpha; see below for an example.
 
@@ -752,6 +759,47 @@ For demonstration, load Grunfeld data.{p_end}
 
 {pstd}Same as above with fixed size of training data.{p_end}
 {phang2}. {stata "cvlasso mvalue L(1/10).mvalue, rolling origin(1950) fixedwindow"}{p_end}
+
+{marker examples_replication}{...}
+{pstd}
+{ul:Replication of cv.glmnet}
+
+{pstd}Use Stata's auto dataset with missing data dropped. There are 69 remaining observations.{p_end}
+{phang2}. {stata "sysuse auto, clear"}{p_end}
+{phang2}. {stata "drop if rep78==."}{p_end}
+
+{pstd}To load the data into R for comparison with glmnet, use the following commands.
+The packages haven and tidyr need to be installed.{p_end}
+{phang2}{res:auto <- haven::read_dta("http://www.stata-press.com/data/r9/auto.dta")}{p_end}
+{phang2}{res:auto <- drop_na(auto)}{p_end}
+{phang2}{res:n <- nrow(auto)}{p_end}
+{phang2}{res:price <- auto$price}{p_end}
+{phang2}{res:X <- auto[, c("mpg", "rep78", "headroom", "trunk", "weight", "length", "turn", "displacement", "gear_ratio")]}{p_end}
+{phang2}{res:X <- as.matrix(X)}{p_end}
+
+{pstd}We replicate {it:cv.glmnet}'s output with 3-fold cross-validation and 5 lambdas.
+The sample size is 69 so each fold has 23 observations.
+Folds are pre-set so that fold 1 is obs 1-23, fold 2 is obs 24-46 and fold 3 is obs 47-69.
+{it:cv.glmnet}'s default behavior is to generates a sequence of lambdas based on the entire sample
+but to use interploation when estimating a training fold.
+To override this behavior, it is necessary to first generate the sequence of lambdas
+and then provide it explicitly in a second call to {it:cv.glmnet}.
+This guarantees that {it:cv.glmnet} uses the same sequence of lambdas for each training sample,
+which is also {opt cvlasso}'s behavior.
+To do this in R, load {it:glmnet} with library("glmnet") and use the following commands:{p_end}
+{phang2}{res:fid = ceiling((1:n)/(n/3))}{p_end}
+{phang2}{res:r<-cv.glmnet(x=X,y=price,type.measure="mse",foldid=fid,nlambda=5)}{p_end}
+{phang2}{res:lambda5<-r$lambda}{p_end}
+{phang2}{res:r<-cv.glmnet(x=X,y=price,type.measure="mse",foldid=fid,lambda=lambda5)}{p_end}
+{phang2}{res:r$lambda}{p_end}
+{phang2}{res:r$cvm}{p_end}
+{pstd}The last two lines display the sequence of lambdas and the corresponding MSEs.
+
+{pstd}Call {opt cvlasso} with the {opt lglmnet} option.
+The {opt norandom} option means that the order of observations is not randomized
+before splitting into 3 folds.
+The MSPE column matches the {it:glmnet} MSEs in {res:r$cvm}.{p_end}
+{phang2}. {stata "cvlasso price mpg-gear, lglmnet nfolds(3) lcount(5) norandom"}{p_end}
 
 {marker saved_results}{...}
 {title:Saved results}

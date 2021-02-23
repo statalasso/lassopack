@@ -1,6 +1,7 @@
 * certification script for 
 * lassopack package 1.1.01 08nov2018, aa
 * parts of the script use R's glmnet for validation
+* updated 23feb2021 for lassopack 1.4.1, cvlasso 1.0.12, ms
 
 cscript "cvlasso" adofile cvlasso lasso2 lasso2_p lassoutils
 clear all
@@ -42,6 +43,35 @@ set seed 123456
 ********************************************************************************
 *** compare with glmnet				                                         ***
 ********************************************************************************
+
+* update with cvlasso 1.0.12 - exact replication using auto dataset
+* note that cv.glmnet needs to be called twice, the second time with an
+* explicit list of lambdas, in order to override the default interpolation
+/*
+auto <- haven::read_dta("http://www.stata-press.com/data/r9/auto.dta")
+auto <- drop_na(auto)
+n <- nrow(auto)
+price <- auto$price
+X <- auto[, c("mpg", "rep78", "headroom", "trunk", "weight", "length", "turn", "displacement", "gear_ratio")]
+X <- as.matrix(X)
+
+# 3 folds
+fid = ceiling((1:n)/(n/3))
+
+r<-cv.glmnet(x=X,y=price,type.measure="mse",foldid=fid,nlambda=5)
+lambda5<-r$lambda
+r<-cv.glmnet(x=X,y=price,type.measure="mse",foldid=fid,lambda=lambda5,thresh=1e-15)
+r$lambda
+[1] 1584.1894208  158.4189421   15.8418942    1.5841894    0.1584189
+r$cvm
+[1] 8415736 8990325 9278120 9417919 9450578
+*/
+sysuse auto, clear
+cvlasso price mpg-gear, lglmnet nfolds(3) lcount(5) norandom
+mat glambdamat = 1584.1894208 \ 158.4189421 \ 15.8418942 \ 1.5841894 \ 0.1584189
+assert mreldif(glambdamat, e(lambdamat))<1e-7
+mat gmmspe = 8415736 \ 8990325 \ 9278120 \ 9417919 \ 9450578
+assert mreldif(gmmspe, e(mmspe))<1e-7
 
 * load example data
 insheet using "$prostate", tab clear

@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0.15  27sept2020}{...}
+{* *! version 1.0.16  23feb2021}{...}
 {hline}
 {cmd:help lasso2}{right: lassopack v1.4.1}
 {hline}
@@ -1103,9 +1103,9 @@ N=69 so the {opt lasso2} lambda becomes 138000/(2*69) = 1000{p_end}
 
 {pstd}{it:glmnet} uses the same definition of the lasso L0 penalty as StataCorp's {helpb lasso},
 so {opt lasso2}'s default parameterization again requires only rescaling by 2N.
-When the {opt lglmnet} option is used with the {opt lglmnet} option,
+When {opt lasso2} is used with the {opt lglmnet} option,
 the L0 penalty should be provided using the glmnet definition.
-To estimate in R, load glmnet with library("glmnet") and use the following command:{p_end}
+To estimate in R, load {it:glmnet} with library("glmnet") and use the following command:{p_end}
 {phang2}{res:r<-glmnet(X,price,alpha=1,lambda=1000,thresh=1e-15)}{p_end}
 
 {phang2}. {stata "lasso2 price mpg-foreign, lambda(138000)"}{p_end}
