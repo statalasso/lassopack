@@ -1,6 +1,6 @@
-*! lassologit (v0.3)
+*! lassologit (v0.3.1b)
 *! part of lassopack v1.4.1
-*! last edited: 15oct2019
+*! last edited: 20mar2021
 *! authors: aa/ms/cbh
 
 * Updates 	(release date):
@@ -624,9 +624,7 @@ program _lassologit, eclass sortpreserve
 			di as err "Options rigorous and lambda() not allowed as the same time."
 		}
 		//
-	
-		//
-		
+			
 		*** estimation & output
 
 		// fit model	
@@ -649,7 +647,7 @@ program _lassologit, eclass sortpreserve
 		// initialize ereturned results with depname
 		ereturn post , depname(`varY_o')
 		// Mata routine to post all results except e(b)
-		mata: PostResults(`data',`fitResults',"`lossmeasure'",`savepredmat')
+		mata: PostResults(`data',`fitResults',"`lossmeasure'",`savepredmat',`debugflag')
 		// post e(b) only
 		if (`lcount'==1) {
 			tempname theb
@@ -1218,7 +1216,7 @@ program define DisplayPath
 
 end
 
-
+//" 
 
 // Display varlist with specified indentation
 program define DispVars
@@ -2308,11 +2306,12 @@ struct outStruct scalar fit(struct dataStruct d,
 void PostResults(struct dataStruct d,			 
 						struct outStruct r, 
 						string scalar losstype,
-						real scalar savephat
+						real scalar savephat,
+						real scalar debugflag
 						)
 {
 	// return beta in e() objects
-	ereturn_beta(d,r)
+	ereturn_beta(d,r,debugflag)
 	
 	// return other parameters
 	ereturn_params(d,r)
@@ -2742,7 +2741,8 @@ real colvector logit_est(struct dataStruct d,
 // end
 
 void ereturn_beta(struct dataStruct d,
-						struct outStruct r)
+						struct outStruct r,
+						real scalar debugflag)
 {
 
 	// set colnames of beta
@@ -2768,6 +2768,15 @@ void ereturn_beta(struct dataStruct d,
 		dense_names = (J(r.shat0,1,""),tokens(selected0)')
 		r.sel=selected
 		r.sel0=selected0
+
+		if (debugflag==1) {
+			r.betas'
+			r.betas_std'
+			select(r.betas,r.ix)'
+			r.betas_post'
+			r.betas_std_post'
+			select(r.betas_post,r.ix)'
+		}
 		
 		// sparsity
 		st_numscalar("e(shat)",r.shat)
@@ -2795,6 +2804,27 @@ void ereturn_beta(struct dataStruct d,
 		st_matrixcolstripe("e(beta_post_dense)",dense_names)
 	}
 	else {
+
+		if (debugflag==1) {
+			"shat="
+			r.shat
+			"shat0="
+			r.shat0
+			"lambdas="
+			r.lambdas
+			"l1 norm="
+			r.L1norm
+			"beta="
+			mean(r.betas')
+			"beta std="
+			mean(r.betas_std')
+			"brnames="
+			brnames
+			"num_feat="
+			d.num_feat
+			"Xnamescon="
+			d.XnamesCons_o
+		}
 		
 		// sparsity
 		st_matrix("e(shat)",r.shat)
