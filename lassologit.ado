@@ -24,6 +24,7 @@ program lassologit, eclass sortpreserve
 						PLOTVar(varlist)					///
 						PLOTLabel							///
 						lambdan	nopath settingup			///
+						debug 								///
 						* ]
 							
 	if "`version'" != "" {							//  Report program version number, then exit.
@@ -42,7 +43,7 @@ program lassologit, eclass sortpreserve
 	if (!replay()) {
 	
 		tokenize "`0'", parse(",")
-		_lassologit `1', `options' newlambda(`newlambda') `lambdan'  
+		_lassologit `1', `options' newlambda(`newlambda') `lambdan' `debug'
 		ereturn local cmdoptions `options'
 	
 	}
@@ -60,7 +61,7 @@ program lassologit, eclass sortpreserve
 							`options' 						///
 							newlambda(`newlambda') 			///
 							`cmdoptions0' 					///
-							`lambdan'
+							`lambdan'  `debug'
 		ereturn local cmdoptions `cmdoptions0'
 	
 	}
@@ -106,7 +107,7 @@ program lassologit, eclass sortpreserve
 							`options' 						///
 							newlambda(`newlambda') 			///
 							`cmdoptions0' 					///
-							`lambdan'
+							`lambdan'  `debug'
 		ereturn local cmdoptions `cmdoptions0'
 	
 	}	
@@ -187,7 +188,7 @@ program lassologit, eclass sortpreserve
 								[`weight' `exp'] , 		///
 								`cmdoptions' 			///
 								newlambda(`newlambda') 	///
-								`lambdan'
+								`lambdan'  `debug'
 		ereturn local cmdoptions `cmdoptions' 
 	}
 	*
@@ -2172,6 +2173,12 @@ struct outStruct scalar fit(struct dataStruct d,
 
 	// lambda_grid
 	lambda_num = cols(lambda_grid)
+	one_lambda = lambda_num==1
+	if (one_lambda) {
+		// add initial lambda as a warm start
+		lambda_grid = (lambda_grid*10,lambda_grid)
+		lambda_num = cols(lambda_grid)
+	}
 	
 	// initial beta
 	if (cons) {
@@ -2192,7 +2199,7 @@ struct outStruct scalar fit(struct dataStruct d,
 	//	printf("----+--- 1 ---+--- 2 ---+--- 3 ---+--- 4 ---+--- 5\n")
 	//}
 	
-	if (lambda_num==1) {
+	if (one_lambda) {
 		d.progbar = 0
 	}
 	if (d.progbar) {
@@ -2293,6 +2300,12 @@ struct outStruct scalar fit(struct dataStruct d,
 		printf("\n")
 	}
 	
+	// remove initial lambda
+	if (one_lambda) {
+		lambda_grid = lambda_grid[2]
+		beta_path = beta_path[,2]
+	}
+
 	// return beta path
 	r.betas_std = beta_path 
 	r.lambdas = lambda_grid
@@ -2864,6 +2877,7 @@ void ereturn_beta(struct dataStruct d,
 void ereturn_params(struct dataStruct d,
 						struct outStruct r)
 {
+	st_numscalar("e(postlogit)",d.postlogit)
 	st_numscalar("e(p)",d.num_feat-d.cons)
 	st_numscalar("e(cons)",d.cons)
 	st_numscalar("e(std)",d.std)
