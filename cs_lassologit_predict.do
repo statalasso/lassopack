@@ -6,7 +6,8 @@ clear all
 *** Verify post-logit predictions 											 ***
 ********************************************************************************
 
-insheet using "spam.data", clear delim(" ")
+$loadspam
+
 gen myholdout = _n>4000
 
 foreach lam in 0.18 .1 .05 .01 0.005 0.001 {
@@ -33,7 +34,7 @@ foreach lam in 0.18 .1 .05 .01 0.005 0.001 {
 
 foreach lam in 0.18 .1 .05 .01 0.005 0.001 {
 
-	insheet using "spam.data", clear delim(" ")
+	$loadspam
 	gen myholdout = _n>4000
 	
 	di "lambda = `lam'"
@@ -51,7 +52,7 @@ foreach lam in 0.18 .1 .05 .01 0.005 0.001 {
 
 foreach lam in 0.18 .1 .05 .01 0.005 0.001 {
 
-	insheet using "spam.data", clear delim(" ")
+	$loadspam
 	gen myholdout = _n>4000
 	
 	di "lambda = `lam'"
@@ -60,7 +61,7 @@ foreach lam in 0.18 .1 .05 .01 0.005 0.001 {
 	mat P = e(phat)
 	svmat P
 
-	predict double p0, pr
+	predict double p0, pr postlogit
 	
 	assert reldif(P1,p0)<10e-4
 	
@@ -69,7 +70,7 @@ foreach lam in 0.18 .1 .05 .01 0.005 0.001 {
 
 foreach lam in .1 .05 .01 0.005 0.001 {
 
-	insheet using "spam.data", clear delim(" ")
+	$loadspam
 	gen myholdout = _n>4000
 	
 	di "lambda = `lam'"
@@ -89,7 +90,7 @@ foreach lam in .1 .05 .01 0.005 0.001 {
 *** Verify using glmnet	(cs_predict.R)										 ***
 ********************************************************************************
 
-insheet using prostate.data, clear
+$loadprostate
 
 gen ybin = lpsa > 2
 
@@ -126,7 +127,7 @@ assert mreldif(P,G)<0.01
 
 *** in-sample
 
-insheet using "spam.data", clear delim(" ")
+$loadspam
 gen myholdout = _n<50
 
 lassologit v58 v1-v57, lambda(0.1) savep lambdan
@@ -141,7 +142,7 @@ assert abs(Phat1 - Phat2)<10e-8
 
 *** in-sample (not on full sample)
 
-insheet using "spam.data", clear delim(" ")
+$loadspam
 gen myholdout = _n<50
 
 lassologit v58 v1-v57 if _n<4000, lambda(0.1) savep lambdan
@@ -156,7 +157,7 @@ assert abs(Phat1 - Phat2)<10e-6  if !missing(Phat1)
 
 *** in-sample
 
-insheet using "spam.data", clear delim(" ")
+$loadspam
 gen myholdout = _n<50
 
 lassologit v58 v1-v57, lambda(0.1) savep  holdout(myh)  lambdan
@@ -167,3 +168,86 @@ svmat Phat1
 predict double Phat2, pr
 
 assert abs(Phat1 - Phat2)<10e-8 if _n<50
+
+
+********************************************************************************
+*** predicted values: re-estimation and no re-estimation					 ***
+********************************************************************************
+
+$loadprostate
+
+gen ybin = lpsa > 2
+
+lassologit ybin lcavol-pgg45
+predict double yhat , lic(ebic)
+predict double yhat2, lic(ebic) est
+
+assert abs(yhat- yhat2)<10e-6
+cap drop yhat yhat2
+
+********************************************************************************
+*** more 	testing 														 ***
+********************************************************************************
+
+$loadprostate
+
+gen ybin = lpsa > 2
+
+* post logit
+cap drop yhat yhat2
+lassologit ybin lcavol-pgg45
+predict double yhat , lic(ebic) postlogit // postlogit is being ignored
+predict double yhat2, lic(ebic) est postlogit
+
+** cvlassologit: compare two methods 
+cap drop yhat*
+set seed 1
+cvlassologit ybin lcavol-pgg45
+cvlassologit, lopt postres
+predict double yhat1
+
+set seed 1 
+cvlassologit ybin lcavol-pgg45
+predict double yhat2, lopt
+
+assert abs(yhat1- yhat2)<10e-6
+
+** cvlassologit with postlogit: compare two methods 
+cap drop yhat*
+set seed 1
+cvlassologit ybin lcavol-pgg45
+cvlassologit, lopt postres postlogit
+predict double yhat1, postlogit
+
+set seed 1 
+cvlassologit ybin lcavol-pgg45
+predict double yhat2, lopt postlogit
+
+assert abs(yhat1- yhat2)<10e-6
+
+** rlassologit 
+cap drop yhat*
+rlassologit ybin lcavol-pgg45
+predict double yhat, postlogit
+
+** lassologit: compare two methods
+cap drop yhat*
+lassologit ybin lcavol-pgg45
+lassologit, lic(ebic) postres
+predict double yhat1
+
+lassologit ybin lcavol-pgg45
+predict double yhat2, lic(ebic) 
+
+assert abs(yhat1- yhat2)<10e-6
+
+** lassologit with post-lasso: compare two methods 
+cap drop yhat*
+lassologit ybin lcavol-pgg45
+lassologit, lic(ebic) postres postlogit
+predict double yhat1, postlogit
+
+lassologit ybin lcavol-pgg45
+predict double yhat2, lic(ebic) postlogit est
+
+assert abs(yhat1- yhat2)<10e-6

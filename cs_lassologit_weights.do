@@ -1,18 +1,11 @@
 clear all 
 
-cap cd "C:\Users\Achim.Ahrens\Dropbox\StataLasso\lassoLogit"
-cap cd "C:\Users\achim\Dropbox\StataLasso\lassoLogit"
-cap cd "C:\LocalStore\ecomes\Dropbox\StataLasso\lassoLogit"
-adopath + "`c(pwd)'"
-
-which lassologit
-
 
 ********************************************************************************
 ***  verify fweights 														 ***
 ********************************************************************************
 
-insheet using "spam.data", clear delim(" ")
+$loadspam
 
 // frequencies
 set seed 123
@@ -36,7 +29,7 @@ assert mreldif(A,B)<1e-10
 ***  verify fweights (without constant)										 ***
 ********************************************************************************
 
-insheet using "spam.data", clear delim(" ")
+$loadspam
 
 // frequencies
 set seed 123
@@ -60,8 +53,8 @@ assert mreldif(A,B)<1e-10
 ***  verify aweights														 ***
 ********************************************************************************
 
-insheet using "spam.data", clear delim(" ")
-	
+$loadspam
+
 // aweights / pweights
 // check by setting lambda very small
 // => lasso logit and post-logit should be similar
