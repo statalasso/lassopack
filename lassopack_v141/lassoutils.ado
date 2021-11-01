@@ -1,4 +1,4 @@
-*! lassoutils 1.2.05 07feb2021
+*! lassoutils 1.2.06 01nov2021
 *! lassopack package 1.4.1
 *! authors aa/cbh/ms
 
@@ -141,6 +141,7 @@
 *         EBIC now excludes omitted/base variables when calculating model size p.
 * 1.2.04  (08dec2020) Bug fix to SD calculation for special case of lglmnet with unit loadings (=not prestandardized)
 * 1.2.05  (07feb2021) Bug fix to bug fix to SD calculation for special case of lglmnet with unit loadings (=not prestandardized)
+* 1.2.06  (01nov2021) Bug fix for combination of ivlasso + pnotpen + no penalized model variables.
 
 
 program lassoutils, rclass sortpreserve
@@ -619,6 +620,8 @@ program define _rlasso, rclass sortpreserve
 		local N_clust			=.
 		local N_clust1			=.
 		local N_clust2			=.
+		// no penalized model vars so automatically 0
+		local psinegs			=0
 	}
 	else if `testonlyflag' {					//  supscore test only
 
