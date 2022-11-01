@@ -77,22 +77,20 @@ program define lasso2_p, rclass
 	else if ("`cmd'"=="cvlasso") { // cvlasso
 	
 		if ("`lse'`lopt'"=="") { 
-			di as "lse or lopt required."
-			exit 198
+			// default to lopt
+			local lopt lopt
 		}
-		else {
-			if ("`postresults'"=="") {
-				tempname m
-				qui estimates store `m'
-			}
-			// return lasso2 results with lse or lopt
-			// postresults option ensures that lasso2 results are being posted
-			cvlasso, `lse' `lopt' postresults 
-			// run predict command
-			_lasso2_p `namelist' `if' `in', `qui' `options'
-			if ("`postresults'"=="") {
-				qui estimates restore `m'
-			}
+		if ("`postresults'"=="") {
+			tempname m
+			qui estimates store `m'
+		}
+		// return lasso2 results with lse or lopt
+		// postresults option ensures that lasso2 results are being posted
+		cvlasso, `lse' `lopt' postresults 
+		// run predict command
+		_lasso2_p `namelist' `if' `in', `qui' `options'
+		if ("`postresults'"=="") {
+			qui estimates restore `m'
 		}
 	
 	}
