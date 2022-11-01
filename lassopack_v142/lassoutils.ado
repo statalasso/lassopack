@@ -1,4 +1,4 @@
-*! lassoutils 1.2.04 8dec2020
+*! lassoutils 1.2.05 01nov2022
 *! lassopack package 1.4.2
 *! authors aa/cbh/ms
 
@@ -140,6 +140,7 @@
 *         Fixed bug in reporting of value of maximized obj fn for elastic net/ridge (missing 1/2 on L2 norm).
 *         EBIC now excludes omitted/base variables when calculating model size p.
 * 1.2.04  Bug fix to SD calculation for special case of lglmnet with unit loadings (=not prestandardized)
+* 1.2.05  Bug fix in special case of only unpenalized regressors (returned scalar psinegs was not initialized to missing)
 
 
 program lassoutils, rclass sortpreserve
@@ -461,6 +462,7 @@ program define _rlasso, rclass sortpreserve
 	tempname b bOLS sb sbOLS Psi sPsi ePsi stdvec
 	tempname bAll bAllOLS
 	tempname supscoremat CCK_ss CCK_p CCK_cv CCK_gamma
+	tempname psinegs
 	// initialize so that returns don't crash in case values not set
 	local k				=0						//  used as flag to indicate betas are non-missing
 	local N				=.
@@ -490,6 +492,7 @@ program define _rlasso, rclass sortpreserve
 	scalar `CCK_p'		=.
 	scalar `CCK_cv'		=.
 	scalar `CCK_gamma'	=.
+	scalar `psinegs'	=.
 
 	if `p' & ~`testonlyflag' {					//  there are penalized model variables; estimate
 	
@@ -587,7 +590,7 @@ program define _rlasso, rclass sortpreserve
 		scalar `gamma'		=r(gamma)
 		scalar `gammad'		=r(gammad)
 		// for HAC or 2-way cluster lasso (neg loadings possible)
-		local psinegs		=r(psinegs)
+		scalar psinegs		=r(psinegs)
 		local psinegvars	`r(psinegvars)'
 		*
 	}
@@ -668,7 +671,7 @@ program define _rlasso, rclass sortpreserve
 		local N_clust2		=r(N_clust2)
 
 		// for HAC or 2-way cluster lasso (neg loadings possible)
-		local psinegs		=r(psinegs)
+		scalar psinegs		=r(psinegs)
 		local psinegvars	`r(psinegvars)'
 	}
 	else {										//  shouldn't reach here

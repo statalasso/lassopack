@@ -29,6 +29,8 @@
 *         dev crit for path (nodevcrit = use full lambda list, no exiting path early).
 * 1.0.11  (27sept2020)
 *         added nopath option to calls to lasso2
+* 1.0.12  (7feb2022)
+*         bug fix for user-provided fold variable - was also checking out-of-sample obs
 
 program cvlasso, eclass sortpreserve
 	version 13
@@ -206,8 +208,8 @@ program _cvlasso, eclass sortpreserve
 		* user-specified folds
 		di as text "Use user-specified fold variable."
 		tempname integercheck
-		gen `integercheck'=mod(`foldvar',2)
-		assert `integercheck'==0 | `integercheck'==1 // integer check
+		qui gen `integercheck'=mod(`foldvar',2)
+		assert `integercheck'==0 | `integercheck'==1 if `touse' // integer check
 		qui sum `foldvar', meanonly
 		local nfolds=r(max)
 		// check that there are no gaps in the fold list (e.g. "1 1 2 2 4 4")
