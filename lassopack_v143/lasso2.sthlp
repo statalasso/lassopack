@@ -1,7 +1,7 @@
 {smcl}
-{* *! version 1.0.15  27sept2020}{...}
+{* *! version 1.0.16  19dec2023}{...}
 {hline}
-{cmd:help lasso2}{right: lassopack v1.4.2}
+{cmd:help lasso2}{right: lassopack v1.4.3}
 {hline}
 
 {title:Title}
@@ -30,6 +30,7 @@
 {cmdab:lminr:atio}{cmd:(}{it:real}{cmd:)}
 {cmdab:lmax:}{cmd:(}{it:real}{cmd:)}
 {cmd:lglmnet}
+{cmd:sklearn}
 {cmdab:notp:en(}{it:varlist}{cmd:)}
 {cmdab:par:tial(}{it:varlist}{cmd:)}
 {cmd:psolver(}{it:string}{cmd:)}
@@ -59,6 +60,17 @@
 {opt ver:bose}
 {cmdab:vver:bose}
 {bind:{cmd:wnorm}]}
+
+{p 8 14 2}
+Note: the {opt sklearn} option will take advantage of
+{browse "https://scikit-learn.org/stable/index.html":scikit-learn}'s
+Python implementations of the lasso, elastic net and ridge estimators;
+the speed gains using this package can be large.
+The {opt sklearn} option requires Stata 16 or higher,  
+a Python installation and scikit-learn (0.24 or higher).
+See {helpb python:here} and
+{browse "https://blog.stata.com/2020/08/18/stata-python-integration-part-1-setting-up-stata-to-use-python/":here} 
+for how to set up Python for Stata on your system.
 
 {p 8 14 2}
 Note: the {opt fe} option will take advantage of the {helpb lasso2##SG2016:ftools}
@@ -148,6 +160,11 @@ Stores estimation results of the model selected by information criterion in {cmd
 {p_end}
 {synopt:{cmd:lglmnet}}
 Use the parameterizations for lambda, alpha, standardization, etc. employed by {it:glmnet} by Friedman et al. ({helpb lasso2##Friedman2010:2010}).
+{p_end}
+{synopt:{cmd:sklearn}}
+Use {browse "https://scikit-learn.org/stable/index.html":scikit-learn}'s
+Python implementations of the lasso, elastic net and ridge estimators.
+Cannot be used with the {opt notpen(.)}, {opt ploadings(.)}, {opt unitloadings} or {opt noconstant} options.
 {p_end}
 {synoptline}
 {p2colreset}{...}
@@ -1476,6 +1493,10 @@ lassopack: model selection and prediction with regularized regression in Stata.
 {it:The Stata Journal}, 20(1):176-235.
 {browse "https://journals.sagepub.com/doi/abs/10.1177/1536867X20909697"}.
 Working paper version: {browse "https://arxiv.org/abs/1901.05397"}.{p_end}
+
+{pstd}
+When using the {opt sklearn} options,
+please also cite scikit-learn; see {browse "https://scikit-learn.org/stable/about.html"}.
 
 {title:Authors}
 

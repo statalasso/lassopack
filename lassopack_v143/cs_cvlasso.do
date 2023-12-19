@@ -1,5 +1,5 @@
 * certification script for 
-* lassopack package 1.4.1 27sept2020
+* lassopack package 1.4.3 19dec2023
 * parts of the script use R's glmnet for validation
 
 cscript "cvlasso" adofile cvlasso lasso2 lasso2_p lassoutils
@@ -162,7 +162,7 @@ assert reldif(0.6062457,r(Var))<0.001 // compare predicted values
 
 
 ********************************************************************************
-*** validate                                                        ***
+*** validate                                                		        ***
 ********************************************************************************
 
 * load example data
@@ -212,7 +212,54 @@ assert myr2==myr
 *
 
 ********************************************************************************
-*** partial                                   							 ***
+*** sklearn                                   							 	****
+********************************************************************************
+
+cap python query
+// run this section only if Stata is Python-aware
+if _rc==0 {
+	
+	* load example data
+	insheet using "$prostate", tab clear
+	 
+	global model lpsa lcavol lweight age lbph svi lcp gleason pgg45
+
+	cvlasso $model, seed(123) lglmnet
+	savedresults save nosklearn e()
+	cvlasso $model, seed(123) lglmnet sklearn
+	savedresults comp nosklearn e(),									///
+		exclude(macros: lasso2opt)										///
+		tol(1e-7) verbose
+	// now with lopt
+	cvlasso $model, seed(123) lglmnet lopt
+	savedresults save nosklearn e()
+	cvlasso $model, seed(123) lglmnet lopt sklearn
+	savedresults comp nosklearn e(),									///
+		exclude(macros: lasso2opt)										///
+		tol(1e-7) verbose
+
+	* load example data
+	webuse air2, clear
+	cvlasso air L(1/12).air, rolling origin(130) lglmnet
+	savedresults save nosklearn e()
+	cvlasso air L(1/12).air, rolling origin(130) lglmnet sklearn
+	// note slightly looser tolerance
+	savedresults comp nosklearn e(),									///
+		exclude(macros: lasso2opt)										///
+		tol(1e-6) verbose
+	// now with lopt
+	cvlasso air L(1/12).air, rolling origin(130) lglmnet lopt
+	savedresults save nosklearn e()
+	cvlasso air L(1/12).air, rolling origin(130) lglmnet lopt sklearn
+	// note slightly looser tolerance
+	savedresults comp nosklearn e(),									///
+		exclude(macros: lasso2opt)										///
+		tol(1e-6) verbose
+
+}
+
+********************************************************************************
+*** partial                                   								****
 ********************************************************************************
 
 

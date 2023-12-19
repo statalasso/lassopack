@@ -1,5 +1,5 @@
 *! lasso2 1.0.12 27sept2020
-*! lassopack package 1.4.2
+*! lassopack package 1.4.3
 *! authors aa/ms
 
 * additional notes
@@ -151,9 +151,6 @@ program lasso2, eclass sortpreserve
 		*
 		
 		// estimate
-		// bug fix:
-		// tokenize "`0'", parse(",")
-		// _lasso2 `1', `options'  ///
 		_lasso2 `anything' `if' `in', `options'		///
 						newlambda(`newlambda')		///	
 						newalpha(`newalpha')		///
@@ -811,7 +808,7 @@ program _lasso2, eclass sortpreserve
 		getlambdamat, lscalar(`lambda') lmatrix(`lambdamat') lfactor(`lfactor')
 		mat `lambdamat0'	= r(lambdamat)
 	}
-	// optional L2 norma lambda
+	// optional L2 norm lambda
 	if "`lambda2'`lambda2mat'"!="" {
 		tempname lambda2mat0
 		getlambdamat, lscalar(`lambda2') lmatrix(`lambda2mat') lfactor(`lfactor')

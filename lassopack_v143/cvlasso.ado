@@ -1,5 +1,5 @@
 *! cvlasso 1.0.13 18dec2023
-*! lassopack package 1.4.2
+*! lassopack package 1.4.3
 *! authors aa/ms
 
 * Updates (release date):
@@ -33,6 +33,7 @@
 *         bug fix for user-provided fold variable - was also checking out-of-sample obs
 * 1.0.13  (18dec2023)
 *         bug fix for norecover option
+*         force use of full lambda list when initializing
 
 program cvlasso, eclass sortpreserve
 	version 13
@@ -58,7 +59,7 @@ program cvlasso, eclass sortpreserve
 			* 										///
 			]
 
-	local lversion 1.0.11
+	local lversion 1.0.13
 	local pversion 1.1.01
 
 	if "`version'" != "" {							//  Report program version number, then exit.
@@ -256,7 +257,7 @@ program _cvlasso, eclass sortpreserve
 	*** get lambda **************************************************************
 	if ("`lambda'"=="") {
 		qui lasso2 `varlist' if `touse', `options'							///
-					lcount(`lcount') lminratio(`lminratio') lmax(`lmax')
+			lcount(`lcount') lminratio(`lminratio') lmax(`lmax') nodevcrit	//  force recovery of full lambda list
 		tempname lambdamat0
 		mat `lambdamat0'=e(lambdamat)'
 	}

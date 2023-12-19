@@ -1,9 +1,6 @@
 *! lassoutils 1.2.06 18dec2023
-*! lassopack package 1.4.2
+*! lassopack package 1.4.3
 *! authors aa/cbh/ms
-
-* enet_path requires a constant
-* sklearn code requires prestd, lglmnet, constant
 
 * Adapted/expanded from lassoShooting version 12, cbh 25/09/2012
 * mm_quantile from moremata package by Ben Jann:
@@ -954,17 +951,32 @@ program define _lassopath, rclass sortpreserve
 		cap python query
 		if _rc==199 {
 			// Stata 15 or lower
-			di as err "error - option sklearn requires Stata 16 or higher and a Python-aware Stata"
+			di as err "error - sklearn option requires Stata 16 or higher and a Python-aware Stata"
 			exit 198
 		}
 		else if _rc==111 {
 			// Stata 16 but no Python
-			di as err "error - sklearn requires a Python-aware Stata - see {helpb help python}"
+			di as err "error - sklearn option requires a Python-aware Stata - see {helpb help python}"
 			exit 111
 		}
 		else if _rc>0 {
 			// some other error code
-			di as err "error - option sklearn requires Stata 16 or higher and a Python-aware Stata"
+			di as err "error - sklearn option requires Stata 16 or higher and a Python-aware Stata"
+			exit 198
+		}
+		// sklearn requires lglmnet
+		if ~`lglmnetflag' {
+			di as err "error - sklearn option requires lglmnet option"
+			exit 198
+		}
+		// and prestd (will be triggered by sklearn unless unitloadings etc. also selected; hence not supported)
+		if ~`prestdflag' {
+			di as err "error - sklearn option requires lglmnet option and pre-standardization"
+			exit 198
+		}
+		//  sklearn currently does not support custom penalty loadings
+		if "`ploadings'`ploadings2'"~="" {
+			di as err "error - sklearn option does not currently support custom penalty loadings"
 			exit 198
 		}
 	}
@@ -4535,6 +4547,7 @@ struct betaStruct PyDoShooting(									///
 	st_numscalar("r(alpha)",alpha)
 	st_numscalar("r(tol)",optTol)
 	st_numscalar("r(max_iter)",maxIter)
+	st_numscalar("r(cons)",d.cons)
 	if (alpha>0) {
 		// elastic net, lasso
 		st_numscalar("r(lambda)",lambda)
@@ -4555,10 +4568,11 @@ struct betaStruct PyDoShooting(									///
 	stata("python: sk_tol = Scalar.getValue('r(tol)')")
 	stata("python: sk_alpha = Scalar.getValue('r(alpha)')")
 	stata("python: sk_lambda = Scalar.getValue('r(lambda)')")
+	stata("python: sk_cons = Scalar.getValue('r(cons)')")
 	
 	if (alpha>0) {
 		// elastic net, lasso
-		stata("python: model = ElasticNet(alpha=sk_lambda, l1_ratio=sk_alpha, fit_intercept=False, max_iter=sk_max_iter, random_state=0, tol=sk_tol)")
+		stata("python: model = ElasticNet(alpha=sk_lambda, l1_ratio=sk_alpha, fit_intercept=sk_cons, max_iter=sk_max_iter, random_state=0, tol=sk_tol)")
 		stata("python: model.fit(sk_X,sk_y)")
 		// Python => Stata r(.) macros => Mata
 		stata("python: Matrix.store('r(beta)',model.coef_)")
@@ -4570,14 +4584,14 @@ struct betaStruct PyDoShooting(									///
 	}
 	else {
 		// ridge
-		stata("python: model = Ridge(alpha=sk_lambda, fit_intercept=False, max_iter=sk_max_iter)")
+		stata("python: model = Ridge(alpha=sk_lambda, fit_intercept=sk_cons, max_iter=sk_max_iter)")
 		stata("python: model.fit(sk_X,sk_y)")
 		// Python => Stata r(.) macros => Mata
 		stata("python: Matrix.store('r(beta)',model.coef_)")
 		beta = st_matrix("r(beta)")
 		m = 0
 	}
-	stata("python: del model")
+	stata("python: del model, sk_X, sk_y, sk_max_iter, sk_tol, sk_alpha, sk_lambda, sk_cons")
 
 	// residuals, MSE, R-sq, obj function
 	resid = (*d.y) - (*d.X)*beta
@@ -4642,6 +4656,7 @@ struct pathStruct PyDoShootingPath(								///
 	st_numscalar("r(alpha)",alpha)
 	st_numscalar("r(tol)",optTol)
 	st_numscalar("r(max_iter)",maxIter)
+	st_numscalar("r(cons)",d.cons)
 	if (alpha>0) {
 		// elastic net, lasso
 		st_matrix("r(lvec)",lvec)
@@ -4662,9 +4677,10 @@ struct pathStruct PyDoShootingPath(								///
 	stata("python: sk_tol = Scalar.getValue('r(tol)')")
 	stata("python: sk_alpha = Scalar.getValue('r(alpha)')")
 	stata("python: sk_lvec = np.squeeze(Matrix.get('r(lvec)'))")
+	stata("python: sk_cons = Scalar.getValue('r(cons)')")
 	
 	if (alpha>0) {
-		// elastic net, lasso
+		// elastic net, lasso. enet_path currently does not support a fit_intercept option
 		stata("python: alphas_enet, coefs_enet, dual_gaps, n_iters = enet_path(sk_X, sk_y, alphas=sk_lvec, l1_ratio=sk_alpha, max_iter=sk_max_iter, tol=sk_tol, return_n_iter=True)")
 		// Python => Stata r(.) macros => Mata
 		stata("python: Matrix.store('r(betas)',coefs_enet)")
@@ -4683,7 +4699,7 @@ struct pathStruct PyDoShootingPath(								///
 		for (i=1;i<=cols(lvec);i++) {
 			st_numscalar("r(lambda)",lvec[i]*d.n)
 			stata("python: sk_lambda = Scalar.getValue('r(lambda)')")
-			stata("python: model = Ridge(alpha=sk_lambda, fit_intercept=False, max_iter=sk_max_iter)")
+			stata("python: model = Ridge(alpha=sk_lambda, fit_intercept=sk_cons, max_iter=sk_max_iter)")
 			stata("python: model.fit(sk_X,sk_y)")
 			// Python => Stata r(.) macros => Mata
 			stata("python: Matrix.store('r(beta)',model.coef_)")
@@ -4691,8 +4707,9 @@ struct pathStruct PyDoShootingPath(								///
 			betas = (betas \ beta')
 		}
 		m = 0
-		stata("python: del sk_lambda, model")
+		stata("python: del model")
 	}
+	stata("python: del sk_X, sk_y, sk_max_iter, sk_tol, sk_alpha, sk_lvec, sk_cons")
 
 	// residuals, R-sq, obj function
 	resid = (*d.y) :- (*d.X)*betas'
