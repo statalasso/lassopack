@@ -164,6 +164,7 @@ Use the parameterizations for lambda, alpha, standardization, etc. employed by {
 {synopt:{cmd:sklearn}}
 Use {browse "https://scikit-learn.org/stable/index.html":scikit-learn}'s
 Python implementations of the lasso, elastic net and ridge estimators.
+The glmnet parameterization is automatically used.
 Cannot be used with the {opt notpen(.)}, {opt ploadings(.)}, {opt unitloadings} or {opt noconstant} options.
 {p_end}
 {synoptline}
