@@ -1,5 +1,5 @@
 * certification script for 
-* lassopack package 1.4.X 11sept2020, aa/ms
+* lassopack package 1.4.3 19dec2023, aa/ms
 * parts of the script use R's glmnet and Matlab code "SqrtLassoIterative.m".
 
 set more off
@@ -1332,7 +1332,7 @@ assert reldif(el(D1,1,1),`df2')<10^-6
 assert reldif(`df1',`df2')<10^-6
 
 ********************************************************************************
-*** lic option 						    							***
+*** lic option 						    									***
 ********************************************************************************
 
 * check that right lambda is used 
@@ -1344,6 +1344,83 @@ foreach ic of newlist ebic aic aicc bic {
 	assert reldif(`optlambda',`thislambda')<10^-8
 }
 *
+
+********************************************************************************
+*** sklearn option 						    								***
+********************************************************************************
+
+cap python query
+// run this section only if Stata is Python-aware
+if _rc==0 {
+	
+	sysuse auto, clear
+	
+	// single lambda
+	
+	// lasso
+	lasso2 mpg rep78-foreign, lglmnet lambda(1)
+	savedresults save nosklearn e()
+	lasso2 mpg rep78-foreign, lglmnet lambda(1) sklearn
+	savedresults comp nosklearn e(),								///
+		exclude(macros: lasso2opt scalars: niter)					///
+		tol(1e-7) verbose
+
+	// ridge
+	lasso2 mpg rep78-foreign, lglmnet lambda(1) alpha(0)
+	savedresults save nosklearn e()
+	lasso2 mpg rep78-foreign, lglmnet lambda(1) alpha(0) sklearn
+	savedresults comp nosklearn e(),								///
+		exclude(macros: lasso2opt scalars: niter)					///
+		tol(1e-7) verbose
+	
+	// elastic net
+	lasso2 mpg rep78-foreign, lglmnet lambda(1) alpha(0.5)
+	savedresults save nosklearn e()
+	lasso2 mpg rep78-foreign, lglmnet lambda(1) alpha(0.5) sklearn
+	savedresults comp nosklearn e(),								///
+		exclude(macros: lasso2opt scalars: niter)					///
+		tol(1e-7) verbose
+	
+	// lambda path
+	
+	// lasso
+	// nodevcrit required because sklearn does full lambda grid
+	lasso2 mpg rep78-foreign, lglmnet long nodevcrit
+	savedresults save nosklearn e()
+	lasso2 mpg rep78-foreign, lglmnet long sklearn
+	savedresults comp nosklearn e(),								///
+		exclude(macros: lasso2opt scalars: lcount)					///
+		tol(1e-7) verbose
+	
+	// ridge
+	// nodevcrit required because sklearn does full lambda grid
+	lasso2 mpg rep78-foreign, lglmnet long nodevcrit
+	savedresults save nosklearn e()
+	lasso2 mpg rep78-foreign, lglmnet long sklearn
+	savedresults comp nosklearn e(),								///
+		exclude(macros: lasso2opt scalars: lcount)					///
+		tol(1e-7) verbose
+	
+	// elastic net
+	// nodevcrit required because sklearn does full lambda grid
+	lasso2 mpg rep78-foreign, lglmnet long alpha(0.5) nodevcrit
+	savedresults save nosklearn e()
+	lasso2 mpg rep78-foreign, lglmnet long alpha(0.5) sklearn
+	savedresults comp nosklearn e(),								///
+		exclude(macros: lasso2opt scalars: lcount)					///
+		tol(1e-7) verbose
+	
+	// error checking
+	// sklearn not supported with unitloadings
+	cap lasso2 mpg rep78-foreign, lglmnet lambda(1) sklearn unitloadings
+	assert _rc > 0
+	// sklearn not supported with custom penalty loadings
+	mat psi = 4, 3, 2, 1, 1, 1, 1, 2, 3
+	cap lasso2 mpg rep78-foreign, lambda(1) lglmnet sklearn ploadings(psi)
+	assert _rc > 0
+
+}
+
 
 ********************************************************************************
 *** predicted values (see help file)										 ***

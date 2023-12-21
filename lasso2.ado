@@ -1,5 +1,5 @@
 *! lasso2 1.0.12 27sept2020
-*! lassopack package 1.4.2
+*! lassopack package 1.4.3
 *! authors aa/ms
 
 * additional notes
@@ -151,9 +151,6 @@ program lasso2, eclass sortpreserve
 		*
 		
 		// estimate
-		// bug fix:
-		// tokenize "`0'", parse(",")
-		// _lasso2 `1', `options'  ///
 		_lasso2 `anything' `if' `in', `options'		///
 						newlambda(`newlambda')		///	
 						newalpha(`newalpha')		///
@@ -811,7 +808,7 @@ program _lasso2, eclass sortpreserve
 		getlambdamat, lscalar(`lambda') lmatrix(`lambdamat') lfactor(`lfactor')
 		mat `lambdamat0'	= r(lambdamat)
 	}
-	// optional L2 norma lambda
+	// optional L2 norm lambda
 	if "`lambda2'`lambda2mat'"!="" {
 		tempname lambda2mat0
 		getlambdamat, lscalar(`lambda2') lmatrix(`lambda2mat') lfactor(`lfactor')
@@ -864,7 +861,7 @@ program _lasso2, eclass sortpreserve
 	*** Create macros etc.
 	local lcount	=r(lcount)
 	if (`lcount'==1) { //------- scalar lambda -----------------------------------------------//	
-		
+
 		// message relevant for single lambda only
 		if `stdcoefflag' {
 			di as text "note: option stdcoef implies norecover; no constant reported" 
@@ -1112,10 +1109,10 @@ program _lasso2, eclass sortpreserve
 
 		ereturn scalar dofminus		=`dofminus'
 		ereturn scalar sdofminus	=`sdofminus'
-	
+
 	}
 	else if (`lcount'>1) { //------- list of lambdas -------------------------------------------------//
-	
+
 		*** Create macros etc.
 		local nobs		=r(N)
 		local lcount	=r(lcount)
@@ -1214,10 +1211,11 @@ program _lasso2, eclass sortpreserve
 			local cnames_o	`r(varlist)'
 			matchnames "`cnames_o'" "`varlist_o'" "`varlist_t'"
 			local cnames_t	`r(names)'
-			
+
 			tempname bi binew betasnew
 			forvalues i= 1/`lcount' {
 				mat `bi' = `betas'[`i',1..`pmodel']
+
 				lassoutils `varY_o',						///
 					unpartial								///
 					touse(`toest')							///
@@ -1227,6 +1225,7 @@ program _lasso2, eclass sortpreserve
 					names_o(`varlist_o')					/// dictionary
 					names_t(`varlist_t')					///	dictionary
 					consmodel(`consmodel')
+
 				mat `binew' = r(b)
 				if `i'==1 {
 					mat `betasnew' = `binew'
@@ -1236,6 +1235,7 @@ program _lasso2, eclass sortpreserve
 				}
 			}
 			mat `betas' = `betasnew'
+
 		}		
 		*
 	
@@ -1327,6 +1327,7 @@ program _lasso2, eclass sortpreserve
 			ereturn matrix IC			= `IC'
 			ereturn matrix sIC			= `sIC'
 		}
+
 	}
 end
 
