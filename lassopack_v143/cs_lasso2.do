@@ -1,5 +1,5 @@
 * certification script for 
-* lassopack package 1.4.3 19dec2023, aa/ms
+* lassopack package 1.4.3 5jan2024, aa/ms
 * parts of the script use R's glmnet and Matlab code "SqrtLassoIterative.m".
 
 set more off
@@ -1380,7 +1380,15 @@ if _rc==0 {
 	savedresults comp nosklearn e(),								///
 		exclude(macros: lasso2opt scalars: niter)					///
 		tol(1e-7) verbose
-	
+
+	// unitloadings
+	lasso2 mpg rep78-foreign, lglmnet lambda(1) unitloadings
+	savedresults save nosklearn e()
+	lasso2 mpg rep78-foreign, lglmnet lambda(1) unitloadings sklearn
+	savedresults comp nosklearn e(),								///
+		exclude(macros: lasso2opt scalars: niter)					///
+		tol(1e-7) verbose
+
 	// lambda path
 	
 	// lasso
@@ -1394,9 +1402,9 @@ if _rc==0 {
 	
 	// ridge
 	// nodevcrit required because sklearn does full lambda grid
-	lasso2 mpg rep78-foreign, lglmnet long nodevcrit
+	lasso2 mpg rep78-foreign, lglmnet long alpha(0) nodevcrit
 	savedresults save nosklearn e()
-	lasso2 mpg rep78-foreign, lglmnet long sklearn
+	lasso2 mpg rep78-foreign, lglmnet long alpha(0) sklearn
 	savedresults comp nosklearn e(),								///
 		exclude(macros: lasso2opt scalars: lcount)					///
 		tol(1e-7) verbose
@@ -1410,10 +1418,16 @@ if _rc==0 {
 		exclude(macros: lasso2opt scalars: lcount)					///
 		tol(1e-7) verbose
 	
+	// unitloadings
+	// nodevcrit required because sklearn does full lambda grid
+	lasso2 mpg rep78-foreign, lglmnet long unitloadings nodevcrit
+	savedresults save nosklearn e()
+	lasso2 mpg rep78-foreign, lglmnet long sklearn unitloadings
+	savedresults comp nosklearn e(),								///
+		exclude(macros: lasso2opt scalars: lcount)					///
+		tol(1e-7) verbose
+	
 	// error checking
-	// sklearn not supported with unitloadings
-	cap lasso2 mpg rep78-foreign, lglmnet lambda(1) sklearn unitloadings
-	assert _rc > 0
 	// sklearn not supported with custom penalty loadings
 	mat psi = 4, 3, 2, 1, 1, 1, 1, 2, 3
 	cap lasso2 mpg rep78-foreign, lambda(1) lglmnet sklearn ploadings(psi)

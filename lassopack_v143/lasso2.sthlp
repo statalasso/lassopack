@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0.16  19dec2023}{...}
+{* *! version 1.0.16  5jan2024}{...}
 {hline}
 {cmd:help lasso2}{right: lassopack v1.4.3}
 {hline}
@@ -165,7 +165,7 @@ Use the parameterizations for lambda, alpha, standardization, etc. employed by {
 Use {browse "https://scikit-learn.org/stable/index.html":scikit-learn}'s
 Python implementations of the lasso, elastic net and ridge estimators.
 The glmnet parameterization is automatically used.
-Cannot be used with the {opt notpen(.)}, {opt ploadings(.)}, {opt unitloadings} or {opt noconstant} options.
+Cannot be used with the {opt notpen(.)}, {opt ploadings(.)} or {opt noconstant} options.
 {p_end}
 {synoptline}
 {p2colreset}{...}
