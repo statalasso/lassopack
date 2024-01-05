@@ -1,4 +1,4 @@
-*! lasso2 1.0.12 27sept2020
+*! lasso2 1.0.13 05jan2024
 *! lassopack package 1.4.3
 *! authors aa/ms
 
@@ -68,7 +68,8 @@
 *         Added stdall option - standardized lambda, L1, ICs, as well as coefficients. stdall=>stdcoef.
 *         Fixed bug in display in partialled-out vs factor variables.
 *         e(objfn) replaces e(pmse) and e(prmse).
-* note in help file that "adaloadings" actually means ada coefs
+* 1.1.13  (5jan2024)
+*         Misc code snippets to support sklearn option.
 
 
 program lasso2, eclass sortpreserve
@@ -372,6 +373,7 @@ program _lasso2, eclass sortpreserve
 			ploadings2(string) 						/// L2 norm loadings
 			UNITLoadings							///
 			lglmnet									/// use glmnet parameterization
+			sklearn									/// use sklearn code
 			///
 			/// standardization
 			PREStd 									///
@@ -407,6 +409,8 @@ program _lasso2, eclass sortpreserve
 	local feflag		=("`fe'"~="")
 	local debugflag		=("`debug'"~="")
 	local lglmnetflag	=("`lglmnet'"~="")
+	local sklearnflag	=("`sklearn'"~="")
+	local prestdflag	=("`prestd'"~="")
 	*
 	
 	** reset lambda, used for predict & replay
@@ -494,6 +498,15 @@ program _lasso2, eclass sortpreserve
 	}
 	*
 	
+	*** sklearn
+	// sklearn requires lglmnet
+	if `sklearnflag' & ~`lglmnetflag' {
+		di as res "note - sklearn option implies lglmnet option/parameterization"
+		local lglmnet lglmnet
+		local lglmnetflag=1
+	}
+	*
+	
 	*** lglmnet
 	// glmnet treats penalty loadings and standardization separately
 	if `lglmnetflag' {
@@ -502,6 +515,7 @@ program _lasso2, eclass sortpreserve
 			local prestd	prestd
 		}
 	}
+	*
 
 	*** constant, partial, etc.
 	// conmodel: constant in original model
@@ -854,6 +868,7 @@ program _lasso2, eclass sortpreserve
 					holdout(`holdout')						///
 					`noic' 									///
 					`lglmnet'								/// use glmnet parameterization
+					`sklearn'								/// use sklearn code
 					`options'
 
 	************* Finish up ********************************************************

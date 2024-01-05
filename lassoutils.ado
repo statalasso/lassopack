@@ -1,4 +1,4 @@
-*! lassoutils 1.2.06 18dec2023
+*! lassoutils 1.2.06 5jan2024
 *! lassopack package 1.4.3
 *! authors aa/cbh/ms
 
@@ -141,7 +141,7 @@
 *         EBIC now excludes omitted/base variables when calculating model size p.
 * 1.2.04  Bug fix to SD calculation for special case of lglmnet with unit loadings (=not prestandardized)
 * 1.2.05  Bug fix in special case of only unpenalized regressors (returned scalar psinegs was not initialized to missing)
-* 1.2.06  (18dec2023)
+* 1.2.06  (5jan2024)
 *         Misc updates to support use of Python/sklearn.
 
 
@@ -936,11 +936,10 @@ program define _lassopath, rclass sortpreserve
 	local lglmnetflag	=("`lglmnet'"!="")
 	local noicflag		=("`noic'"!="")
 	local nodevcritflag	=("`nodevcrit'"!="")
-	local prestdflag	=("`stdy'"!="")
 	local sklearnflag	=("`sklearn'"!="")
 	if (~`consflag')	local noconstant noconstant
 	*
-	
+
 	*** syntax checks
 	if `sqrtflag' & `lglmnetflag' {
 		di as err "lglmnet option not supported for square-root lasso"
@@ -969,12 +968,7 @@ program define _lassopath, rclass sortpreserve
 			di as err "error - sklearn option requires lglmnet option"
 			exit 198
 		}
-		// and prestd (will be triggered by sklearn unless unitloadings etc. also selected; hence not supported)
-		if ~`prestdflag' {
-			di as err "error - sklearn option requires lglmnet option and pre-standardization"
-			exit 198
-		}
-		//  sklearn currently does not support custom penalty loadings
+		//  and no custom penalty loadings
 		if "`ploadings'`ploadings2'"~="" {
 			di as err "error - sklearn option does not currently support custom penalty loadings"
 			exit 198
@@ -2367,7 +2361,7 @@ struct outputStructPath DoLassoPath(									///
 		if (verbose>=2) {
 			printf("Lambda list: %s\n",invtokens(strofreal(lvec)))
 		}
-		
+	
 		if (sklearn) {
 			bpath = PyDoShootingPath(d,lvec,lvec2,verbose,optTol,maxIter,alpha)
 			lpath = bpath.betas
@@ -2911,10 +2905,10 @@ struct betaStruct DoShooting(									///
 	}
 
 	// deviation (R-sq)
-	ERROR	= ((*d.y):-(d.ymvec*d.cons)) - ((*d.X):-(d.mvec*d.cons))*beta
+	ERROR		= ((*d.y):-(d.ymvec*d.cons)) - ((*d.X):-(d.mvec*d.cons))*beta
 
-	RSS		= quadcolsum(ERROR:^2)
-	RSQ		= 1-RSS:/d.TSS
+	RSS			= quadcolsum(ERROR:^2)
+	RSQ			= 1-RSS:/d.TSS
 
 	b.beta		= beta
 	b.m			= m
@@ -4250,7 +4244,6 @@ void EstimateLassoPath(							///  Complete Mata code for lassopath
 				real scalar nodevcrit			///
 				)
 {
-
 	struct dataStruct scalar d
 	d			= MakeData(nameY,nameX,nameX_o,toest,cons,dmflag,dofminus,sdofminus,prestdflag,sqrtflag,stdymat,stdxmat,lglmnet)
 	
@@ -4524,17 +4517,6 @@ struct betaStruct PyDoShooting(									///
 {
 	// stores results
 	struct betaStruct scalar	b
-	
-	// assume lasso2 called with prestd option
-	// require m (number of iterations), fobj (min obj fun), dev (R-sq)
-	// in DoShooting(.): fobj	= 1/2*mse + lambda*Psi*abs(beta)*d.ysd
-	//                   mse	= mean( ((*d.y) - (*d.X)*beta):^2 )
-	// ... but returned only with vverb option.
-	// with prestd, Psi and ysd are ones
-	//                   dev:
-	// 	ERROR	= ((*d.y):-(d.ymvec*d.cons)) - ((*d.X):-(d.mvec*d.cons))*beta
-	//	RSS		= quadcolsum(ERROR:^2)
-	//	RSQ		= 1-RSS:/d.TSS
 
 	// Mata externals start with __
 	external __X, __y
@@ -4594,9 +4576,10 @@ struct betaStruct PyDoShooting(									///
 	stata("python: del model, sk_X, sk_y, sk_max_iter, sk_tol, sk_alpha, sk_lambda, sk_cons")
 
 	// residuals, MSE, R-sq, obj function
-	resid = (*d.y) - (*d.X)*beta
+	resid = ((*d.y):-(d.ymvec*d.cons)) - ((*d.X):-(d.mvec*d.cons))*beta
 	mse	= mean(resid:^2)
 	dev = 1-quadcolsum(resid:^2):/d.TSS
+
 	if (alpha==1) {
 		// lasso
 		fobj	= 1/2*mse + lambda*sum(abs(beta))
@@ -4647,7 +4630,7 @@ struct pathStruct PyDoShootingPath(								///
 
 	// Mata externals start with __
 	external __X, __y
-	
+
 	// create new temporary views as externals; take up minimal additional memory
 	st_view(__X,.,d.nameX,d.touse)
 	st_view(__y,.,d.nameY,d.touse)
@@ -4680,7 +4663,11 @@ struct pathStruct PyDoShootingPath(								///
 	stata("python: sk_cons = Scalar.getValue('r(cons)')")
 	
 	if (alpha>0) {
-		// elastic net, lasso. enet_path currently does not support a fit_intercept option
+		// elastic net, lasso. enet_path currently does not support a fit_intercept option, so need to demean
+		if (d.dmflag==0) {
+			stata("python: sk_y = (sk_y - np.mean(sk_y,axis=0))")
+			stata("python: sk_X = sk_X - np.mean(sk_X,axis=0)")
+		}
 		stata("python: alphas_enet, coefs_enet, dual_gaps, n_iters = enet_path(sk_X, sk_y, alphas=sk_lvec, l1_ratio=sk_alpha, max_iter=sk_max_iter, tol=sk_tol, return_n_iter=True)")
 		// Python => Stata r(.) macros => Mata
 		stata("python: Matrix.store('r(betas)',coefs_enet)")
@@ -4712,7 +4699,8 @@ struct pathStruct PyDoShootingPath(								///
 	stata("python: del sk_X, sk_y, sk_max_iter, sk_tol, sk_alpha, sk_lvec, sk_cons")
 
 	// residuals, R-sq, obj function
-	resid = (*d.y) :- (*d.X)*betas'
+//	resid = (*d.y) :- (*d.X)*betas'
+	resid = ((*d.y):-(d.ymvec*d.cons)) :- ((*d.X):-(d.mvec*d.cons))*betas'
 	dev = 1:-quadcolsum(resid:^2):/d.TSS
 	mse	= mean(resid:^2)
 	if (alpha==1) {
@@ -4894,7 +4882,7 @@ struct outputStruct scalar DoLasso(								///
 	
 	// R-squared. Same as "dev" (deviation)
 	t.r2		=dev
-	
+
 	// rescaling minimized objective function
 	if (d.lglmnet) {
 		// use glmnet definitions
