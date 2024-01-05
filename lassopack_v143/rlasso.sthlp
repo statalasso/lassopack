@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0.17  31july2020}{...}
+{* *! version 1.0.18  5jan2024}{...}
 {hline}
 {cmd:help rlasso}{right: lassopack v1.4.2}
 {hline}
@@ -1164,7 +1164,7 @@ Please check our website {browse "https://statalasso.github.io/"} for more infor
 {pstd}
 {opt rlasso} is part of the {helpb lassopack} package.
 To get the latest stable version of {helpb lassopack} from our website, 
-check the installation instructions at {browse "https://statalasso.github.io/installation/"}.
+check the installation instructions at {browse "https://statalasso.github.io/docs/lassopack/installation/"}.
 We update the stable website version more frequently than the SSC version.
 Earlier versions of {help lassopack} are also available from the website.
 

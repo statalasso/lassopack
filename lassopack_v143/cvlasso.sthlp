@@ -877,7 +877,7 @@ Please check our website {browse "https://statalasso.github.io/"} for more infor
 {pstd}
 {opt cvlasso} is part of the {helpb lassopack} package.
 To get the latest stable version of {helpb lassopack} from our website, 
-check the installation instructions at {browse "https://statalasso.github.io/installation/"}.
+check the installation instructions at {browse "https://statalasso.github.io/docs/lassopack/installation/"}.
 We update the stable website version more frequently than the SSC version.
 Earlier versions of {help lassopack} are also available from the website.
 
@@ -897,7 +897,7 @@ to be installed; {stata "ssc install whichpkg"}).
 {pstd}{opt cvlasso} is not an official Stata command. It is a free contribution
 to the research community, like a paper. Please cite it as such: {p_end}
 
-{phang}Ahrens, A., Hansen, C.B., Schaffer, M.E. 2018 (updated 2020).
+{phang}Ahrens, A., Hansen, C.B., Schaffer, M.E. 2018 (updated 2024).
 LASSOPACK: Stata module for lasso, square-root lasso, elastic net, ridge, adaptive lasso estimation and cross-validation
 {browse "http://ideas.repec.org/c/boc/bocode/s458458.html"}{p_end}
 
