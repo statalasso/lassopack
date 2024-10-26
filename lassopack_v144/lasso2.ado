@@ -73,6 +73,7 @@
 * 1.1.14  (26oct2024)
 *         Bug fixe for FE with holdout sample when holdout has panel units not in the estimation sample.
 *         Now drop these observations from the holdout sample and output an info message.
+*         Added absorb(.) option (alternative to fe option).
 
 
 program lasso2, eclass sortpreserve
@@ -353,6 +354,7 @@ program _lasso2, eclass sortpreserve
 			PARtial(string)							/// string so that list can contain "_cons"
 			psolver(string)							/// optional solver for partialling out
 			fe										/// do within-transformation
+			absorb(varname)							/// provide variable for FEs
 			NOCONStant								///
 			NORecover 								/// recover partialled out coefficients
 			///
@@ -410,6 +412,7 @@ program _lasso2, eclass sortpreserve
 	
 	*** flags
 	local feflag		=("`fe'"~="")
+	local absorbflag	=("`absorb'"~="")
 	local debugflag		=("`debug'"~="")
 	local lglmnetflag	=("`lglmnet'"~="")
 	local sklearnflag	=("`sklearn'"~="")
@@ -464,16 +467,19 @@ program _lasso2, eclass sortpreserve
 		di as error "error: cannot combine options ploadings(.) and adaptive"
 		exit 198
 	}
+	if `feflag' & `absorbflag' {
+		di as error "incompatible options: fe and absorb(.)"
+		exit 198
+	}
 	*
 	****************************************************************************
 	
 	*** Record which observations have non-missing values
 	marksample touse
 	// need to check panel var up here
-	if `feflag' {
-		cap xtset
-		local ivar	`r(panelvar)'
-	}
+	cap xtset
+	local ivar	`r(panelvar)'	// empty if not xtset
+	local tvar	`r(timevar)'	// empty if not xtset
 	markout `touse' `varlist' `ivar' `holdout'
 	tempvar toest
 	qui gen `toest' = `touse'
@@ -485,6 +491,39 @@ program _lasso2, eclass sortpreserve
 	}
 	*
 
+	*** absorb(.)
+	// if already xtset with absorb variable, then set fe option and feflag
+	// if not xtset, then xtset with absorb variable but clear xtset when exiting
+	// if xtset with another variable, save xtset info and reset xt when exiting
+	local xtclear=0
+	local xtrestore=0
+	if `absorbflag' {
+		if "`ivar'"~="" {
+			// data already xtset
+			// update fe option/flag; this is enough if panel var = absorb var
+			local fe fe
+			local feflag=1
+			if "`ivar'"~="`absorb'" {
+				// data already xtset to another setting, so save and update xtset
+				local xtivar `ivar'
+				local xttvar `tvar'
+				xtset `absorb'
+				local ivar `absorb'
+				local tvar
+				local xtrestore=1
+			}
+		}
+		else {
+			// data not xtset; xtset and set flag for clearing xtset when exiting
+			qui xtset `absorb'
+			local ivar `absorb'
+			local fe fe
+			local feflag=1
+			local xtclear=1
+		}
+	}
+	*
+	
 	*** FEs.
 	if `feflag' {
 		if "`ivar'"=="" {
@@ -516,7 +555,6 @@ program _lasso2, eclass sortpreserve
 		// fe transformation may expect data to be sorted on ivar
 		local sortvar_1	: word 1 of `sortvar'				// in case sorted on multiple variables
 		if "`ivar'"~="`sortvar_1'" {
-			di as text "(sorting by xtset panelvar `ivar')"
 			sort `ivar'
 		}
 	}
@@ -1100,6 +1138,7 @@ program _lasso2, eclass sortpreserve
 			ereturn scalar N_g		=`N_g'
 		}
 		ereturn scalar fe			=`feflag'
+		ereturn local  absorb		`absorb'
 		ereturn scalar rmse			=`rmse'
 		ereturn scalar rmseOLS		=`rmseOLS'
 		ereturn scalar srmse		=`srmse'
@@ -1145,6 +1184,7 @@ program _lasso2, eclass sortpreserve
 		*** more lasso2 ereturns
 		ereturn scalar alpha		=`alpha'
 		ereturn scalar fe 			=`feflag'
+		ereturn local  absorb		`absorb'
 		ereturn scalar sqrt  		= `sqrtflag'
 		ereturn scalar prestd		= `prestdflag'
 		ereturn scalar ols 			= `olsflag'
@@ -1289,6 +1329,7 @@ program _lasso2, eclass sortpreserve
 		ereturn scalar stdall		=`stdallflag'
 		ereturn scalar cons 		=`consmodel'
 		ereturn scalar fe 			=`feflag'
+		ereturn local  absorb		`absorb'
 		ereturn scalar alpha		=`alpha'
 		ereturn scalar sqrt  		=`sqrtflag'
 		ereturn scalar ols	 		=`olsflag' 
@@ -1373,6 +1414,17 @@ program _lasso2, eclass sortpreserve
 		}
 
 	}
+	
+	// finish up
+	// if we xtset the data to support absorb, remove this
+	if `xtclear' {
+		qui xtset, clear
+	}
+	// if we changed xtset to support absorb, restore to original settings
+	if `xtrestore' {
+		qui xtset `xtivar' `xttvar'
+	}
+	
 end
 
 

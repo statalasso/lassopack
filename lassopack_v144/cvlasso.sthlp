@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0.13  5jan2024}{...}
+{* *! version 1.0.14  26oct2024}{...}
 {hline}
 {cmd:help cvlasso}{right: lassopack v1.4.4}
 {hline}
@@ -42,6 +42,7 @@
 {cmdab:pres:td}
 {cmd:fe}
 {cmd:noftools}
+{cmd:absorb(}{it:varname}{cmd:)}
 {cmdab:noc:onstant}
 {cmdab:tolo:pt}{cmd:(}{it:real}{cmd:)}
 {cmdab:tolz:ero}{cmd:(}{it:real}{cmd:)}
@@ -196,6 +197,9 @@ within-transformation is applied prior to estimation. Requires data to be xtset.
 {p_end}
 {synopt:{opt noftools}}
 do not use FTOOLS package for fixed-effects transform (slower; rarely used)
+{p_end}
+{synopt:{cmd:absorb(}{it:varname}{cmd:)}}
+specify variable for within-transformation. Does not require data to be xtset.
 {p_end}
 {synopt:{cmdab:noc:onstant}}
 suppress constant from estimation.

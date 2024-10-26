@@ -1,4 +1,4 @@
-*! lasso2_p 1.0.06 14oct2019
+*! lasso2_p 1.0.07 26oct2024
 *! lassopack package 1.4.4
 *! authors aa/ms
 *
@@ -16,6 +16,8 @@
 * 1.0.05  	(9oct2019)
 *         	added proper support for fe
 *			noisily now shows beta vector
+* 1.0.07    (26oct2024)
+*           added support for absorb(.)
 
 program define lasso2_p, rclass
 
@@ -138,17 +140,56 @@ program define _lasso2_p, rclass
 	
 	marksample touse, novarlist 
 
+	// fixed effects and absorb(.)
+	cap xtset
+	local ivar	`r(panelvar)'	// empty if not xtset
+	local tvar	`r(timevar)'	// empty if not xtset
+	// absorb(.) sets e(fe) to 1 and also saves the absorb variable as e(absorb)
+	local feflag = `e(fe)'
+	local absorb `e(absorb)'
+	local absorbflag = "`absorb'"~=""
+	// if already xtset with absorb variable, then set fe option and feflag
+	// if not xtset, then xtset with absorb variable but clear xtset when exiting
+	// if xtset with another variable, save xtset info and reset xt when exiting
+	local xtclear=0
+	local xtrestore=0
+	if `absorbflag' {
+		if "`ivar'"~="" {
+			// data already xtset
+			// update fe option/flag; this is enough if panel var = absorb var
+			local fe fe
+			local feflag=1
+			if "`ivar'"~="`absorb'" {
+				// data already xtset to another setting, so save and update xtset
+				local xtivar `ivar'
+				local xttvar `tvar'
+				xtset `absorb'
+				local ivar `absorb'
+				local tvar
+				local xtrestore=1
+			}
+		}
+		else {
+			// data not xtset; xtset and set flag for clearing xtset when exiting
+			qui xtset `absorb'
+			local ivar `absorb'
+			local fe fe
+			local feflag=1
+			local xtclear=1
+		}
+	}
+
+	
 	*** warning messages
-	local fe = `e(fe)'
 	if ("`xb'`residuals'`u'`e'`ue'`xbu'"=="") {
 		di as gr "No xb or residuals options specified. Assume xb (fitted values)."
 		local xb xb
 	}
-	if (("`u'`e'`ue'`xbu'"!="") & (`fe'!=1)) {
+	if (("`u'`e'`ue'`xbu'"!="") & (`feflag'==0)) {
 		di as err "u, e, ue and xbu only supported after fe"
 		exit 198
 	}
-	else if `fe'==1 {
+	else if `feflag' {
 		* xtset is required for FEs so this check should never fail
 		cap xtset
 		if _rc {
@@ -162,7 +203,7 @@ program define _lasso2_p, rclass
 		di as err "only one allowed: u, e or ue"
 		exit 198
 	}
-	if (("`residuals'"!="") & (`fe'==1)) {
+	if (("`residuals'"!="") & `feflag') {
 		di as err "residuals option not allowed after fe; select u, e or ue."
 		exit 198
 	}
@@ -347,7 +388,7 @@ program define _lasso2_p, rclass
 	qui matrix score `vtype' `xbvar' = `betaused'  if `touse'
 	if ("`xb'"!="") {
 		// enter if standard or FE
-	    if (`fe'==1) {
+	    if `feflag' {
 			* need to add constant
 			qui gen `vtype'  `res' = `depvar' - `xbvar' if `esample'
 			qui sum `res' if `esample', meanonly
@@ -424,4 +465,16 @@ program define _lasso2_p, rclass
 	
 	`qui' di "Beta used for predict:"
 	`qui' mat list `betaused', noblank noheader
+
+	// finish up
+	// if we xtset the data to support absorb, remove this
+	if `xtclear' {
+		qui xtset, clear
+	}
+	// if we changed xtset to support absorb, restore to original settings
+	if `xtrestore' {
+		qui xtset `xtivar' `xttvar'
+	}
+
+
 end
