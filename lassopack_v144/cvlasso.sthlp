@@ -1,7 +1,7 @@
 {smcl}
 {* *! version 1.0.13  5jan2024}{...}
 {hline}
-{cmd:help cvlasso}{right: lassopack v1.4.3}
+{cmd:help cvlasso}{right: lassopack v1.4.4}
 {hline}
 
 {title:Title}

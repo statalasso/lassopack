@@ -1,5 +1,5 @@
 *! lassologit_p
-*! part of lassopack v1.4.2
+*! part of lassopack v1.4.4
 *! last edited: 27mar2021
 *! authors: aa/ms
 

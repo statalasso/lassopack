@@ -1,5 +1,5 @@
 *! rlasso 1.0.11 29jul2020
-*! lassopack package 1.4.1
+*! lassopack package 1.4.4
 *! authors aa/cbh/ms
 
 * Also see lassoutils.ado notes for details of code updates.

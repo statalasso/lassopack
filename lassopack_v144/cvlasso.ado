@@ -1,5 +1,5 @@
 *! cvlasso 1.0.13 18dec2023
-*! lassopack package 1.4.3
+*! lassopack package 1.4.4
 *! authors aa/ms
 
 * Updates (release date):

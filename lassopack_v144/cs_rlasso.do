@@ -1,5 +1,5 @@
 * certification script for 
-* lassopack package 1.2.01XX 19aug2020, MS
+* lassopack package 1.4.4, 19aug2020
 
 cscript rlasso adofile rlasso
 clear all

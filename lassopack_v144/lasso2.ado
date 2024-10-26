@@ -1,5 +1,5 @@
-*! lasso2 1.0.13 05jan2024
-*! lassopack package 1.4.3
+*! lasso2 1.0.14 26oct2024
+*! lassopack package 1.4.4
 *! authors aa/ms
 
 * additional notes
@@ -70,6 +70,9 @@
 *         e(objfn) replaces e(pmse) and e(prmse).
 * 1.1.13  (5jan2024)
 *         Misc code snippets to support sklearn option.
+* 1.1.14  (26oct2024)
+*         Bug fixe for FE with holdout sample when holdout has panel units not in the estimation sample.
+*         Now drop these observations from the holdout sample and output an info message.
 
 
 program lasso2, eclass sortpreserve
@@ -472,13 +475,13 @@ program _lasso2, eclass sortpreserve
 		local ivar	`r(panelvar)'
 	}
 	markout `touse' `varlist' `ivar' `holdout'
-	sum `touse' if `touse', meanonly		//  will sum weight var when weights are used
-	local N		= r(N)
 	tempvar toest
 	qui gen `toest' = `touse'
 	if ("`holdout'"!="") {
-		assert `holdout' == 1 | `holdout'==0 if `touse'
-		qui replace `toest' = 0 if `holdout'
+		tempvar tohold
+		qui gen `tohold' = `holdout'
+		assert `tohold' == 1 | `tohold'==0 if `touse'
+		qui replace `toest' = 0 if `tohold'
 	}
 	*
 
@@ -488,14 +491,40 @@ program _lasso2, eclass sortpreserve
 			di as err "Error: fe option requires data to be xtset"
 			exit 459
 		}
-		// fe transformation may expect data to be sorted on ivar
+		// save current sort variables
 		local sortvar	: sortedby
-		local sortvar	: word 1 of `sortvar'				// in case sorted on multiple variables
-		if "`ivar'"~="`sortvar'" {
+		// if panel id appears in holdout but not estimation sample, drop from holdout
+		if "`holdout'"~="" {
+			tempvar hcount hmiss
+			sort `ivar' `tohold'
+			qui by `ivar': gen `hcount'=sum(`tohold')
+			qui by `ivar': egen `hmiss'=min(`hcount'), missing
+			// if hmiss=1, means no obs for that panel in estimation sample
+			qui count if `hmiss'==1
+			local hobs=r(N)
+			qui tab `ivar' if `hmiss'==1
+			local hpanels=r(r)
+			if r(N) > 0 {
+				di as text "note: panels missing in the estimation sample are dropped from the holdout sample"
+				di as text "      `hpanels' panels with `hobs' holdout observations dropped"
+				qui replace `tohold'=0 if `hmiss'==1
+				qui replace `touse'=0 if `hmiss'==1
+			}
+			// restore sort
+			sort `sortvar'
+		}
+		// fe transformation may expect data to be sorted on ivar
+		local sortvar_1	: word 1 of `sortvar'				// in case sorted on multiple variables
+		if "`ivar'"~="`sortvar_1'" {
 			di as text "(sorting by xtset panelvar `ivar')"
 			sort `ivar'
 		}
 	}
+	*
+
+	*** sample size	
+	sum `touse' if `touse', meanonly		//  will sum weight var when weights are used
+	local N		= r(N)
 	*
 	
 	*** sklearn
@@ -865,7 +894,7 @@ program _lasso2, eclass sortpreserve
 					ploadings(`ploadings') 					/// L1 norm loadings
 					ploadings2(`ploadings2') 				/// L2 norm loadings
 					`verbose' `vverbose'					///
-					holdout(`holdout')						///
+					holdout(`tohold')						///
 					`noic' 									///
 					`lglmnet'								/// use glmnet parameterization
 					`sklearn'								/// use sklearn code

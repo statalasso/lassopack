@@ -1,5 +1,5 @@
 *! rlasso_p 1.0.01 15oct2019
-*! lassopack package 1.4.2
+*! lassopack package 1.4.4
 *! authors aa/cbh/ms
 
 * postestimation predict for rlasso
