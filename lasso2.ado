@@ -1,5 +1,5 @@
-*! lasso2 1.0.13 05jan2024
-*! lassopack package 1.4.3
+*! lasso2 1.0.14 26oct2024
+*! lassopack package 1.4.4
 *! authors aa/ms
 
 * additional notes
@@ -70,6 +70,10 @@
 *         e(objfn) replaces e(pmse) and e(prmse).
 * 1.1.13  (5jan2024)
 *         Misc code snippets to support sklearn option.
+* 1.1.14  (26oct2024)
+*         Bug fixe for FE with holdout sample when holdout has panel units not in the estimation sample.
+*         Now drop these observations from the holdout sample and output an info message.
+*         Added absorb(.) option (alternative to fe option).
 
 
 program lasso2, eclass sortpreserve
@@ -350,6 +354,7 @@ program _lasso2, eclass sortpreserve
 			PARtial(string)							/// string so that list can contain "_cons"
 			psolver(string)							/// optional solver for partialling out
 			fe										/// do within-transformation
+			absorb(varname)							/// provide variable for FEs
 			NOCONStant								///
 			NORecover 								/// recover partialled out coefficients
 			///
@@ -407,6 +412,7 @@ program _lasso2, eclass sortpreserve
 	
 	*** flags
 	local feflag		=("`fe'"~="")
+	local absorbflag	=("`absorb'"~="")
 	local debugflag		=("`debug'"~="")
 	local lglmnetflag	=("`lglmnet'"~="")
 	local sklearnflag	=("`sklearn'"~="")
@@ -461,41 +467,102 @@ program _lasso2, eclass sortpreserve
 		di as error "error: cannot combine options ploadings(.) and adaptive"
 		exit 198
 	}
+	if `feflag' & `absorbflag' {
+		di as error "incompatible options: fe and absorb(.)"
+		exit 198
+	}
 	*
 	****************************************************************************
 	
 	*** Record which observations have non-missing values
 	marksample touse
 	// need to check panel var up here
-	if `feflag' {
-		cap xtset
-		local ivar	`r(panelvar)'
-	}
+	cap xtset
+	local ivar	`r(panelvar)'	// empty if not xtset
+	local tvar	`r(timevar)'	// empty if not xtset
 	markout `touse' `varlist' `ivar' `holdout'
-	sum `touse' if `touse', meanonly		//  will sum weight var when weights are used
-	local N		= r(N)
 	tempvar toest
 	qui gen `toest' = `touse'
 	if ("`holdout'"!="") {
-		assert `holdout' == 1 | `holdout'==0 if `touse'
-		qui replace `toest' = 0 if `holdout'
+		tempvar tohold
+		qui gen `tohold' = `holdout'
+		assert `tohold' == 1 | `tohold'==0 if `touse'
+		qui replace `toest' = 0 if `tohold'
 	}
 	*
 
+	*** absorb(.)
+	// if already xtset with absorb variable, then set fe option and feflag
+	// if not xtset, then xtset with absorb variable but clear xtset when exiting
+	// if xtset with another variable, save xtset info and reset xt when exiting
+	local xtclear=0
+	local xtrestore=0
+	if `absorbflag' {
+		if "`ivar'"~="" {
+			// data already xtset
+			// update fe option/flag; this is enough if panel var = absorb var
+			local fe fe
+			local feflag=1
+			if "`ivar'"~="`absorb'" {
+				// data already xtset to another setting, so save and update xtset
+				local xtivar `ivar'
+				local xttvar `tvar'
+				xtset `absorb'
+				local ivar `absorb'
+				local tvar
+				local xtrestore=1
+			}
+		}
+		else {
+			// data not xtset; xtset and set flag for clearing xtset when exiting
+			qui xtset `absorb'
+			local ivar `absorb'
+			local fe fe
+			local feflag=1
+			local xtclear=1
+		}
+	}
+	*
+	
 	*** FEs.
 	if `feflag' {
 		if "`ivar'"=="" {
 			di as err "Error: fe option requires data to be xtset"
 			exit 459
 		}
-		// fe transformation may expect data to be sorted on ivar
+		// save current sort variables
 		local sortvar	: sortedby
-		local sortvar	: word 1 of `sortvar'				// in case sorted on multiple variables
-		if "`ivar'"~="`sortvar'" {
-			di as text "(sorting by xtset panelvar `ivar')"
+		// if panel id appears in holdout but not estimation sample, drop from holdout
+		if "`holdout'"~="" {
+			tempvar hcount hmiss
+			sort `ivar' `tohold'
+			qui by `ivar': gen `hcount'=sum(`tohold')
+			qui by `ivar': egen `hmiss'=min(`hcount'), missing
+			// if hmiss=1, means no obs for that panel in estimation sample
+			qui count if `hmiss'==1
+			local hobs=r(N)
+			qui tab `ivar' if `hmiss'==1
+			local hpanels=r(r)
+			if r(N) > 0 {
+				di as text "note: panels missing in the estimation sample are dropped from the holdout sample"
+				di as text "      `hpanels' panels with `hobs' holdout observations dropped"
+				qui replace `tohold'=0 if `hmiss'==1
+				qui replace `touse'=0 if `hmiss'==1
+			}
+			// restore sort
+			sort `sortvar'
+		}
+		// fe transformation may expect data to be sorted on ivar
+		local sortvar_1	: word 1 of `sortvar'				// in case sorted on multiple variables
+		if "`ivar'"~="`sortvar_1'" {
 			sort `ivar'
 		}
 	}
+	*
+
+	*** sample size	
+	sum `touse' if `touse', meanonly		//  will sum weight var when weights are used
+	local N		= r(N)
 	*
 	
 	*** sklearn
@@ -865,7 +932,7 @@ program _lasso2, eclass sortpreserve
 					ploadings(`ploadings') 					/// L1 norm loadings
 					ploadings2(`ploadings2') 				/// L2 norm loadings
 					`verbose' `vverbose'					///
-					holdout(`holdout')						///
+					holdout(`tohold')						///
 					`noic' 									///
 					`lglmnet'								/// use glmnet parameterization
 					`sklearn'								/// use sklearn code
@@ -1071,6 +1138,7 @@ program _lasso2, eclass sortpreserve
 			ereturn scalar N_g		=`N_g'
 		}
 		ereturn scalar fe			=`feflag'
+		ereturn local  absorb		`absorb'
 		ereturn scalar rmse			=`rmse'
 		ereturn scalar rmseOLS		=`rmseOLS'
 		ereturn scalar srmse		=`srmse'
@@ -1116,6 +1184,7 @@ program _lasso2, eclass sortpreserve
 		*** more lasso2 ereturns
 		ereturn scalar alpha		=`alpha'
 		ereturn scalar fe 			=`feflag'
+		ereturn local  absorb		`absorb'
 		ereturn scalar sqrt  		= `sqrtflag'
 		ereturn scalar prestd		= `prestdflag'
 		ereturn scalar ols 			= `olsflag'
@@ -1260,6 +1329,7 @@ program _lasso2, eclass sortpreserve
 		ereturn scalar stdall		=`stdallflag'
 		ereturn scalar cons 		=`consmodel'
 		ereturn scalar fe 			=`feflag'
+		ereturn local  absorb		`absorb'
 		ereturn scalar alpha		=`alpha'
 		ereturn scalar sqrt  		=`sqrtflag'
 		ereturn scalar ols	 		=`olsflag' 
@@ -1344,6 +1414,17 @@ program _lasso2, eclass sortpreserve
 		}
 
 	}
+	
+	// finish up
+	// if we xtset the data to support absorb, remove this
+	if `xtclear' {
+		qui xtset, clear
+	}
+	// if we changed xtset to support absorb, restore to original settings
+	if `xtrestore' {
+		qui xtset `xtivar' `xttvar'
+	}
+	
 end
 
 

@@ -1,5 +1,5 @@
 * certification script for 
-* lassopack package 1.4.3 19dec2023
+* lassopack package 1.4.4 25oct2024
 * parts of the script use R's glmnet for validation
 
 cscript "cvlasso" adofile cvlasso lasso2 lasso2_p lassoutils
@@ -16,8 +16,8 @@ which lasso2_p
 which lassoutils
 
 * data source
-* global prostate prostate.data
-global prostate https://web.stanford.edu/~hastie/ElemStatLearn/datasets/prostate.data
+global prostate prostate.data
+// global prostate https://web.stanford.edu/~hastie/ElemStatLearn/datasets/prostate.data
 
 * program to compare two matrices in terms of avg abs deviation
 cap program drop comparemat

@@ -1,7 +1,7 @@
 {smcl}
-{* *! version 1.0.16  5jan2024}{...}
+{* *! version 1.0.17  26oct2024}{...}
 {hline}
-{cmd:help lasso2}{right: lassopack v1.4.3}
+{cmd:help lasso2}{right: lassopack v1.4.4}
 {hline}
 
 {title:Title}
@@ -41,6 +41,7 @@
 {cmdab:stdc:oef}
 {cmd:fe}
 {cmd:noftools}
+{cmd:absorb(}{it:varname}{cmd:)}
 {cmdab:noc:onstant}
 {cmdab:tolo:pt}{cmd:(}{it:real}{cmd:)}
 {cmdab:tolz:ero}{cmd:(}{it:real}{cmd:)}
@@ -67,10 +68,13 @@ Note: the {opt sklearn} option will take advantage of
 Python implementations of the lasso, elastic net and ridge estimators;
 the speed gains using this package can be large.
 The {opt sklearn} option requires Stata 16 or higher,  
-a Python installation and scikit-learn (0.24 or higher).
+a Python installation and scikit-learn (0.24 or higher; tested up to 1.5.2).
 See {helpb python:here} and
 {browse "https://blog.stata.com/2020/08/18/stata-python-integration-part-1-setting-up-stata-to-use-python/":here} 
 for how to set up Python for Stata on your system.
+You can check your scikit-learn version using:{p_end}
+{pmore3}. {stata "python: import sklearn"}{p_end}
+{pmore3}. {stata "python: sklearn.__version__"}{p_end}
 
 {p 8 14 2}
 Note: the {opt fe} option will take advantage of the {helpb lasso2##SG2016:ftools}
@@ -220,6 +224,9 @@ within-transformation is applied prior to estimation. Requires data to be xtset.
 {p_end}
 {synopt:{cmd:noftools}}
 do not use {helpb lasso2##SG2016:ftools} package for fixed-effects transform (slower; rarely used)
+{p_end}
+{synopt:{cmd:absorb(}{it:varname}{cmd:)}}
+specify variable for within-transformation. Does not require data to be xtset.
 {p_end}
 {synopt:{cmdab:noc:onstant}}
 suppress constant from estimation.

@@ -1,5 +1,5 @@
 * certification script for 
-* lassopack package 1.4.3 5jan2024, aa/ms
+* lassopack package 1.4.4 25oct2024, aa/ms
 * parts of the script use R's glmnet and Matlab code "SqrtLassoIterative.m".
 
 set more off
@@ -8,15 +8,15 @@ clear all
 capture log close
 set rmsg on
 program drop _all
-log using cs_lasso2,replace
+log using cs_lasso2, replace
 about
 which lasso2
 which lasso2_p
 which lassoutils
 
 * data source
-//global prostate prostate.data
-global prostate https://web.stanford.edu/~hastie/ElemStatLearn/datasets/prostate.data
+global prostate prostate.data
+// global prostate https://web.stanford.edu/~hastie/ElemStatLearn/datasets/prostate.data
 
 * simple ridge regression program
 cap program drop estridge

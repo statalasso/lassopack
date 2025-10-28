@@ -1,5 +1,5 @@
-*! lassoutils 1.2.06 5jan2024
-*! lassopack package 1.4.3
+*! lassoutils 1.2.07 26Oct2024
+*! lassopack package 1.4.4
 *! authors aa/cbh/ms
 
 * Adapted/expanded from lassoShooting version 12, cbh 25/09/2012
@@ -143,6 +143,11 @@
 * 1.2.05  Bug fix in special case of only unpenalized regressors (returned scalar psinegs was not initialized to missing)
 * 1.2.06  (5jan2024)
 *         Misc updates to support use of Python/sklearn.
+* 1.2.07  Bug fix to accommodate update in sklearn (first detected in sklearn v1.5.2 - sklearn intercept flag
+*         requires a boolean (real=0 or =1 no longer accepted).
+*         Bug fixes for FE with holdout sample when holdout has panel units not in the estimation sample.
+*         Stata code (no ftools) would fail to calculate MSPE. ftools code would calculate incorrectly.
+*         rlasso bug fix - additiona of sklearn option would cause sqrt rlasso to crash.
 
 
 program lassoutils, rclass sortpreserve
@@ -1110,7 +1115,7 @@ program define _lassopath, rclass sortpreserve
 		mat `stdvec'		= r(stdvec)
 		if ("`holdout'"!="") {
 			tempname mspe0
-			mat `mspe0' = r(mspe)	
+			mat `mspe0' = r(mspe)
 		}
 		else {
 			tempname rss ess tss rsq
@@ -1565,6 +1570,10 @@ program define _fe, rclass sortpreserve
 			qui replace `tvar'=`var'-``var'_m' if `touse'
 			local ++i
 		}
+		// some obs in the holdout sample may be missing because there
+		// are no panel means for those panels in the estimation sample.
+		// set these missings to zeros => won't contribute to the holdout MSPE
+		qui mvencode `tvarlist' if `touse' & ~`toest', mv(0) override
 		return scalar N_g = `N_g'
 		*
 		// timer off 1
@@ -4094,7 +4103,7 @@ struct outputStruct scalar RSqrtLasso(						/// Mata code for BCH sqrt rlasso
 		if (verbose>=1) {
 			printf("Obtaining sqrt-lasso estimate...\n")
 		}
-		betas	= DoLasso(d, Psi, Psi, lambda, lambda, verbose, optTol, maxIter, zeroTol, alpha, skearn, beta_ridge)
+		betas	= DoLasso(d, Psi, Psi, lambda, lambda, verbose, optTol, maxIter, zeroTol, alpha, sklearn, beta_ridge)
 		if (verbose>=1) {
 			printf("Selected variables: %s\n\n",invtokens(betas.nameXSel'))
 		}
@@ -4550,7 +4559,7 @@ struct betaStruct PyDoShooting(									///
 	stata("python: sk_tol = Scalar.getValue('r(tol)')")
 	stata("python: sk_alpha = Scalar.getValue('r(alpha)')")
 	stata("python: sk_lambda = Scalar.getValue('r(lambda)')")
-	stata("python: sk_cons = Scalar.getValue('r(cons)')")
+	stata("python: sk_cons = bool(Scalar.getValue('r(cons)'))")
 	
 	if (alpha>0) {
 		// elastic net, lasso
@@ -4660,7 +4669,7 @@ struct pathStruct PyDoShootingPath(								///
 	stata("python: sk_tol = Scalar.getValue('r(tol)')")
 	stata("python: sk_alpha = Scalar.getValue('r(alpha)')")
 	stata("python: sk_lvec = np.squeeze(Matrix.get('r(lvec)'))")
-	stata("python: sk_cons = Scalar.getValue('r(cons)')")
+	stata("python: sk_cons = bool(Scalar.getValue('r(cons)'))")
 	
 	if (alpha>0) {
 		// elastic net, lasso. enet_path currently does not support a fit_intercept option, so need to demean
@@ -5307,9 +5316,10 @@ void getMSPE(struct outputStructPath scalar t,
 								string scalar holdout, // marks validation data set
 								struct dataStruct scalar d)
 {		
+
 		// get beta matrix
-		bhat=t.betas 		// lcount by p	
-	
+		bhat=t.betas 		// lcount by p
+		
 		// get validation data
 		st_view(y0,.,varY,holdout)
 		st_view(X0,.,varX,holdout) 	// n by p
@@ -6058,8 +6068,10 @@ void s_fe(		string scalar Xnames,
 
 	w = F.sort(st_data(., toest, touse))				//  extract toest variable
 	counts = panelsum(w:*Wvar, F.info)					//  weighted counts for just the toest subsample
-	means = editmissing(panelsum(F.sort(X:*Wvar), w, F.info) :/ counts, 0)
+	means = panelsum(F.sort(X:*Wvar), w, F.info) :/ counts
 	tX[.,.] = X - means[F.levels, .]
+	// convert missings (in holdout/full sample) to zeros => won't contribute to holdout MSPE
+	tX[.,.] = editmissing(X - means[F.levels, .], 0)
 
 	N_g = F.num_levels
 	st_numscalar("r(N_g)",N_g)
